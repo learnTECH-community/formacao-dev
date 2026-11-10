@@ -13,7 +13,8 @@ export const PADROES = [
   { nome: 'token do GitHub', re: /\b(?:gh[pousr]_[A-Za-z0-9]{36,}|github_pat_[A-Za-z0-9_]{50,})\b/ },
   { nome: 'chave de acesso da AWS', re: /\bAKIA[0-9A-Z]{16}\b/ },
   { nome: 'chave privada', re: /-----BEGIN (?:RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----/ },
-  { nome: 'URL de banco com senha', re: /\b(?:mongodb(?:\+srv)?|postgres(?:ql)?|mysql|redis):\/\/[^\s:/@'"]+:[^\s@'"]+@/ },
+  // Usuário e senha de exemplo entre <> (como <usuario>:<senha>) não contam: são só o formato.
+  { nome: 'URL de banco com senha', re: /\b(?:mongodb(?:\+srv)?|postgres(?:ql)?|mysql|redis):\/\/[^\s:/@'"<>]+:[^\s@'"<>]+@/ },
   { nome: 'chave de API live', re: /\b(?:sk|rk)_live_[A-Za-z0-9]{16,}\b/ },
   { nome: 'token do Slack', re: /\bxox[abposr]-[A-Za-z0-9-]{10,}\b/ },
 ];

@@ -21,7 +21,7 @@ for (const [tipo, linha] of Object.entries(FALSOS)) {
 }
 
 test('texto comum, URL de banco sem senha e nomes de variável passam', () => {
-  const texto = ['MONGO_URL=mongodb://127.0.0.1:27017', 'const token = process.env.GITHUB_TOKEN;', 'ghp_ curto não é token'].join('\n');
+  const texto = ['MONGO_URL=mongodb://127.0.0.1:27017', 'formato: mongodb+srv://' + '<usuario>:<senha>' + '@<cluster>/painel', 'const token = process.env.GITHUB_TOKEN;', 'ghp_ curto não é token'].join('\n');
   assert.deepEqual(conferirArquivo('src/app.mjs', texto), []);
 });
 
