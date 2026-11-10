@@ -12,6 +12,7 @@ O painel lê o `CATALOGO.md` e mostra o progresso. O que mais pode dar errado, e
 | Integração (componente e app) | Vitest + jsdom + Testing Library | `painel/src/**/*.test.tsx`, `useCatalogo.test.ts` | `npm test`, job `catalogo` |
 | Ponta a ponta | Playwright + `@axe-core/playwright`: Chromium nos temas claro e escuro (tudo); WebKit e celular emulado (Pixel 7) no fluxo principal | `e2e/*.spec.mjs` | `npm run test:e2e`, job `painel` |
 | API (rotas e contrato) | `node:test` + Ajv contra o `api/openapi.json`, com o repositório em memória | `api/test/*.test.mjs` | `npm test` em `api/`, job `api` |
+| Carga | autocannon, 50 conexões por rota, meta p95 < 300 ms | `api/carga/carga.mjs` | à mão, `npm run carga` em `api/` (resultado em `docs/carga.md`); uma rodada curta no job `api` |
 | Manual | Pessoa com teclado e leitor de tela | roteiro nas issues (T2.3, T7.7) | antes de marcar itens que pedem pessoa real |
 
 ## Fluxos por nível

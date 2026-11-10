@@ -86,6 +86,7 @@ npm test                                # testes das rotas e do repositório (no
 npm run semear                          # cria o banco SQLite (api/dados/) com dados fictícios
 npm start                               # sobe em http://127.0.0.1:4320/v1/health; Ctrl+C para parar
 curl http://127.0.0.1:4320/v1/catalogo  # trilhas, itens e quem fez cada item
+npm run carga                           # teste de carga: 50 conexões, meta p95 < 300 ms (docs/carga.md)
 ```
 
 Para o painel usar a API (quem fez cada item e avisos em tempo real), suba a API e depois o painel com a URL dela:
@@ -105,6 +106,7 @@ Sem `VITE_API_URL`, o painel lê o `CATALOGO.md`, como antes. As variáveis est�
 - [docs/api.md](docs/api.md): rotas da API, exemplos, erros e a política de versão.
 - [docs/banco.md](docs/banco.md): tabelas, migrações e dados de teste do banco.
 - [docs/consultas.md](docs/consultas.md): consultas do painel, plano de execução e quando usar view.
+- [docs/carga.md](docs/carga.md): teste de carga da API, meta e resultado.
 - [docs/plano-de-testes.md](docs/plano-de-testes.md): o que se testa em cada nível e os riscos que cada teste cobre.
 - [docs/como-a-web-funciona.md](docs/como-a-web-funciona.md): do endereço digitado até o painel na tela.
 - [docs/adr/](docs/adr/): decisões.
