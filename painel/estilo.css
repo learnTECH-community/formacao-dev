@@ -5,6 +5,21 @@
   box-sizing: border-box;
 }
 
+:root {
+  /* Cores do painel. Pares de texto e fundo com contraste AA (4,5:1 ou mais). */
+  --fundo: #ffffff;
+  --fundo-alt: #eef2f6;
+  --texto: #1b1f24;
+  --texto-suave: #4a5560;
+  --link: #0b5cad;
+  --borda: #d0d7de;
+  --borda-forte: #6e7781;
+  --trilho: #e6eaee;
+  --preenchido: #1f7a4d;
+  --foco: #0b5cad;
+  --foco-fundo: #ffffff;
+}
+
 html {
   font-size: 100%; /* 16 px, ou o que a pessoa escolheu no navegador */
   -webkit-text-size-adjust: 100%;
@@ -16,8 +31,8 @@ body {
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   font-size: 1rem;
   line-height: 1.5;
-  color: #1b1f24;
-  background: #ffffff;
+  color: var(--texto);
+  background: var(--fundo);
   overflow-wrap: break-word;
 }
 
@@ -48,14 +63,14 @@ h3 {
 
 .topo {
   padding-block: 2rem 1rem;
-  background: #eef2f6;
-  border-bottom: 1px solid #d0d7de;
+  background: var(--fundo-alt);
+  border-bottom: 1px solid var(--borda);
 }
 
 .marca {
   margin: 0;
   font-weight: 600;
-  color: #4a5560;
+  color: var(--texto-suave);
 }
 
 .resumo {
@@ -78,7 +93,7 @@ h3 {
 }
 
 a {
-  color: #0b5cad;
+  color: var(--link);
 }
 
 main {
@@ -99,7 +114,7 @@ main {
   flex-direction: column;
   gap: 0.25rem;
   padding: 1rem;
-  border: 1px solid #d0d7de;
+  border: 1px solid var(--borda);
   border-radius: 0.5rem;
 }
 
@@ -111,11 +126,11 @@ main {
   display: inline-block;
   min-width: 2.75rem;
   margin-right: 0.25rem;
-  color: #4a5560;
+  color: var(--texto-suave);
 }
 
 .itens {
-  color: #4a5560;
+  color: var(--texto-suave);
 }
 
 .passos {
@@ -128,8 +143,8 @@ code {
 
 .rodape {
   padding-block: 1.5rem;
-  background: #eef2f6;
-  border-top: 1px solid #d0d7de;
+  background: var(--fundo-alt);
+  border-top: 1px solid var(--borda);
 }
 
 .rodape p {
@@ -148,13 +163,48 @@ code {
   flex: 1 1 8rem;
   height: 0.75rem;
   overflow: hidden;
-  background: #e6eaee;
-  border: 1px solid #6e7781;
+  background: var(--trilho);
+  border: 1px solid var(--borda-forte);
   border-radius: 999px;
 }
 
 .preenchido {
   display: block;
   height: 100%;
-  background: #1f7a4d;
+  background: var(--preenchido);
+}
+
+/* T2.4: foco visível em todo link e botão, ao navegar com o teclado. */
+:focus-visible {
+  outline: 3px solid var(--foco);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+main:focus {
+  outline: none; /* recebe o foco do "Pular para o conteúdo"; não é um controle */
+}
+
+/* T2.6: o link de pular aparece quando recebe o foco. */
+.pular {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 10;
+  padding: 0.5rem 1rem;
+  color: var(--link);
+  background: var(--foco-fundo);
+  border: 1px solid var(--borda-forte);
+  border-radius: 0.25rem;
+  transform: translateY(-200%);
+}
+
+.pular:focus {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .pular {
+    transition: transform 0.15s ease-out;
+  }
 }
