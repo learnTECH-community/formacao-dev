@@ -9,7 +9,12 @@
 //   GET  /v1/auth/eu      → quem está na sessão
 // O token do GitHub é usado uma vez (para ler o login) e descartado: a API não o guarda.
 // Segredos só por variável de ambiente (nomes no api/.env.example).
-import { randomBytes, timingSafeEqual } from 'node:crypto';
+//
+// T10.8: o login troca o id da sessão (uma sessão anterior é apagada) e as rotas que
+// mudam dados recusam pedido de outra origem (contra CSRF).
+// T10.9: o cookie da sessão leva o id e uma assinatura HMAC-SHA256 ("id.assinatura"),
+// feita com CHAVE_DA_SESSAO. Cookie alterado é recusado antes de olhar a sessão.
+import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 import { ErroDaApi } from './erros.mjs';
 
 export const COOKIE_DA_SESSAO = 'sessao';
@@ -50,16 +55,52 @@ export function configDoAmbiente(ambiente = process.env) {
   };
 }
 
-/** Sessões no servidor, em memória. Reiniciar a API encerra todas. */
-export function criarSessoes({ agora = Date.now, horas = HORAS_DA_SESSAO } = {}) {
-  const sessoes = new Map();
+/** T10.9: assinatura HMAC-SHA256 do id da sessão, em base64url. */
+export const assinar = (id, chave) => createHmac('sha256', chave).update(id).digest('base64url');
+
+/**
+ * T10.9: chaves da sessão lidas do ambiente. A primeira assina; as outras só conferem
+ * (troca de chave sem derrubar as sessões abertas, ver docs/seguranca.md).
+ * Sem CHAVE_DA_SESSAO, a API gera uma chave aleatória a cada início: as sessões
+ * já morrem quando a API reinicia (ficam em memória), então nada se perde.
+ */
+export function chavesDaSessao(ambiente = process.env) {
+  const chaves = [ambiente.CHAVE_DA_SESSAO, ambiente.CHAVE_DA_SESSAO_ANTERIOR].filter(Boolean);
+  for (const chave of chaves) {
+    if (chave.length < 32) throw new Error('CHAVE_DA_SESSAO e CHAVE_DA_SESSAO_ANTERIOR precisam de pelo menos 32 caracteres.');
+  }
+  return chaves.length ? chaves : [randomBytes(32).toString('base64url')];
+}
+
+/**
+ * Sessões no servidor, em memória. Reiniciar a API encerra todas.
+ * O armazém é injetável: com um armazém compartilhado (no futuro, fora da memória),
+ * a troca de chave não derruba as sessões abertas se a chave anterior seguir na lista.
+ */
+export function criarSessoes({ agora = Date.now, horas = HORAS_DA_SESSAO, chaves = chavesDaSessao({}), armazem = new Map() } = {}) {
+  if (!chaves.length) throw new Error('criarSessoes precisa de pelo menos uma chave.');
+  const sessoes = armazem;
+  /** Devolve o id se a assinatura confere com alguma chave; senão, null. */
+  const conferir = (valor) => {
+    if (typeof valor !== 'string') return null;
+    const ponto = valor.lastIndexOf('.');
+    if (ponto < 1) return null;
+    const id = valor.slice(0, ponto);
+    const assinatura = valor.slice(ponto + 1);
+    // Compara todas as chaves, em tempo constante, sem parar na primeira.
+    let ok = false;
+    for (const chave of chaves) ok = iguais(assinatura, assinar(id, chave)) || ok;
+    return ok ? id : null;
+  };
   return {
+    /** Cria a sessão e devolve o valor do cookie: "id.assinatura". */
     criar(usuario, papel) {
       const id = randomBytes(32).toString('base64url');
       sessoes.set(id, { usuario, papel, expiraEm: agora() + horas * 3_600_000 });
-      return id;
+      return `${id}.${assinar(id, chaves[0])}`;
     },
-    ler(id) {
+    ler(valor) {
+      const id = conferir(valor);
       const s = id && sessoes.get(id);
       if (!s) return null;
       if (agora() >= s.expiraEm) {
@@ -68,8 +109,9 @@ export function criarSessoes({ agora = Date.now, horas = HORAS_DA_SESSAO } = {})
       }
       return { usuario: s.usuario, papel: s.papel };
     },
-    apagar(id) {
-      return sessoes.delete(id);
+    apagar(valor) {
+      const id = conferir(valor);
+      return id ? sessoes.delete(id) : false;
     },
     get tamanho() {
       return sessoes.size;
@@ -91,6 +133,34 @@ export function exigirPapel(papel) {
     if (!pedido.sessao) return seguir(new ErroDaApi('nao-autenticado', 'Entre com a conta do GitHub para fazer isso.'));
     if (papel && pedido.sessao.papel !== papel) {
       return seguir(new ErroDaApi('proibido', `Só quem tem o papel "${papel}" pode fazer isso.`));
+    }
+    seguir();
+  };
+}
+
+const METODOS_QUE_MUDAM = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+
+/**
+ * T10.8: contra CSRF, as rotas que mudam dados só aceitam pedido do próprio painel.
+ * - Com o cabeçalho Origin (o navegador sempre manda num POST de outro site):
+ *   precisa ser uma das origens aceitas ou a da própria API. "null" é recusado.
+ * - Sem Origin: aceito só se o navegador não disser que veio de outro site
+ *   (Sec-Fetch-Site). Clientes fora do navegador (curl, testes) não mandam nenhum dos dois.
+ * Junto com o cookie SameSite=Lax, um site de fora não consegue usar a sessão.
+ * @param {string[]} origens
+ */
+export function conferirOrigem(origens) {
+  const aceitas = new Set(origens);
+  return (pedido, _resposta, seguir) => {
+    if (!METODOS_QUE_MUDAM.has(pedido.method)) return seguir();
+    const origem = pedido.get('origin');
+    const propria = `${pedido.protocol}://${pedido.get('host')}`;
+    if (origem !== undefined) {
+      if (aceitas.has(origem) || origem === propria) return seguir();
+      return seguir(new ErroDaApi('proibido', `Pedido de outra origem (${origem.slice(0, 100)}) recusado: só o painel pode mudar dados.`));
+    }
+    if (pedido.get('sec-fetch-site') === 'cross-site') {
+      return seguir(new ErroDaApi('proibido', 'Pedido de outro site recusado: só o painel pode mudar dados.'));
     }
     seguir();
   };
@@ -155,6 +225,10 @@ export function rotasDeAutenticacao({ rota, sessoes, config, buscar = fetch }) {
       throw new ErroDaApi('falha-do-github', 'Não conseguimos ler o usuário no GitHub.');
     }
 
+    // T10.8: o login sempre cria um id novo; uma sessão que já vinha no cookie é apagada
+    // (quem plantou um id antes do login não fica com a sessão de quem entrou).
+    const anterior = lerCookies(pedido.get('cookie'))[COOKIE_DA_SESSAO];
+    if (anterior) sessoes.apagar(anterior);
     const id = sessoes.criar(usuario, papelDe(usuario, config.mantenedores));
     resposta.cookie(COOKIE_DA_SESSAO, id, { ...OPCOES_DO_COOKIE, maxAge: HORAS_DA_SESSAO * 3_600_000 });
     resposta.redirect(302, config.urlDoPainel);

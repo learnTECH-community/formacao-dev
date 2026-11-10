@@ -4,7 +4,7 @@ Cada item tem um código (ex.: `T2.3`). O PR que pratica o item no **Painel de F
 
 O roadmap.sh é o nosso referencial: cada trilha cresce, na ordem dos tópicos do roadmap dela, até todo tópico ter um item prático aqui (issue de `cobertura` de cada trilha). Os itens foram escritos pela comunidade, com palavras próprias. O link de cada trilha leva ao roadmap correspondente no [roadmap.sh](https://roadmap.sh), onde está o conteúdo de estudo. Este repositório não copia o conteúdo do roadmap.sh: a licença dele só permite compartilhar os links (ver [ADR 001](docs/adr/001-roadmap-sh-so-por-link.md)).
 
-**Progresso:** 75 de 161 itens
+**Progresso:** 77 de 161 itens
 
 ## T0 · Fundamentos
 Roadmaps de referência: [Full Stack](https://roadmap.sh/full-stack) · [Computer Science](https://roadmap.sh/computer-science) · [Linux](https://roadmap.sh/linux)
@@ -193,8 +193,8 @@ Roadmap de referência: [Cyber Security](https://roadmap.sh/cyber-security)
 - [ ] **T10.5** Decidir, por escrito, que dados pessoais o painel guarda e por quê (LGPD).
 - [x] **T10.6** Modelagem de ameaças do painel. (#133)
 - [x] **T10.7** Testes contra XSS e injeção de SQL. (#134)
-- [ ] **T10.8** Sessão protegida contra roubo e CSRF. (#135)
-- [ ] **T10.9** Cookie assinado com HMAC. (#136)
+- [x] **T10.8** Sessão protegida contra roubo e CSRF. (#135)
+- [x] **T10.9** Cookie assinado com HMAC. (#136)
 - [ ] **T10.10** Só HTTPS, com HSTS. (#137)
 - [ ] **T10.11** Análise estática de segurança. (#138)
 - [ ] **T10.12** Varredura do OWASP ZAP no CI. (#139)

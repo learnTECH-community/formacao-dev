@@ -176,7 +176,7 @@ curl -si $API/v1/auth/entrar | grep -i '^location'
 
 ### GET /v1/auth/retorno
 
-O GitHub volta aqui com `code` e `state`. A API confere o `state` contra o cookie (contra CSRF: um `state` diferente ou sem cookie recebe 403), troca o `code` por um token, lê o login do usuário e **descarta o token**. Cria a sessão no servidor e põe o cookie `sessao` (`HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/v1`, 8 horas). Depois redireciona ao painel (`URL_DO_PAINEL`).
+O GitHub volta aqui com `code` e `state`. A API confere o `state` contra o cookie (contra CSRF: um `state` diferente ou sem cookie recebe 403), troca o `code` por um token, lê o login do usuário e **descarta o token**. Apaga a sessão que já vinha no cookie, cria outra no servidor e põe o cookie `sessao`, com o id e a assinatura HMAC (`id.assinatura`, T10.8 e T10.9; `HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/v1`, 8 horas). Depois redireciona ao painel (`URL_DO_PAINEL`).
 
 ```bash
 # Quem chama é o navegador, vindo do GitHub; à mão, sem o cookie do state, a resposta é 403.
@@ -352,7 +352,7 @@ O 500 nunca traz a pilha nem a mensagem interna: elas vão para o log do servido
 | 400 | `validacao` | Um ou mais campos fora da regra |
 | 400 | `json-malformado` | O corpo não é JSON |
 | 401 | `nao-autenticado` | A rota pede sessão e não há |
-| 403 | `proibido` | Sem o papel pedido, ou `state` do login que não confere |
+| 403 | `proibido` | Sem o papel pedido, `state` do login que não confere, ou pedido que muda dados vindo de outra origem (T10.8) |
 | 404 | `nao-encontrado` | Rota ou item que não existe |
 | 413 | `corpo-grande` | Corpo acima de 10 KB |
 | 429 | `limite-de-pedidos` | Pedidos demais no minuto (ver [Limite de pedidos](#limite-de-pedidos)) |

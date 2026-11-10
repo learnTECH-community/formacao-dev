@@ -4,7 +4,7 @@
 // repositório em memória.
 import express from 'express';
 import helmet from 'helmet';
-import { configDoAmbiente, criarSessoes, exigirPapel, lerSessao, rotasDeAutenticacao } from './autenticacao.mjs';
+import { chavesDaSessao, conferirOrigem, configDoAmbiente, criarSessoes, exigirPapel, lerSessao, rotasDeAutenticacao } from './autenticacao.mjs';
 import { emCache, jsonComEtag, tempoDoCache } from './cache.mjs';
 import { comConclusoes, itemExiste, leitorDeArquivo, trilhasDoTexto } from './catalogo.mjs';
 import { ErroDaApi, rotaNaoEncontrada, tratarErros } from './erros.mjs';
@@ -32,6 +32,7 @@ import { OBSOLETAS, obsoleta } from './versao.mjs';
  * @param {ReturnType<typeof configDoAmbiente>} [opcoes.configDoLogin] OAuth do GitHub e mantenedores (T5.13, T5.14).
  * @param {typeof fetch} [opcoes.buscarNoGitHub] fetch do login (simulado nos testes).
  * @param {ReturnType<typeof criarCanalDeEventos>} [opcoes.eventos] Avisos em tempo real (T5.8).
+ * @param {string[]} [opcoes.chavesDaSessao] Chaves HMAC do cookie da sessão (T10.9).
  */
 export function criarApp({
   repositorio,
@@ -45,6 +46,7 @@ export function criarApp({
   configDoLogin = configDoAmbiente(),
   buscarNoGitHub = fetch,
   eventos = criarCanalDeEventos(),
+  chavesDaSessao: chaves = chavesDaSessao(),
 }) {
   conferirRepositorio(repositorio);
   const app = express();
@@ -54,8 +56,10 @@ export function criarApp({
   app.use(registrarPedidos(log));
   app.use(helmet());
   app.use(cors(origens));
+  // T10.8: rotas que mudam dados só aceitam pedido do painel (contra CSRF).
+  app.use(conferirOrigem(origens));
   app.use(express.json({ limit: '10kb' }));
-  const sessoes = criarSessoes({ agora: () => relogio().getTime() });
+  const sessoes = criarSessoes({ agora: () => relogio().getTime(), chaves });
   app.locals.sessoes = sessoes;
   app.use(lerSessao(sessoes));
 

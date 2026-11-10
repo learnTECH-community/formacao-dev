@@ -20,6 +20,31 @@ O que protege o Painel de Formação e a API, onde está no código e qual teste
 
 Os tempos limite ficam em `api/src/tempos.mjs`. Eles valem para receber o pedido: a rota de eventos em tempo real (`/v1/eventos`) segue aberta depois que o pedido chegou.
 
+## Sessão contra roubo e CSRF (T10.8)
+
+- Cookie `sessao` com `HttpOnly` (o JavaScript da página não lê), `Secure` (só HTTPS ou localhost), `SameSite=Lax` (não vai em POST vindo de outro site), `Path=/v1` e `Max-Age` de 8 horas. A sessão também vence no servidor depois de 8 horas.
+- O login sempre cria um id novo e apaga a sessão que já vinha no cookie: quem planta um id antes do login não fica com a sessão de quem entrou (fixação de sessão).
+- Rotas que mudam dados (POST, PUT, PATCH, DELETE) passam pelo `conferirOrigem` (`api/src/autenticacao.mjs`): com o cabeçalho `Origin`, só aceitam as origens de `ORIGENS_PERMITIDAS` ou a da própria API (`Origin: null` é recusado); sem `Origin`, recusam o que o navegador marca como `Sec-Fetch-Site: cross-site`. Recusa: 403 em Problem Details.
+- O login com o GitHub tem o `state` contra CSRF (T5.13).
+- Testes: `api/test/sessao.test.mjs` (outra origem, `null`, `cross-site`, sem sessão, troca do id no login, validade) e `api/test/autenticacao.test.mjs`.
+
+## Cookie assinado com HMAC (T10.9)
+
+- O valor do cookie é `id.assinatura`: o id aleatório (32 bytes) e o HMAC-SHA256 dele, com a chave `CHAVE_DA_SESSAO` (32 caracteres ou mais, só no ambiente). Cookie com o id, a assinatura ou o formato alterado é recusado antes de olhar a sessão.
+- A comparação da assinatura usa `timingSafeEqual` e confere todas as chaves, sem parar na primeira, para o tempo não dizer qual parte bateu.
+- Sem `CHAVE_DA_SESSAO`, a API gera uma chave aleatória a cada início. Como as sessões ficam em memória e já morrem no reinício, nada se perde.
+
+### Troca da chave
+
+Quem faz: o responsável, nas variáveis do serviço publicado.
+
+1. Gere uma chave nova: `node -e "console.log(require('node:crypto').randomBytes(32).toString('base64url'))"`.
+2. Ponha a chave atual em `CHAVE_DA_SESSAO_ANTERIOR` e a nova em `CHAVE_DA_SESSAO`.
+3. Reinicie a API. Sessões novas saem com a chave nova; a anterior só confere.
+4. Depois de 8 horas (a validade da sessão), apague `CHAVE_DA_SESSAO_ANTERIOR` e reinicie.
+
+**Decisão sobre as sessões abertas:** hoje as sessões ficam em memória, então o reinício do passo 3 já encerra todas: as pessoas entram de novo com o GitHub, sem perder nenhum dado. Aceitamos isso. A `CHAVE_DA_SESSAO_ANTERIOR` passa a valer quando as sessões ficarem fora da memória (o `criarSessoes` aceita um armazém injetado; o teste da troca usa um compartilhado). Se a chave vazou, pule o passo da anterior: troque direto e reinicie, para derrubar todas as sessões (ver [docs/incidente.md](incidente.md)).
+
 ## XSS e injeção de SQL (T10.7)
 
 Os dois casos estão na categoria **Injection** do [OWASP Top 10](https://owasp.org/Top10/): A03 na lista de 2021 e A05 na de 2025. Nos dois, o ataque é o mesmo: texto que vem de fora é tratado como código.
