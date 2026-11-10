@@ -92,7 +92,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          # Node 24: o autorizador do node:sqlite (T6.11) chegou no 24.10.
+          node-version: 24
           cache: npm
           cache-dependency-path: api/package-lock.json
       - run: npm ci

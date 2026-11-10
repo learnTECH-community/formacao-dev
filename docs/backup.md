@@ -9,7 +9,7 @@ O SQLite não tem usuários: quem abre o arquivo pode tudo. No estudo, a separa�
 | De migração | `npm run migrar`, `npm run semear` e a subida da API (`src/servidor.mjs`, que abre, migra e fecha) | Tudo: criar, mudar e apagar tabelas |
 | Da API | As rotas, pelo repositório SQLite | Só `SELECT`, `INSERT`, `UPDATE`, `DELETE` e transações |
 
-A trava da conexão da API é o autorizador do SQLite (`DatabaseSync.setAuthorizer`, Node 24.10 ou mais novo), em [`api/src/banco/acesso.mjs`](../api/src/banco/acesso.mjs). Ele recusa `CREATE`, `DROP`, `ALTER`, `ATTACH` e `PRAGMA` que muda configuração. Num Node sem o autorizador, a API sobe sem a trava e diz isso na linha de início.
+A trava da conexão da API é o autorizador do SQLite (`DatabaseSync.setAuthorizer`, do Node 24.10; o CI da API roda no Node 24), em [`api/src/banco/acesso.mjs`](../api/src/banco/acesso.mjs). Ele recusa `CREATE`, `DROP`, `ALTER`, `ATTACH` e `PRAGMA` que muda configuração. Num Node sem o autorizador (o 22, por exemplo), a API sobe sem a trava e diz isso na linha de início.
 
 O teste [`api/test/acesso.test.mjs`](../api/test/acesso.test.mjs) confere que a conexão da API recusa 9 comandos de estrutura, que o repositório funciona com ela, e que as migrações só rodam pela outra.
 
