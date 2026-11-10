@@ -4,17 +4,36 @@
     "title": "API do Painel de Formação",
     "version": "1.0.0",
     "description": "Catálogo de formação da learnTECH Community e quem fez cada item. Documentação em docs/api.md.",
-    "license": { "name": "MIT", "identifier": "MIT" }
+    "license": {
+      "name": "MIT",
+      "identifier": "MIT"
+    }
   },
-  "servers": [{ "url": "http://127.0.0.1:4320", "description": "Local (a API não está publicada)" }],
+  "servers": [
+    {
+      "url": "http://127.0.0.1:4320",
+      "description": "Local (a API não está publicada)"
+    }
+  ],
   "paths": {
     "/v1/health": {
       "get": {
         "summary": "Situação da API e do repositório de dados",
         "operationId": "saude",
         "responses": {
-          "200": { "description": "API e repositório respondendo", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Saude" } } } },
-          "503": { "$ref": "#/components/responses/Problema" }
+          "200": {
+            "description": "API e repositório respondendo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Saude"
+                }
+              }
+            }
+          },
+          "503": {
+            "$ref": "#/components/responses/Problema"
+          }
         }
       }
     },
@@ -23,8 +42,19 @@
         "summary": "Trilhas, itens e quem fez cada item",
         "operationId": "catalogo",
         "responses": {
-          "200": { "description": "Catálogo", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Catalogo" } } } },
-          "500": { "$ref": "#/components/responses/Problema" }
+          "200": {
+            "description": "Catálogo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Catalogo"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema"
+          }
         }
       }
     },
@@ -38,11 +68,29 @@
           "200": {
             "description": "Texto do catálogo",
             "headers": {
-              "Deprecation": { "schema": { "type": "string" } },
-              "Sunset": { "schema": { "type": "string" } },
-              "Link": { "schema": { "type": "string" } }
+              "Deprecation": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Sunset": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Link": {
+                "schema": {
+                  "type": "string"
+                }
+              }
             },
-            "content": { "text/markdown": { "schema": { "type": "string" } } }
+            "content": {
+              "text/markdown": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
           }
         }
       }
@@ -53,14 +101,157 @@
         "operationId": "registrarConclusao",
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EntradaDaConclusao" } } }
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EntradaDaConclusao"
+              }
+            }
+          }
         },
         "responses": {
-          "201": { "description": "Conclusão gravada", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Conclusao" } } } },
-          "200": { "description": "A conclusão já existia e é devolvida como estava", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Conclusao" } } } },
-          "400": { "$ref": "#/components/responses/Problema" },
-          "404": { "$ref": "#/components/responses/Problema" },
-          "413": { "$ref": "#/components/responses/Problema" }
+          "200": {
+            "description": "A conclusão já existia e é devolvida como estava",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Conclusao"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Conclusão gravada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Conclusao"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "413": {
+            "$ref": "#/components/responses/Problema"
+          }
+        }
+      }
+    },
+    "/v1/itens": {
+      "get": {
+        "summary": "Itens com filtros e paginação",
+        "operationId": "listarItens",
+        "parameters": [
+          {
+            "name": "trilha",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^T\\d+$"
+            },
+            "description": "Código da trilha, como T2"
+          },
+          {
+            "name": "situacao",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "todos",
+                "feitos",
+                "a-fazer"
+              ],
+              "default": "todos"
+            },
+            "description": "Situação dos itens"
+          },
+          {
+            "name": "limite",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20
+            },
+            "description": "Itens por página (máximo 50)"
+          },
+          {
+            "name": "pagina",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "description": "Página, a partir de 1"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Uma página de itens",
+            "headers": {
+              "Link": {
+                "description": "Próxima página, com rel=\"next\"",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginaDeItens"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problema"
+          }
+        }
+      }
+    },
+    "/v1/itens/{codigo}": {
+      "get": {
+        "summary": "Um item pelo código",
+        "operationId": "obterItem",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^T\\d+\\.\\d+$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "O item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemDaLista"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problema"
+          }
         }
       }
     }
@@ -69,99 +260,326 @@
     "responses": {
       "Problema": {
         "description": "Erro no formato Problem Details (RFC 9457)",
-        "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/Problema" } } }
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problema"
+            }
+          }
+        }
       }
     },
     "schemas": {
       "Saude": {
         "type": "object",
-        "required": ["situacao", "repositorio"],
+        "required": [
+          "situacao",
+          "repositorio"
+        ],
         "additionalProperties": false,
         "properties": {
-          "situacao": { "const": "ok" },
+          "situacao": {
+            "const": "ok"
+          },
           "repositorio": {
             "type": "object",
-            "required": ["situacao", "conclusoes"],
+            "required": [
+              "situacao",
+              "conclusoes"
+            ],
             "additionalProperties": false,
-            "properties": { "situacao": { "const": "ok" }, "conclusoes": { "type": "integer", "minimum": 0 } }
+            "properties": {
+              "situacao": {
+                "const": "ok"
+              },
+              "conclusoes": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
           }
         }
       },
       "Catalogo": {
         "type": "object",
-        "required": ["trilhas"],
+        "required": [
+          "trilhas"
+        ],
         "additionalProperties": false,
-        "properties": { "trilhas": { "type": "array", "items": { "$ref": "#/components/schemas/Trilha" } } }
+        "properties": {
+          "trilhas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Trilha"
+            }
+          }
+        }
       },
       "Trilha": {
         "type": "object",
-        "required": ["codigo", "nome", "itens"],
+        "required": [
+          "codigo",
+          "nome",
+          "itens"
+        ],
         "additionalProperties": false,
         "properties": {
-          "codigo": { "type": "string", "pattern": "^T\\d+$" },
-          "nome": { "type": "string" },
-          "itens": { "type": "array", "items": { "$ref": "#/components/schemas/Item" } }
+          "codigo": {
+            "type": "string",
+            "pattern": "^T\\d+$"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Item"
+            }
+          }
         }
       },
       "Item": {
         "type": "object",
-        "required": ["codigo", "texto", "feito", "conclusoes"],
+        "required": [
+          "codigo",
+          "texto",
+          "feito",
+          "conclusoes"
+        ],
         "additionalProperties": false,
         "properties": {
-          "codigo": { "type": "string", "pattern": "^T\\d+\\.\\d+$" },
-          "texto": { "type": "string" },
-          "feito": { "type": "boolean" },
-          "issue": { "type": "integer", "minimum": 1 },
+          "codigo": {
+            "type": "string",
+            "pattern": "^T\\d+\\.\\d+$"
+          },
+          "texto": {
+            "type": "string"
+          },
+          "feito": {
+            "type": "boolean"
+          },
+          "issue": {
+            "type": "integer",
+            "minimum": 1
+          },
           "conclusoes": {
             "type": "array",
             "items": {
               "type": "object",
-              "required": ["usuario", "pr"],
+              "required": [
+                "usuario",
+                "pr"
+              ],
               "additionalProperties": false,
-              "properties": { "usuario": { "type": "string" }, "pr": { "type": "string", "format": "uri" } }
+              "properties": {
+                "usuario": {
+                  "type": "string"
+                },
+                "pr": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              }
             }
           }
         }
       },
       "EntradaDaConclusao": {
         "type": "object",
-        "required": ["item", "usuario", "pr"],
+        "required": [
+          "item",
+          "usuario",
+          "pr"
+        ],
         "additionalProperties": false,
         "properties": {
-          "item": { "type": "string", "pattern": "^T\\d+\\.\\d+$", "examples": ["T2.3"] },
-          "usuario": { "type": "string", "maxLength": 39, "examples": ["pessoa-ficticia"] },
-          "pr": { "type": "string", "pattern": "^https://github\\.com/[A-Za-z0-9-]+/[A-Za-z0-9._-]+/pull/\\d+$" }
+          "item": {
+            "type": "string",
+            "pattern": "^T\\d+\\.\\d+$",
+            "examples": [
+              "T2.3"
+            ]
+          },
+          "usuario": {
+            "type": "string",
+            "maxLength": 39,
+            "examples": [
+              "pessoa-ficticia"
+            ]
+          },
+          "pr": {
+            "type": "string",
+            "pattern": "^https://github\\.com/[A-Za-z0-9-]+/[A-Za-z0-9._-]+/pull/\\d+$"
+          }
         }
       },
       "Conclusao": {
         "type": "object",
-        "required": ["id", "item", "usuario", "pr", "concluidaEm"],
+        "required": [
+          "id",
+          "item",
+          "usuario",
+          "pr",
+          "concluidaEm"
+        ],
         "additionalProperties": false,
         "properties": {
-          "id": { "type": "integer", "minimum": 1 },
-          "item": { "type": "string", "pattern": "^T\\d+\\.\\d+$" },
-          "usuario": { "type": "string" },
-          "pr": { "type": "string", "format": "uri" },
-          "concluidaEm": { "type": "string", "format": "date-time" }
+          "id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "item": {
+            "type": "string",
+            "pattern": "^T\\d+\\.\\d+$"
+          },
+          "usuario": {
+            "type": "string"
+          },
+          "pr": {
+            "type": "string",
+            "format": "uri"
+          },
+          "concluidaEm": {
+            "type": "string",
+            "format": "date-time"
+          }
         }
       },
       "Problema": {
         "type": "object",
-        "required": ["type", "title", "status", "detail"],
+        "required": [
+          "type",
+          "title",
+          "status",
+          "detail"
+        ],
         "properties": {
-          "type": { "type": "string", "format": "uri" },
-          "title": { "type": "string" },
-          "status": { "type": "integer", "minimum": 400, "maximum": 599 },
-          "detail": { "type": "string" },
-          "instance": { "type": "string" },
+          "type": {
+            "type": "string",
+            "format": "uri"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer",
+            "minimum": 400,
+            "maximum": 599
+          },
+          "detail": {
+            "type": "string"
+          },
+          "instance": {
+            "type": "string"
+          },
           "erros": {
             "type": "array",
             "items": {
               "type": "object",
-              "required": ["campo", "mensagem"],
+              "required": [
+                "campo",
+                "mensagem"
+              ],
               "additionalProperties": false,
-              "properties": { "campo": { "type": "string" }, "mensagem": { "type": "string" } }
+              "properties": {
+                "campo": {
+                  "type": "string"
+                },
+                "mensagem": {
+                  "type": "string"
+                }
+              }
             }
+          }
+        }
+      },
+      "ItemDaLista": {
+        "type": "object",
+        "required": [
+          "codigo",
+          "texto",
+          "feito",
+          "conclusoes",
+          "trilha"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "codigo": {
+            "type": "string",
+            "pattern": "^T\\d+\\.\\d+$"
+          },
+          "texto": {
+            "type": "string"
+          },
+          "feito": {
+            "type": "boolean"
+          },
+          "issue": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "conclusoes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "usuario",
+                "pr"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "usuario": {
+                  "type": "string"
+                },
+                "pr": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              }
+            }
+          },
+          "trilha": {
+            "type": "string",
+            "pattern": "^T\\d+$"
+          }
+        }
+      },
+      "PaginaDeItens": {
+        "type": "object",
+        "required": [
+          "itens",
+          "total",
+          "pagina",
+          "limite",
+          "proxima"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ItemDaLista"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "pagina": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "limite": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50
+          },
+          "proxima": {
+            "type": [
+              "string",
+              "null"
+            ]
           }
         }
       }
