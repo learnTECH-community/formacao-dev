@@ -5,7 +5,7 @@ import { after, before, describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { criarApp } from '../src/app.mjs';
 import { criarRepositorioEmMemoria } from '../src/repositorios/memoria.mjs';
-import { conclusao, subir } from './apoio.mjs';
+import { LOG_MUDO, conclusao, subir } from './apoio.mjs';
 import { pedirComContrato, problemasDoContrato } from './contrato.mjs';
 
 const JSON_ = { 'Content-Type': 'application/json' };
@@ -49,7 +49,7 @@ describe('contrato da API contra o openapi.json', () => {
         throw new Error('falha');
       },
       repositorio: { ...criarRepositorioEmMemoria(), saude: async () => Promise.reject(new Error('sem banco')) },
-      log: { info: () => {}, error: () => {} },
+      log: LOG_MUDO,
     });
     t.after(falho.fechar);
     const quinhentos = await pedirComContrato(falho.base, '/v1/catalogo');

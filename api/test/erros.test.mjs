@@ -1,13 +1,13 @@
 // T5.9: erros centralizados no formato Problem Details (RFC 9457).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { subir } from './apoio.mjs';
+import { LOG_MUDO, subir } from './apoio.mjs';
 
 const CAMPOS = ['type', 'title', 'status', 'detail'];
 
 async function pedir(url, opcoes) {
   const resposta = await fetch(url, opcoes);
-  return { status: resposta.status, tipo: resposta.headers.get('content-type'), corpo: await resposta.json() };
+  return { status: resposta.status, tipo: resposta.headers.get('content-type'), id: resposta.headers.get('x-request-id'), corpo: await resposta.json() };
 }
 
 function conferirProblema(r, status) {
@@ -52,7 +52,7 @@ test('500: erro de código assíncrono chega ao middleware, sem a pilha na respo
       await new Promise((r) => setTimeout(r, 5));
       throw new Error('disco cheio em /segredo/caminho');
     },
-    log: { info: () => {}, error: (dados) => registros.push(dados) },
+    log: { ...LOG_MUDO, error: (dados) => registros.push(dados) },
   });
   t.after(api.fechar);
   const r = await pedir(`${api.base}/v1/catalogo`);
@@ -61,6 +61,8 @@ test('500: erro de código assíncrono chega ao middleware, sem a pilha na respo
   const texto = JSON.stringify(r.corpo);
   assert.doesNotMatch(texto, /segredo|disco cheio|at /);
   // A pilha fica no log do servidor.
-  assert.equal(registros.length, 1);
-  assert.match(registros[0].pilha, /disco cheio/);
+  const erros = registros.filter((r) => r.msg === 'erro inesperado');
+  assert.equal(erros.length, 1);
+  assert.match(erros[0].pilha, /disco cheio/);
+  assert.equal(erros[0].id, r.id);
 });

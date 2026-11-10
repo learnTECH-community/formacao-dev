@@ -6,6 +6,7 @@ import express from 'express';
 import helmet from 'helmet';
 import { comConclusoes, itemExiste, leitorDeArquivo, trilhasDoTexto } from './catalogo.mjs';
 import { ErroDaApi, rotaNaoEncontrada, tratarErros } from './erros.mjs';
+import { criarLog, registrarPedidos } from './log.mjs';
 import { conferirRepositorio } from './repositorios/contrato.mjs';
 import { esquemaDaConclusao, validar } from './validacao.mjs';
 import { OBSOLETAS, obsoleta } from './versao.mjs';
@@ -18,12 +19,13 @@ const LOG_PADRAO = { info: () => {}, error: (dados) => console.error(JSON.string
  * @param {() => Promise<string>} [opcoes.lerCatalogo] Devolve o texto do CATALOGO.md.
  * @param {string[]} [opcoes.origens] Origens que o CORS aceita (o endereço do painel).
  * @param {() => Date} [opcoes.relogio]
- * @param {{ info: Function, error: Function }} [opcoes.log]
+ * @param {ReturnType<typeof criarLog>} [opcoes.log] Log estruturado (T5.10).
  */
-export function criarApp({ repositorio, lerCatalogo = leitorDeArquivo(), origens = [], relogio = () => new Date(), log = LOG_PADRAO }) {
+export function criarApp({ repositorio, lerCatalogo = leitorDeArquivo(), origens = [], relogio = () => new Date(), log = criarLog() }) {
   conferirRepositorio(repositorio);
   const app = express();
   app.disable('x-powered-by');
+  app.use(registrarPedidos(log));
   app.use(helmet());
   app.use(cors(origens));
   app.use(express.json({ limit: '10kb' }));
@@ -85,6 +87,7 @@ function cors(origens) {
       resposta.set('Vary', 'Origin');
       resposta.set('Access-Control-Allow-Headers', 'Content-Type, If-None-Match');
       resposta.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+      resposta.set('Access-Control-Expose-Headers', 'X-Request-Id');
     }
     if (pedido.method === 'OPTIONS') return resposta.sendStatus(204);
     seguir();
