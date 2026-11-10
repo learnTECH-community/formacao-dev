@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router';
 import { BarraProgresso } from '../componentes/BarraProgresso';
 import { ItemDoCatalogo } from '../componentes/ItemDoCatalogo';
 import { Roadmaps } from '../componentes/Roadmaps';
+import { useAcoesDePreferencias, usePreferencias } from '../estado/usePreferencias';
 import { progressoDe } from '../progresso';
 import type { PropsDePagina } from '../rotas';
 import { useFocoNoTitulo, useTituloDaAba } from '../useFocoNoTitulo';
@@ -11,6 +12,8 @@ import { useFocoNoTitulo, useTituloDaAba } from '../useFocoNoTitulo';
 export function DetalheTrilha({ catalogo, pedidoDeFoco }: PropsDePagina) {
   const { codigo = '' } = useParams();
   const titulo = useRef<HTMLHeadingElement>(null);
+  const { fixados } = usePreferencias();
+  const despachar = useAcoesDePreferencias();
   const trilha = catalogo.situacao === 'pronto' ? catalogo.trilhas.find((t) => t.codigo === codigo) : undefined;
   const naoExiste = catalogo.situacao !== 'carregando' && catalogo.situacao !== 'erro' && !trilha;
 
@@ -33,7 +36,12 @@ export function DetalheTrilha({ catalogo, pedidoDeFoco }: PropsDePagina) {
           <h3>Itens da trilha</h3>
           <ul className="lista-itens">
             {trilha.itens.map((item) => (
-              <ItemDoCatalogo key={item.codigo} item={item} />
+              <ItemDoCatalogo
+                key={item.codigo}
+                item={item}
+                fixado={fixados.includes(item.codigo)}
+                aoAlternarFixado={(c) => despachar({ tipo: 'alternar-fixado', codigo: c })}
+              />
             ))}
           </ul>
         </>
