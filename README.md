@@ -59,6 +59,7 @@ O painel fica em `painel/` e lê o `CATALOGO.md` da raiz (pilha na [ADR 002](doc
 ```bash
 npm ci                                  # instala as dependências de desenvolvimento
 npm run painel                          # abre o painel em http://127.0.0.1:4317/ (Vite)
+npm run typecheck                       # confere os tipos do painel (TypeScript, strict)
 npm test                                # testes do catálogo e das funções do painel (Vitest)
 npm run build                           # gera o site em dist/, com o CATALOGO.md junto
 npx playwright install chromium         # baixa o navegador dos testes (uma vez)
