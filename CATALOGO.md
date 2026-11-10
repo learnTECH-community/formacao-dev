@@ -4,7 +4,7 @@ Cada item tem um código (ex.: `T2.3`). Ele é marcado com `[x]` quando o PR que
 
 O roadmap.sh é o nosso referencial: cada trilha cresce, na ordem dos tópicos do roadmap dela, até todo tópico ter um item prático aqui (issue de `cobertura` de cada trilha). Os itens foram escritos pela comunidade, com palavras próprias. O link de cada trilha leva ao roadmap correspondente no [roadmap.sh](https://roadmap.sh), onde está o conteúdo de estudo. Este repositório não copia o conteúdo do roadmap.sh: a licença dele só permite compartilhar os links (ver [ADR 001](docs/adr/001-roadmap-sh-so-por-link.md)).
 
-**Progresso:** 1 de 63 itens
+**Progresso:** 3 de 63 itens
 
 ## T0 · Fundamentos
 Roadmaps de referência: [Full Stack](https://roadmap.sh/full-stack) · [Computer Science](https://roadmap.sh/computer-science) · [Linux](https://roadmap.sh/linux)
@@ -27,8 +27,8 @@ Roadmap de referência: [Git e GitHub](https://roadmap.sh/git-github)
 ## T2 · Frontend base
 Roadmap de referência: [Frontend](https://roadmap.sh/frontend)
 
-- [ ] **T2.1** Montar a página do painel com HTML semântico: cabeçalho, navegação, conteúdo principal e rodapé.
-- [ ] **T2.2** Estilizar com CSS responsivo: a página funciona de 320 px a 1440 px, sem rolagem lateral.
+- [x] **T2.1** Montar a página do painel com HTML semântico: cabeçalho, navegação, conteúdo principal e rodapé.
+- [x] **T2.2** Estilizar com CSS responsivo: a página funciona de 320 px a 1440 px, sem rolagem lateral.
 - [ ] **T2.3** Mostrar o progresso de cada trilha com uma barra acessível (`role="progressbar"` e texto equivalente).
 - [ ] **T2.4** Garantir contraste AA e foco visível em todos os controles.
 - [ ] **T2.5** Oferecer tema claro e escuro, que respeita a preferência do sistema.
