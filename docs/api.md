@@ -129,6 +129,30 @@ T0,T0.1,"Explicar, num documento do repositório, o caminho de uma requisição:
 T0,T0.2,"Rodar o projeto só pelo terminal: clonar, instalar, testar e subir, com os comandos no README.",sim,,
 ```
 
+### GET /v1/progresso/trilhas
+
+O progresso de cada trilha, na ordem do catálogo, lido da view `v_progresso_trilha` (T6.10). Um item conta como feito se está com `[x]` no catálogo ou tem uma conclusão; o percentual arredonda para baixo, como o painel. Responde com `ETag`.
+
+```bash
+curl -s $API/v1/progresso/trilhas
+```
+
+```json
+{ "trilhas": [{ "trilha": "T0", "nome": "Fundamentos", "feitos": 4, "total": 12, "percentual": 33 }] }
+```
+
+### GET /v1/progresso/pessoas
+
+Quantos itens cada pessoa concluiu, em quantas trilhas, o percentual do catálogo e a primeira e a última conclusão. Quem concluiu mais vem antes; no empate, ordem alfabética. As consultas e o plano de execução estão em [docs/consultas.md](consultas.md).
+
+```bash
+curl -s $API/v1/progresso/pessoas
+```
+
+```json
+{ "pessoas": [{ "usuario": "pessoa-ficticia-01", "concluidos": 41, "trilhas": 4, "percentual": 25, "primeira": "2026-09-28T12:00:00.000Z", "ultima": "2026-11-04T12:00:00.000Z" }] }
+```
+
 ### GET /v1/catalogo.md
 
 **Rota antiga.** Devolve o texto do `CATALOGO.md`, para o painel que ainda lê o arquivo. Antiga desde 10/11/2026; sai do ar em 08/02/2027. Use `GET /v1/catalogo`. A resposta traz os cabeçalhos `Deprecation`, `Sunset` e `Link` (ver [Versões e desativação](#versões-e-desativação)).

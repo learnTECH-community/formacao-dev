@@ -97,6 +97,7 @@ As variáveis estão em `api/.env.example` (só os nomes e valores de exemplo). 
 - [docs/MVP.md](docs/MVP.md): estado do projeto pela régua da comunidade.
 - [docs/api.md](docs/api.md): rotas da API, exemplos, erros e a política de versão.
 - [docs/banco.md](docs/banco.md): tabelas, migrações e dados de teste do banco.
+- [docs/consultas.md](docs/consultas.md): consultas do painel, plano de execução e quando usar view.
 - [docs/plano-de-testes.md](docs/plano-de-testes.md): o que se testa em cada nível e os riscos que cada teste cobre.
 - [docs/como-a-web-funciona.md](docs/como-a-web-funciona.md): do endereço digitado até o painel na tela.
 - [docs/adr/](docs/adr/): decisões.
