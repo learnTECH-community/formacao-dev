@@ -71,6 +71,7 @@ npm run test:e2e                        # testes do painel no navegador, temas c
 - [CATALOGO.md](CATALOGO.md): as trilhas e os itens.
 - [CONTRIBUTING.md](CONTRIBUTING.md): fluxo, PR e revisão.
 - [docs/MVP.md](docs/MVP.md): estado do projeto pela régua da comunidade.
+- [docs/como-a-web-funciona.md](docs/como-a-web-funciona.md): do endereço digitado até o painel na tela.
 - [docs/adr/](docs/adr/): decisões.
 
 ## Licença
