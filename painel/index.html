@@ -8,73 +8,10 @@
     <meta name="color-scheme" content="light dark">
     <link rel="stylesheet" href="estilo.css">
     <script src="./tema.js"></script>
-    <script type="module" src="./src/main.ts"></script>
+    <script type="module" src="./src/main.tsx"></script>
   </head>
   <body>
-    <a class="pular" href="#conteudo">Pular para o conteúdo</a>
-    <header class="topo">
-      <div class="faixa">
-        <p class="marca">learnTECH Community</p>
-        <h1>Painel de Formação</h1>
-        <p class="resumo">As 12 trilhas do catálogo de formação fullstack. Cada item é praticado neste painel.</p>
-        <nav aria-label="Principal">
-          <ul class="menu">
-            <li><a href="#trilhas">Trilhas</a></li>
-            <li><a href="#itens">Itens</a></li>
-            <li><a href="#como-participar">Como participar</a></li>
-            <li><a href="https://github.com/learnTECH-community/formacao-dev/blob/main/CATALOGO.md">Catálogo no GitHub</a></li>
-          </ul>
-        </nav>
-        <div class="total" id="total"></div>
-        <button type="button" class="botao-tema" id="botao-tema" aria-pressed="false" hidden>Tema escuro</button>
-      </div>
-    </header>
-    <main id="conteudo" tabindex="-1">
-      <noscript><p class="faixa aviso">O painel precisa de JavaScript para ler o catálogo. O catálogo completo está no <a href="https://github.com/learnTECH-community/formacao-dev/blob/main/CATALOGO.md">GitHub</a>.</p></noscript>
-      <div class="faixa estado" id="estado" tabindex="-1">
-        <p class="aviso" id="aviso-status" role="status"></p>
-        <div class="aviso aviso-erro" id="aviso-erro" role="alert"></div>
-      </div>
-      <section class="faixa" id="trilhas" aria-labelledby="titulo-trilhas">
-        <h2 id="titulo-trilhas" tabindex="-1">Trilhas</h2>
-        <ol class="trilhas" id="lista-trilhas"></ol>
-      </section>
-      <section class="faixa" id="itens" aria-labelledby="titulo-itens">
-        <h2 id="titulo-itens">Itens</h2>
-        <form class="filtros" id="filtros" aria-label="Filtrar itens">
-          <div class="campo">
-            <label for="filtro-trilha">Trilha</label>
-            <select id="filtro-trilha" name="trilha">
-              <option value="">Todas as trilhas</option>
-            </select>
-          </div>
-          <div class="campo">
-            <label for="filtro-situacao">Situação</label>
-            <select id="filtro-situacao" name="situacao">
-              <option value="todos">Todos</option>
-              <option value="feitos">Feitos</option>
-              <option value="a-fazer">A fazer</option>
-            </select>
-          </div>
-        </form>
-        <p class="contagem" id="contagem" aria-live="polite"></p>
-        <div id="lista-itens"></div>
-      </section>
-      <section class="faixa" id="como-participar" aria-labelledby="titulo-participar">
-        <h2 id="titulo-participar">Como participar</h2>
-        <ol class="passos">
-          <li>Escolha um item no catálogo ou uma issue com o rótulo <code>item-do-catalogo</code>.</li>
-          <li>Comente na issue que vai fazer.</li>
-          <li>Pratique neste painel e abra um PR com o código do item no título.</li>
-        </ol>
-        <p>O passo a passo completo está no <a href="https://github.com/learnTECH-community/formacao-dev/blob/main/CONTRIBUTING.md">guia de contribuição</a>.</p>
-      </section>
-    </main>
-    <footer class="rodape">
-      <div class="faixa">
-        <p>Código e textos sob licença MIT. Sem afiliação com o roadmap.sh: usamos só os links das trilhas.</p>
-        <p><a href="https://github.com/learnTECH-community/formacao-dev">Repositório no GitHub</a></p>
-      </div>
-    </footer>
+    <noscript><p class="faixa aviso">O painel precisa de JavaScript para ler o catálogo. O catálogo completo está no <a href="https://github.com/learnTECH-community/formacao-dev/blob/main/CATALOGO.md">GitHub</a>.</p></noscript>
+    <div id="app"></div>
   </body>
 </html>

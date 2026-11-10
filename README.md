@@ -27,7 +27,7 @@ O texto dos tópicos fica no roadmap.sh: o catálogo traz a nossa tarefa prátic
 
 ## O projeto prático: Painel de Formação
 
-Uma página que lê o próprio `CATALOGO.md` e mostra o progresso de cada trilha, quem fez cada item e o PR que o fez. Ele nasce simples (HTML e CSS, trilha T2) e cresce a cada trilha: JavaScript e TypeScript (T3), React (T4), API em Node (T5), banco (T6), testes (T7), publicação (T9).
+Uma página que lê o próprio `CATALOGO.md` e mostra o progresso de cada trilha, quem fez cada item e o PR que o fez. Ele nasceu simples (HTML e CSS, trilha T2) e cresce a cada trilha: JavaScript e TypeScript (T3), React (T4, em uso), API em Node (T5), banco (T6), testes (T7), publicação (T9).
 
 ## Fora deste repositório: contribuir em outros projetos
 
@@ -54,7 +54,7 @@ npm test                               # testes do catálogo e do painel
 
 ## Rodar o painel
 
-O painel fica em `painel/` e lê o `CATALOGO.md` da raiz (pilha na [ADR 002](docs/adr/002-pilha-do-painel.md)). Requisitos: Git e Node 22.12 ou mais novo (o mesmo do `engines` no `package.json`). Tudo roda pelo terminal:
+O painel fica em `painel/`, é um app React com Vite e TypeScript e lê o `CATALOGO.md` da raiz (pilha nas ADRs [002](docs/adr/002-pilha-do-painel.md) e [003](docs/adr/003-react-no-painel.md)). Requisitos: Git e Node 22.12 ou mais novo (o mesmo do `engines` no `package.json`). Tudo roda pelo terminal:
 
 ```bash
 git clone https://github.com/learnTECH-community/formacao-dev.git   # baixa o repositório
@@ -62,6 +62,7 @@ cd formacao-dev                         # entra na pasta do projeto
 npm ci                                  # instala as dependências de desenvolvimento
 npm run painel                          # abre o painel em http://127.0.0.1:4317/ (Vite); Ctrl+C para parar
 npm run typecheck                       # confere os tipos do painel (TypeScript, strict)
+npm run lint                            # confere o código com o oxlint (React, hooks e acessibilidade)
 npm test                                # testes do catálogo e das funções do painel (Vitest)
 npm run build                           # gera o site em dist/, com o CATALOGO.md junto
 npx playwright install chromium         # baixa o navegador dos testes (uma vez)

@@ -12,7 +12,8 @@
     "painel": "vite --host 127.0.0.1 --port 4317",
     "catalogo": "node scripts/catalogo.mjs",
     "catalogo:atualizar": "node scripts/catalogo.mjs --atualizar",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint --deny-warnings"
   },
   "engines": {
     "node": ">=22.12"
@@ -21,8 +22,16 @@
     "@axe-core/playwright": "^4.14.0",
     "@playwright/test": "^1.65.0",
     "@types/node": "^22.20.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.3.0",
+    "oxlint": "^1.93.0",
     "typescript": "^5.9.3",
     "vite": "^8.3.7",
     "vitest": "^5.1.0"
+  },
+  "dependencies": {
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
   }
 }
