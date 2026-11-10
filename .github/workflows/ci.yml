@@ -183,8 +183,11 @@ jobs:
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/api/metricas)" = 404
       - name: O banco fica na rede interna, sem porta exposta
         run: |
-          docker compose port banco 27017 && exit 1 || echo "banco sem porta publicada"
-          docker compose port api 4320 && exit 1 || echo "api sem porta publicada"
+          for servico in banco api; do
+            portas=$(docker inspect "$(docker compose ps -q $servico)" --format '{{json .NetworkSettings.Ports}}')
+            echo "$servico: $portas"
+            if grep -q HostPort <<< "$portas"; then echo "$servico tem porta publicada"; exit 1; fi
+          done
           # O Nginx (rede borda) não alcança o banco (rede interna).
           ! docker compose exec -T web wget -q -T 3 -O /dev/null http://banco:27017/
           # A API (nas duas redes) alcança.
