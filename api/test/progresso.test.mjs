@@ -12,6 +12,7 @@ import { comConclusoes, trilhasDoTexto } from '../src/catalogo.mjs';
 import { criarRepositorioEmMemoria } from '../src/repositorios/memoria.mjs';
 import { criarRepositorioSqlite } from '../src/repositorios/sqlite.mjs';
 import { CATALOGO_DE_TESTE, conclusao, subir } from './apoio.mjs';
+import { SEM_MONGO, repositorioMongoDeTeste } from './mongo.mjs';
 
 const TRILHAS = trilhasDoTexto(CATALOGO_DE_TESTE);
 
@@ -24,12 +25,13 @@ function sqlite() {
 const IMPLEMENTACOES = [
   ['memória', () => criarRepositorioEmMemoria()],
   ['SQLite', () => sqlite().repositorio],
+  ['MongoDB', repositorioMongoDeTeste, SEM_MONGO],
 ];
 
-for (const [nome, criar] of IMPLEMENTACOES) {
-  describe(`progresso: ${nome}`, () => {
+for (const [nome, criar, pular = false] of IMPLEMENTACOES) {
+  describe(`progresso: ${nome}`, { skip: pular }, () => {
     test('por trilha, na ordem do catálogo: marcado ou com conclusão conta como feito', async () => {
-      const r = criar();
+      const r = await criar();
       await r.gravarCatalogo(TRILHAS);
       await r.registrarConclusao(conclusao('T2.1', 'pessoa-a', 1));
       await r.registrarConclusao(conclusao('T2.1', 'pessoa-b', 2));
@@ -41,7 +43,7 @@ for (const [nome, criar] of IMPLEMENTACOES) {
     });
 
     test('por pessoa: concluídos, trilhas, percentual e datas; empate em ordem alfabética', async () => {
-      const r = criar();
+      const r = await criar();
       await r.gravarCatalogo(TRILHAS);
       await r.registrarConclusao({ ...conclusao('T1.2', 'pessoa-b', 1), concluidaEm: '2026-11-01T10:00:00.000Z' });
       await r.registrarConclusao({ ...conclusao('T2.1', 'pessoa-b', 2), concluidaEm: '2026-11-03T10:00:00.000Z' });
@@ -55,7 +57,7 @@ for (const [nome, criar] of IMPLEMENTACOES) {
     });
 
     test('trilha sem item mostra 0%, sem dividir por zero', async () => {
-      const r = criar();
+      const r = await criar();
       await r.gravarCatalogo([{ codigo: 'T1', nome: 'Vazia', itens: [] }]);
       assert.deepEqual(await r.progressoPorTrilha(), [{ trilha: 'T1', nome: 'Vazia', feitos: 0, total: 0, percentual: 0 }]);
     });

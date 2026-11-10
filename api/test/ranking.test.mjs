@@ -9,6 +9,7 @@ import { trilhasDoTexto } from '../src/catalogo.mjs';
 import { criarRepositorioEmMemoria } from '../src/repositorios/memoria.mjs';
 import { criarRepositorioSqlite } from '../src/repositorios/sqlite.mjs';
 import { CATALOGO_DE_TESTE, subir } from './apoio.mjs';
+import { SEM_MONGO, repositorioMongoDeTeste } from './mongo.mjs';
 
 const c = (item, usuario, data) => ({ item, usuario, pr: 'https://github.com/exemplo/repo/pull/1', concluidaEm: `${data}T12:00:00.000Z` });
 
@@ -43,13 +44,14 @@ function sqlite() {
   return criarRepositorioSqlite(banco);
 }
 
-for (const [nome, criar] of [
+for (const [nome, criar, pular = false] of [
   ['memória', () => criarRepositorioEmMemoria()],
   ['SQLite', sqlite],
+  ['MongoDB', repositorioMongoDeTeste, SEM_MONGO],
 ]) {
-  describe(`ranking e semanas: ${nome}`, () => {
+  describe(`ranking e semanas: ${nome}`, { skip: pular }, () => {
     const preparar = async () => {
-      const r = criar();
+      const r = await criar();
       await r.gravarCatalogo(trilhasDoTexto(CATALOGO_DE_TESTE));
       for (const x of CONCLUSOES) await r.registrarConclusao(x);
       return r;
@@ -64,7 +66,7 @@ for (const [nome, criar] of [
     });
 
     test('sem conclusões, listas vazias', async () => {
-      const r = criar();
+      const r = await criar();
       assert.deepEqual(await r.ranking(), []);
       assert.deepEqual(await r.progressoSemanal(), []);
     });
