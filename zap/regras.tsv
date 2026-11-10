@@ -2,3 +2,4 @@
 #   id<TAB>IGNORE|WARN|FAIL<TAB>(motivo)
 # IGNORE só com motivo escrito: falso positivo ou risco aceito, com a issue que trata.
 # Os ids estão em https://www.zaproxy.org/docs/alerts/
+10116	IGNORE	(a versão do ZAP é fixada de propósito no varreduras.yml, para o resultado não mudar sozinho; atualizar por PR)
