@@ -1,0 +1,170 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "API do Painel de Formação",
+    "version": "1.0.0",
+    "description": "Catálogo de formação da learnTECH Community e quem fez cada item. Documentação em docs/api.md.",
+    "license": { "name": "MIT", "identifier": "MIT" }
+  },
+  "servers": [{ "url": "http://127.0.0.1:4320", "description": "Local (a API não está publicada)" }],
+  "paths": {
+    "/v1/health": {
+      "get": {
+        "summary": "Situação da API e do repositório de dados",
+        "operationId": "saude",
+        "responses": {
+          "200": { "description": "API e repositório respondendo", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Saude" } } } },
+          "503": { "$ref": "#/components/responses/Problema" }
+        }
+      }
+    },
+    "/v1/catalogo": {
+      "get": {
+        "summary": "Trilhas, itens e quem fez cada item",
+        "operationId": "catalogo",
+        "responses": {
+          "200": { "description": "Catálogo", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Catalogo" } } } },
+          "500": { "$ref": "#/components/responses/Problema" }
+        }
+      }
+    },
+    "/v1/catalogo.md": {
+      "get": {
+        "summary": "Texto do CATALOGO.md (rota antiga)",
+        "operationId": "catalogoEmMarkdown",
+        "deprecated": true,
+        "description": "Antiga desde 10/11/2026; sai do ar em 08/02/2027. Use /v1/catalogo.",
+        "responses": {
+          "200": {
+            "description": "Texto do catálogo",
+            "headers": {
+              "Deprecation": { "schema": { "type": "string" } },
+              "Sunset": { "schema": { "type": "string" } },
+              "Link": { "schema": { "type": "string" } }
+            },
+            "content": { "text/markdown": { "schema": { "type": "string" } } }
+          }
+        }
+      }
+    },
+    "/v1/conclusoes": {
+      "post": {
+        "summary": "Registrar que uma pessoa fez um item",
+        "operationId": "registrarConclusao",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EntradaDaConclusao" } } }
+        },
+        "responses": {
+          "201": { "description": "Conclusão gravada", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Conclusao" } } } },
+          "200": { "description": "A conclusão já existia e é devolvida como estava", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Conclusao" } } } },
+          "400": { "$ref": "#/components/responses/Problema" },
+          "404": { "$ref": "#/components/responses/Problema" },
+          "413": { "$ref": "#/components/responses/Problema" }
+        }
+      }
+    }
+  },
+  "components": {
+    "responses": {
+      "Problema": {
+        "description": "Erro no formato Problem Details (RFC 9457)",
+        "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/Problema" } } }
+      }
+    },
+    "schemas": {
+      "Saude": {
+        "type": "object",
+        "required": ["situacao", "repositorio"],
+        "additionalProperties": false,
+        "properties": {
+          "situacao": { "const": "ok" },
+          "repositorio": {
+            "type": "object",
+            "required": ["situacao", "conclusoes"],
+            "additionalProperties": false,
+            "properties": { "situacao": { "const": "ok" }, "conclusoes": { "type": "integer", "minimum": 0 } }
+          }
+        }
+      },
+      "Catalogo": {
+        "type": "object",
+        "required": ["trilhas"],
+        "additionalProperties": false,
+        "properties": { "trilhas": { "type": "array", "items": { "$ref": "#/components/schemas/Trilha" } } }
+      },
+      "Trilha": {
+        "type": "object",
+        "required": ["codigo", "nome", "itens"],
+        "additionalProperties": false,
+        "properties": {
+          "codigo": { "type": "string", "pattern": "^T\\d+$" },
+          "nome": { "type": "string" },
+          "itens": { "type": "array", "items": { "$ref": "#/components/schemas/Item" } }
+        }
+      },
+      "Item": {
+        "type": "object",
+        "required": ["codigo", "texto", "feito", "conclusoes"],
+        "additionalProperties": false,
+        "properties": {
+          "codigo": { "type": "string", "pattern": "^T\\d+\\.\\d+$" },
+          "texto": { "type": "string" },
+          "feito": { "type": "boolean" },
+          "issue": { "type": "integer", "minimum": 1 },
+          "conclusoes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["usuario", "pr"],
+              "additionalProperties": false,
+              "properties": { "usuario": { "type": "string" }, "pr": { "type": "string", "format": "uri" } }
+            }
+          }
+        }
+      },
+      "EntradaDaConclusao": {
+        "type": "object",
+        "required": ["item", "usuario", "pr"],
+        "additionalProperties": false,
+        "properties": {
+          "item": { "type": "string", "pattern": "^T\\d+\\.\\d+$", "examples": ["T2.3"] },
+          "usuario": { "type": "string", "maxLength": 39, "examples": ["pessoa-ficticia"] },
+          "pr": { "type": "string", "pattern": "^https://github\\.com/[A-Za-z0-9-]+/[A-Za-z0-9._-]+/pull/\\d+$" }
+        }
+      },
+      "Conclusao": {
+        "type": "object",
+        "required": ["id", "item", "usuario", "pr", "concluidaEm"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "integer", "minimum": 1 },
+          "item": { "type": "string", "pattern": "^T\\d+\\.\\d+$" },
+          "usuario": { "type": "string" },
+          "pr": { "type": "string", "format": "uri" },
+          "concluidaEm": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Problema": {
+        "type": "object",
+        "required": ["type", "title", "status", "detail"],
+        "properties": {
+          "type": { "type": "string", "format": "uri" },
+          "title": { "type": "string" },
+          "status": { "type": "integer", "minimum": 400, "maximum": 599 },
+          "detail": { "type": "string" },
+          "instance": { "type": "string" },
+          "erros": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["campo", "mensagem"],
+              "additionalProperties": false,
+              "properties": { "campo": { "type": "string" }, "mensagem": { "type": "string" } }
+            }
+          }
+        }
+      }
+    }
+  }
+}

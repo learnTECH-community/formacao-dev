@@ -8,6 +8,7 @@ import { comConclusoes, itemExiste, leitorDeArquivo, trilhasDoTexto } from './ca
 import { ErroDaApi, rotaNaoEncontrada, tratarErros } from './erros.mjs';
 import { conferirRepositorio } from './repositorios/contrato.mjs';
 import { esquemaDaConclusao, validar } from './validacao.mjs';
+import { OBSOLETAS, obsoleta } from './versao.mjs';
 
 const LOG_PADRAO = { info: () => {}, error: (dados) => console.error(JSON.stringify(dados)) };
 
@@ -29,9 +30,17 @@ export function criarApp({ repositorio, lerCatalogo = leitorDeArquivo(), origens
 
   const trilhas = async () => trilhasDoTexto(await lerCatalogo());
   const v1 = express.Router();
+  // T5.3: toda rota passa por aqui e fica listada em app.locals.rotas; um teste
+  // confere que cada uma está no api/openapi.json.
+  const rotas = [];
+  const rota = (metodo, caminho, ...funcoes) => {
+    rotas.push({ metodo, caminho: `/v1${caminho}` });
+    v1[metodo](caminho, ...funcoes);
+  };
+  app.locals.rotas = rotas;
 
   // /health lê o repositório: um /health que não toca os dados não prova a conexão.
-  v1.get('/health', async (_pedido, resposta) => {
+  rota('get', '/health', async (_pedido, resposta) => {
     try {
       const { conclusoes } = await repositorio.saude();
       resposta.json({ situacao: 'ok', repositorio: { situacao: 'ok', conclusoes } });
@@ -40,19 +49,24 @@ export function criarApp({ repositorio, lerCatalogo = leitorDeArquivo(), origens
     }
   });
 
-  v1.get('/catalogo', async (_pedido, resposta) => {
+  rota('get', '/catalogo', async (_pedido, resposta) => {
     const conclusoes = await repositorio.listarConclusoes();
     resposta.json({ trilhas: comConclusoes(await trilhas(), conclusoes) });
   });
 
   // T5.2: registrar uma conclusão. 201 na primeira vez; 200 se já existia (T6.5).
-  v1.post('/conclusoes', async (pedido, resposta) => {
+  rota('post', '/conclusoes', async (pedido, resposta) => {
     const dados = validar(esquemaDaConclusao, pedido.body);
     if (!itemExiste(await trilhas(), dados.item)) {
       throw new ErroDaApi('nao-encontrado', `O item ${dados.item} não existe no catálogo.`);
     }
     const { conclusao, criada } = await repositorio.registrarConclusao({ ...dados, concluidaEm: relogio().toISOString() });
     resposta.status(criada ? 201 : 200).json(conclusao);
+  });
+
+  // T5.15: rota antiga, mantida até a data de remoção, com os cabeçalhos de aviso.
+  rota('get', '/catalogo.md', obsoleta(OBSOLETAS['/v1/catalogo.md']), async (_pedido, resposta) => {
+    resposta.type('text/markdown; charset=utf-8').send(await lerCatalogo());
   });
 
   app.use('/v1', v1);
