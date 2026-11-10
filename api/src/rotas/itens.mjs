@@ -3,6 +3,7 @@
 import { z } from 'zod';
 import { comConclusoes } from '../catalogo.mjs';
 import { ErroDaApi } from '../erros.mjs';
+import { jsonComEtag } from '../cache.mjs';
 import { CODIGO_DO_ITEM, validar } from '../validacao.mjs';
 
 export const LIMITE_PADRAO = 20;
@@ -62,7 +63,7 @@ export function rotasDeItens({ rota, trilhas, repositorio }) {
     const { total, itens, haMais } = paginar(todos, filtro);
     const proxima = haMais ? enderecoDaPagina(filtro, filtro.pagina + 1) : null;
     if (proxima) resposta.set('Link', `<${proxima}>; rel="next"`);
-    resposta.json({ itens, total, pagina: filtro.pagina, limite: filtro.limite, proxima });
+    jsonComEtag(pedido, resposta, { itens, total, pagina: filtro.pagina, limite: filtro.limite, proxima });
   });
 
   rota('get', '/itens/:codigo', async (pedido, resposta) => {
@@ -74,6 +75,6 @@ export function rotasDeItens({ rota, trilhas, repositorio }) {
     }
     const item = (await itensComConclusoes()).find((i) => i.codigo === codigo);
     if (!item) throw new ErroDaApi('nao-encontrado', `O item ${codigo} não existe no catálogo.`);
-    resposta.json(item);
+    jsonComEtag(pedido, resposta, item);
   });
 }
