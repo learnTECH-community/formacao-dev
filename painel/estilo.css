@@ -455,3 +455,55 @@ h2:focus {
     grid-template-columns: 1fr auto auto;
   }
 }
+
+/* T4.15: janela modal do detalhe do item. */
+.fundo-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgb(0 0 0 / 0.6);
+}
+
+.janela-modal {
+  width: min(100%, 36rem);
+  max-height: calc(100vh - 2rem);
+  overflow: auto;
+  padding: 1rem 1.5rem 1.5rem;
+  color: var(--texto);
+  background: var(--fundo);
+  border: 1px solid var(--borda-forte);
+  border-radius: 0.5rem;
+}
+
+.janela-modal:focus {
+  outline: none; /* recebe o foco só ao abrir, para o leitor de tela ler o título */
+}
+
+.cabeca-modal {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+
+.detalhe-do-item dt {
+  font-weight: 600;
+}
+
+.detalhe-do-item dd {
+  margin: 0 0 0.5rem;
+}
+
+.item:has(.botao-fixar + .botao-fixar) {
+  grid-template-columns: 3.5rem 1fr auto auto auto;
+}
+
+@media (max-width: 30rem) {
+  .item:has(.botao-fixar + .botao-fixar) {
+    grid-template-columns: 1fr auto auto auto;
+  }
+}
