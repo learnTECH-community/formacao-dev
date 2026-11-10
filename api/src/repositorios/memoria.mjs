@@ -43,7 +43,31 @@ export function criarRepositorioEmMemoria() {
       conclusoes.splice(i, 1);
       return true;
     },
-    /** Só para os testes e as consultas em memória: as trilhas guardadas. */
-    trilhas: () => trilhas,
+    async progressoPorTrilha() {
+      const feito = (i) => i.feito || conclusoes.some((c) => c.item === i.codigo);
+      return trilhas.map((t) => {
+        const total = t.itens.length;
+        const feitos = t.itens.filter(feito).length;
+        return { trilha: t.codigo, nome: t.nome, feitos, total, percentual: total === 0 ? 0 : Math.floor((feitos * 100) / total) };
+      });
+    },
+    async progressoPorPessoa() {
+      const trilhaDo = new Map(trilhas.flatMap((t) => t.itens.map((i) => [i.codigo, t.codigo])));
+      const totalDeItens = trilhaDo.size;
+      const porPessoa = Map.groupBy(conclusoes.filter((c) => trilhaDo.has(c.item)), (c) => c.usuario);
+      return [...porPessoa]
+        .map(([usuario, lista]) => {
+          const datas = lista.map((c) => c.concluidaEm).sort();
+          return {
+            usuario,
+            concluidos: lista.length,
+            trilhas: new Set(lista.map((c) => trilhaDo.get(c.item))).size,
+            percentual: Math.floor((lista.length * 100) / totalDeItens),
+            primeira: datas[0],
+            ultima: datas.at(-1),
+          };
+        })
+        .sort((a, b) => b.concluidos - a.concluidos || (a.usuario < b.usuario ? -1 : a.usuario > b.usuario ? 1 : 0));
+    },
   };
 }

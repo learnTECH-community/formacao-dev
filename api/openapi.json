@@ -423,6 +423,94 @@
           }
         }
       }
+    },
+    "/v1/progresso/trilhas": {
+      "get": {
+        "summary": "Progresso de cada trilha, na ordem do catálogo",
+        "operationId": "progressoPorTrilha",
+        "parameters": [
+          {
+            "name": "If-None-Match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Progresso de cada trilha, na ordem do catálogo",
+            "headers": {
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProgressoPorTrilha"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Nada mudou desde o ETag enviado"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema"
+          }
+        }
+      }
+    },
+    "/v1/progresso/pessoas": {
+      "get": {
+        "summary": "Progresso de cada pessoa, de quem concluiu mais para quem concluiu menos",
+        "operationId": "progressoPorPessoa",
+        "parameters": [
+          {
+            "name": "If-None-Match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Progresso de cada pessoa, de quem concluiu mais para quem concluiu menos",
+            "headers": {
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProgressoPorPessoa"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Nada mudou desde o ETag enviado"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -772,6 +860,100 @@
           "repetidas": {
             "type": "integer",
             "minimum": 0
+          }
+        }
+      },
+      "ProgressoPorTrilha": {
+        "type": "object",
+        "required": [
+          "trilhas"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "trilhas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "trilha",
+                "nome",
+                "feitos",
+                "total",
+                "percentual"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "trilha": {
+                  "type": "string"
+                },
+                "nome": {
+                  "type": "string"
+                },
+                "feitos": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "total": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "percentual": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              }
+            }
+          }
+        }
+      },
+      "ProgressoPorPessoa": {
+        "type": "object",
+        "required": [
+          "pessoas"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "pessoas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "usuario",
+                "concluidos",
+                "trilhas",
+                "percentual",
+                "primeira",
+                "ultima"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "usuario": {
+                  "type": "string"
+                },
+                "concluidos": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "trilhas": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "percentual": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "primeira": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "ultima": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
           }
         }
       }

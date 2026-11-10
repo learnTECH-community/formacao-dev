@@ -107,6 +107,7 @@ test('T6.6: o repositório SQLite não monta SQL com texto: toda consulta usa pa
   assert.ok(consultas.length >= 7);
   for (const consulta of consultas) assert.doesNotMatch(consulta, /\$\{/, `consulta com interpolação: ${consulta}`);
   // Nenhum prepare recebe uma variável ou concatenação.
-  assert.doesNotMatch(codigo, /prepare\((?![`'])/);
+  // A exceção são as consultas versionadas em api/consultas/*.sql, lidas por nome fixo.
+  assert.doesNotMatch(codigo, /prepare\((?![`']|consulta\('[a-z_]+'\)\))/);
   assert.doesNotMatch(codigo, /\.exec\(/);
 });

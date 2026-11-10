@@ -29,6 +29,8 @@ const CASOS = [
   ['erro: corpo grande', '/v1/conclusoes', post({ item: 'x'.repeat(11_000) }), 413],
   ['sincronizar com o GitHub', '/v1/sincronizar', { method: 'POST' }, 200],
   ['progresso em CSV', '/v1/progresso.csv', {}, 200],
+  ['progresso por trilha', '/v1/progresso/trilhas', {}, 200],
+  ['progresso por pessoa', '/v1/progresso/pessoas', {}, 200],
 ];
 
 const PR_FICTICIO = { base: { ref: 'main' }, title: 'T1.1: primeiro', user: { login: 'pessoa-b' }, html_url: 'https://github.com/exemplo/repo/pull/8', merged_at: '2026-11-10T15:00:00Z' };

@@ -79,7 +79,7 @@ test('o CORS só aceita a origem configurada', async (t) => {
 });
 
 test('criarApp recusa um repositório fora da interface', () => {
-  assert.throws(() => criarApp({ repositorio: { saude: async () => ({}) } }), /gravarCatalogo, registrarConclusao, listarConclusoes, obterConclusao, atualizarConclusao, apagarConclusao/);
+  assert.throws(() => criarApp({ repositorio: { saude: async () => ({}) } }), /gravarCatalogo, registrarConclusao, listarConclusoes, obterConclusao, atualizarConclusao, apagarConclusao, progressoPorTrilha, progressoPorPessoa/);
 });
 
 test('/v1/catalogo lê o CATALOGO.md da raiz sem erro', async (t) => {
