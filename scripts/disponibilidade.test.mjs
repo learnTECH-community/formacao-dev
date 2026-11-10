@@ -23,7 +23,15 @@ test('500, falha de rede e demora contam como falha', async () => {
   assert.deepEqual([rede.ok, rede.status], [false, 'falha de rede']);
   const lento = await conferir('https://api.exemplo/v1/health', {
     tempoLimite: 20,
-    buscar: (_u, { signal }) => new Promise((_ok, falhar) => signal.addEventListener('abort', () => falhar(signal.reason))),
+    // O timer do AbortSignal.timeout não segura o processo; este segura até o aborto.
+    buscar: (_u, { signal }) =>
+      new Promise((_ok, falhar) => {
+        const segura = setTimeout(() => {}, 5_000);
+        signal.addEventListener('abort', () => {
+          clearTimeout(segura);
+          falhar(signal.reason);
+        });
+      }),
   });
   assert.deepEqual([lento.ok, lento.status], [false, 'sem resposta em 0.02 s']);
 });
