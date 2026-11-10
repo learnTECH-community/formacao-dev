@@ -4,7 +4,7 @@ Cada item tem um código (ex.: `T2.3`). O PR que pratica o item no **Painel de F
 
 O roadmap.sh é o nosso referencial: cada trilha cresce, na ordem dos tópicos do roadmap dela, até todo tópico ter um item prático aqui (issue de `cobertura` de cada trilha). Os itens foram escritos pela comunidade, com palavras próprias. O link de cada trilha leva ao roadmap correspondente no [roadmap.sh](https://roadmap.sh), onde está o conteúdo de estudo. Este repositório não copia o conteúdo do roadmap.sh: a licença dele só permite compartilhar os links (ver [ADR 001](docs/adr/001-roadmap-sh-so-por-link.md)).
 
-**Progresso:** 65 de 161 itens
+**Progresso:** 67 de 161 itens
 
 ## T0 · Fundamentos
 Roadmaps de referência: [Full Stack](https://roadmap.sh/full-stack) · [Computer Science](https://roadmap.sh/computer-science) · [Linux](https://roadmap.sh/linux)
@@ -168,12 +168,12 @@ Roadmaps de referência: [Code Review](https://roadmap.sh/code-review) · [Boas 
 ## T9 · Entrega
 Roadmaps de referência: [DevOps](https://roadmap.sh/devops) · [Docker](https://roadmap.sh/docker)
 
-- [ ] **T9.1** CI que roda lint, testes e build em todo PR.
+- [x] **T9.1** CI que roda lint, testes e build em todo PR.
 - [ ] **T9.2** Proteger a `main`: só entra por PR com o CI verde.
 - [ ] **T9.3** Publicar o painel no GitHub Pages, por Actions, depois do CI verde.
 - [ ] **T9.4** Empacotar a API num contêiner Docker, com `docker compose` para rodar local.
 - [ ] **T9.5** Publicar a API num serviço gratuito e registrar o passo a passo.
-- [ ] **T9.6** Atualizar dependências com o Dependabot, sem quebrar o CI.
+- [x] **T9.6** Atualizar dependências com o Dependabot, sem quebrar o CI.
 - [ ] **T9.7** Nginx na frente do painel e da API. (#124)
 - [ ] **T9.8** Checagem agendada de disponibilidade. (#125)
 - [ ] **T9.9** Métricas da API no compose. (#126)
