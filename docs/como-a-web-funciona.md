@@ -19,7 +19,7 @@ sequenceDiagram
     N->>S: GET / (HTTP)
     S-->>N: 200 OK + index.html
     N->>N: lê o HTML e monta o DOM
-    N->>S: GET do CSS, do tema.js e do script principal
+    N->>S: GET do CSS e do script principal
     S-->>N: 200 OK + arquivos
     N->>N: CSS vira CSSOM; DOM + CSSOM viram a árvore de renderização
     N->>N: layout e pintura: a página aparece
@@ -61,8 +61,8 @@ O servidor do painel é simples: ele só entrega arquivos prontos. Em produção
 O navegador lê o HTML de cima para baixo e monta o **DOM**, a árvore de elementos da página (`header`, `nav`, `main`, `footer`...). Ao achar um `<link rel="stylesheet">` ou um `<script>`, ele pede esses arquivos ao servidor, cada um com seu próprio pedido HTTP.
 
 Dois detalhes do painel mostram como a ordem importa:
-- `tema.js` é um script comum no `<head>`: o navegador para a leitura, roda o script e só então segue. É de propósito: o tema escolhido é aplicado antes de pintar, e a página não pisca no tema errado.
-- o script principal (`painel/src/main.ts`, que o Vite converte em JavaScript) é `type="module"`: o navegador o baixa sem parar a leitura e só o executa depois que o HTML inteiro foi lido.
+- o script do tema fica escrito dentro do `<head>` (inline): o navegador para a leitura, roda o script e só então segue. É de propósito: o tema escolhido é aplicado antes de pintar, e a página não pisca no tema errado. Por ser inline e pequeno, não custa um pedido de rede (T7.12).
+- o script principal (`painel/src/main.tsx`, que o Vite converte em JavaScript) é `type="module"`: o navegador o baixa sem parar a leitura e só o executa depois que o HTML inteiro foi lido.
 
 ## 6. O CSS
 
