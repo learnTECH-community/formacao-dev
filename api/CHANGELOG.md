@@ -16,4 +16,5 @@ Tipos de mudança: **Novo**, **Mudou**, **Antiga** (vai sair, com data), **Remov
 - **Novo:** limite de pedidos por minuto e falhas do GitHub em 502 e 503 (T5.5).
 - **Novo:** `GET /v1/progresso.csv`, o progresso em CSV por stream (T5.11).
 - **Novo:** `GET /v1/progresso/trilhas` (da view `v_progresso_trilha`) e `GET /v1/progresso/pessoas` (T6.2, T6.10).
+- **Novo:** `GET /v1/trilhas/{codigo}/concluintes`, quem concluiu a trilha inteira (T6.8).
 - **Antiga:** `GET /v1/catalogo.md` devolve o texto do `CATALOGO.md` para o painel atual. Antiga desde 10/11/2026; sai do ar em 08/02/2027. Use `GET /v1/catalogo` (T5.15).

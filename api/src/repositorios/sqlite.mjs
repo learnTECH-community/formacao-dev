@@ -30,6 +30,8 @@ export function criarRepositorioSqlite(banco) {
     // T6.2: consultas do painel, em arquivos .sql versionados.
     porTrilha: banco.prepare(consulta('progresso_por_trilha')),
     porPessoa: banco.prepare(consulta('progresso_por_pessoa')),
+    // T6.8: a versão com JOIN, escolhida pelo plano (docs/consultas.md).
+    concluintes: banco.prepare(consulta('concluintes_da_trilha_join')),
   };
 
   return {
@@ -61,6 +63,9 @@ export function criarRepositorioSqlite(banco) {
     },
     async progressoPorPessoa() {
       return sql.porPessoa.all().map((l) => ({ ...l }));
+    },
+    async concluintesDaTrilha(trilha) {
+      return sql.concluintes.all({ trilha }).map((l) => ({ ...l }));
     },
   };
 }

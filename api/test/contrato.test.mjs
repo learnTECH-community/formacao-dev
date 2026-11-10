@@ -31,6 +31,8 @@ const CASOS = [
   ['progresso em CSV', '/v1/progresso.csv', {}, 200],
   ['progresso por trilha', '/v1/progresso/trilhas', {}, 200],
   ['progresso por pessoa', '/v1/progresso/pessoas', {}, 200],
+  ['concluintes de uma trilha', '/v1/trilhas/T1/concluintes', {}, 200],
+  ['erro: concluintes de trilha que não existe', '/v1/trilhas/T9/concluintes', {}, 404],
 ];
 
 const PR_FICTICIO = { base: { ref: 'main' }, title: 'T1.1: primeiro', user: { login: 'pessoa-b' }, html_url: 'https://github.com/exemplo/repo/pull/8', merged_at: '2026-11-10T15:00:00Z' };

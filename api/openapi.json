@@ -511,6 +511,58 @@
           }
         }
       }
+    },
+    "/v1/trilhas/{codigo}/concluintes": {
+      "get": {
+        "summary": "Quem concluiu todos os itens de uma trilha",
+        "operationId": "concluintesDaTrilha",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "If-None-Match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pessoas que fecharam a trilha, pela data",
+            "headers": {
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Concluintes"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Nada mudou desde o ETag enviado"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problema"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -949,6 +1001,39 @@
                   "format": "date-time"
                 },
                 "ultima": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Concluintes": {
+        "type": "object",
+        "required": [
+          "trilha",
+          "concluintes"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "trilha": {
+            "type": "string"
+          },
+          "concluintes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "usuario",
+                "concluiu_em"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "usuario": {
+                  "type": "string"
+                },
+                "concluiu_em": {
                   "type": "string",
                   "format": "date-time"
                 }

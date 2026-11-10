@@ -153,6 +153,18 @@ curl -s $API/v1/progresso/pessoas
 { "pessoas": [{ "usuario": "pessoa-ficticia-01", "concluidos": 41, "trilhas": 4, "percentual": 25, "primeira": "2026-09-28T12:00:00.000Z", "ultima": "2026-11-04T12:00:00.000Z" }] }
 ```
 
+### GET /v1/trilhas/{codigo}/concluintes
+
+Quem tem conclusão em todos os itens da trilha, com a data em que fechou a trilha (a última conclusão dela), do mais antigo para o mais novo. Trilha que não existe recebe 404. A consulta e a comparação das duas versões estão em [docs/consultas.md](consultas.md).
+
+```bash
+curl -s $API/v1/trilhas/T1/concluintes
+```
+
+```json
+{ "trilha": "T1", "concluintes": [{ "usuario": "pessoa-ficticia-05", "concluiu_em": "2026-10-27T12:00:00.000Z" }] }
+```
+
 ### GET /v1/catalogo.md
 
 **Rota antiga.** Devolve o texto do `CATALOGO.md`, para o painel que ainda lê o arquivo. Antiga desde 10/11/2026; sai do ar em 08/02/2027. Use `GET /v1/catalogo`. A resposta traz os cabeçalhos `Deprecation`, `Sunset` e `Link` (ver [Versões e desativação](#versões-e-desativação)).
