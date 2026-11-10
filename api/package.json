@@ -11,7 +11,9 @@
     "test": "node --test --test-reporter=spec \"test/**/*.test.mjs\"",
     "migrar": "node src/banco/migrar.mjs",
     "semear": "node src/banco/semear.mjs",
-    "carga": "node carga/carga.mjs"
+    "carga": "node carga/carga.mjs",
+    "backup": "node src/banco/backup.mjs fazer",
+    "restaurar": "node src/banco/backup.mjs restaurar"
   },
   "dependencies": {
     "express": "^5.3.0",
