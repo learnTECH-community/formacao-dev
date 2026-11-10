@@ -9,6 +9,7 @@ import { Roadmaps } from '../componentes/Roadmaps';
 import { useAcoesDePreferencias, useFixados } from '../estado/usePreferencias';
 import { progressoDe } from '../progresso';
 import type { PropsDePagina } from '../rotas';
+import { useTrilha } from '../useCatalogo';
 import { useFocoNoTitulo, useTituloDaAba } from '../useFocoNoTitulo';
 
 export function DetalheTrilha({ catalogo, pedidoDeFoco }: PropsDePagina) {
@@ -17,11 +18,13 @@ export function DetalheTrilha({ catalogo, pedidoDeFoco }: PropsDePagina) {
   const fixados = useFixados();
   const despachar = useAcoesDePreferencias();
   const alternarFixado = useCallback((c: string) => despachar({ tipo: 'alternar-fixado', codigo: c }), [despachar]);
-  const trilha = catalogo.situacao === 'pronto' ? catalogo.trilhas.find((t) => t.codigo === codigo) : undefined;
+  // T4.11: a trilha tem chave de consulta própria; o estado geral (carregando, erro) vem do catálogo.
+  const daConsulta = useTrilha(codigo);
+  const trilha = catalogo.situacao === 'pronto' ? (daConsulta ?? undefined) : undefined;
   const [aberto, setAberto] = useState<string | null>(null);
   const itemAberto = trilha?.itens.find((i) => i.codigo === aberto);
   const fecharDetalhes = useCallback(() => setAberto(null), []);
-  const naoExiste = catalogo.situacao !== 'carregando' && catalogo.situacao !== 'erro' && !trilha;
+  const naoExiste = catalogo.situacao === 'vazio' || (catalogo.situacao === 'pronto' && daConsulta === null);
 
   useTituloDaAba(trilha ? `${trilha.codigo} ${trilha.nome}` : naoExiste ? 'Trilha não encontrada' : undefined);
   useFocoNoTitulo(titulo, pedidoDeFoco);
