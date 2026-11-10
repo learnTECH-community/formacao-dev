@@ -1,6 +1,7 @@
 // T5.11: exportar o progresso em CSV por stream.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { get } from 'node:http';
 import { campoCsv, linhasDoProgresso } from '../src/rotas/csv.mjs';
 import { conclusao, subir } from './apoio.mjs';
 
@@ -28,17 +29,20 @@ test('10 mil linhas fictícias chegam em várias partes, todas certas', async (t
   t.after(api.fechar);
   await api.repositorio.registrarConclusao(conclusao('T1.1', 'pessoa-a', 1));
   await api.repositorio.registrarConclusao(conclusao('T1.1', 'pessoa-b', 2));
-  const r = await fetch(`${api.base}/v1/progresso.csv`);
-  const leitor = r.body.getReader();
-  const decodificador = new TextDecoder();
-  let partes = 0;
-  let texto = '';
-  for (;;) {
-    const { done, value } = await leitor.read();
-    if (done) break;
-    partes++;
-    texto += decodificador.decode(value, { stream: true });
-  }
+  // Lê com o cliente do node:http, que mostra cada parte que chega ("data").
+  const { partes, texto } = await new Promise((pronto, falhar) => {
+    get(`${api.base}/v1/progresso.csv`, (resposta) => {
+      resposta.setEncoding('utf8');
+      let partes = 0;
+      let texto = '';
+      resposta.on('data', (pedaco) => {
+        partes++;
+        texto += pedaco;
+      });
+      resposta.on('end', () => pronto({ partes, texto }));
+      resposta.on('error', falhar);
+    }).on('error', falhar);
+  });
   const linhas = texto.replace(/^﻿/, '').split('\r\n').filter(Boolean);
   assert.equal(linhas.length, 10_001);
   assert.ok(partes > 1, `chegou em ${partes} parte(s)`);
