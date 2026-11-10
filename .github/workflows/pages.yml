@@ -51,13 +51,13 @@ jobs:
        (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'))
     runs-on: ubuntu-latest
     steps:
+      # Sem "ref": o checkout pega a main como ela está agora, nunca o código de um PR.
+      # Sem cache do npm: o job que publica não reaproveita nada que um PR possa ter gravado
+      # (alertas actions/untrusted-checkout e actions/cache-poisoning do CodeQL).
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
       - run: npm ci
       # Com a API publicada (#230), o responsável define a variável URL_DA_API.
       - run: npm run build
