@@ -222,6 +222,36 @@ data: {"motivo":"conclusao","itens":["T5.7"]}
 
 No painel, com `VITE_API_URL` definido, o `EventSource` ouve esta rota e, a cada aviso, busca o catálogo de novo: a barra de progresso muda sem recarregar a página.
 
+### GET /v1/ranking
+
+Quem mais concluiu itens. Empate divide a posição e pula as seguintes, como num pódio (1, 2, 2, 4); `empatado` diz se a posição é dividida. Dentro da mesma posição, a ordem é alfabética. Consulta com `WITH` e `RANK() OVER (...)` em [`api/consultas/ranking.sql`](../api/consultas/ranking.sql).
+
+```bash
+curl -s $API/v1/ranking
+```
+
+```json
+{ "ranking": [
+  { "posicao": 1, "usuario": "pessoa-ficticia-01", "concluidos": 41, "empatado": false },
+  { "posicao": 2, "usuario": "pessoa-ficticia-02", "concluidos": 38, "empatado": false }
+] }
+```
+
+### GET /v1/progresso/semanas
+
+Conclusões por semana (de segunda a domingo, em UTC) e o total acumulado até ela, com `WITH` e `sum(...) OVER (ORDER BY semana)` em [`api/consultas/progresso_semanal.sql`](../api/consultas/progresso_semanal.sql).
+
+```bash
+curl -s $API/v1/progresso/semanas
+```
+
+```json
+{ "semanas": [
+  { "semana": "2026-09-28", "concluidas": 47, "acumulado": 47 },
+  { "semana": "2026-10-05", "concluidas": 55, "acumulado": 102 }
+] }
+```
+
 ### GET /v1/catalogo.md
 
 **Rota antiga.** Devolve o texto do `CATALOGO.md`, para o painel que ainda lê o arquivo. Antiga desde 10/11/2026; sai do ar em 08/02/2027. Use `GET /v1/catalogo`. A resposta traz os cabeçalhos `Deprecation`, `Sunset` e `Link` (ver [Versões e desativação](#versões-e-desativação)).

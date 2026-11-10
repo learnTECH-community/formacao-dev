@@ -557,3 +557,25 @@ h2:focus {
 #trilhas[aria-busy="true"] {
   min-height: 100vh;
 }
+
+/* T6.9: tabela do ranking (só com a API configurada). */
+.ranking {
+  border-collapse: collapse;
+  width: 100%;
+  max-width: 32rem;
+}
+.ranking caption {
+  text-align: left;
+  color: var(--texto-suave);
+  margin-bottom: 0.5rem;
+}
+.ranking th,
+.ranking td {
+  text-align: left;
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid var(--borda);
+}
+.ranking td:last-child {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}

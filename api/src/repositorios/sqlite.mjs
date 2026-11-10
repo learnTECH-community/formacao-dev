@@ -32,6 +32,9 @@ export function criarRepositorioSqlite(banco) {
     porPessoa: banco.prepare(consulta('progresso_por_pessoa')),
     // T6.8: a versão com JOIN, escolhida pelo plano (docs/consultas.md).
     concluintes: banco.prepare(consulta('concluintes_da_trilha_join')),
+    // T6.9: ranking e progresso por semana (CTE e funções de janela).
+    ranking: banco.prepare(consulta('ranking')),
+    semanal: banco.prepare(consulta('progresso_semanal')),
   };
 
   return {
@@ -63,6 +66,12 @@ export function criarRepositorioSqlite(banco) {
     },
     async progressoPorPessoa() {
       return sql.porPessoa.all().map((l) => ({ ...l }));
+    },
+    async ranking() {
+      return sql.ranking.all().map((l) => ({ posicao: l.posicao, usuario: l.usuario, concluidos: l.concluidos, empatado: l.empatado === 1 }));
+    },
+    async progressoSemanal() {
+      return sql.semanal.all().map((l) => ({ ...l }));
     },
     async concluintesDaTrilha(trilha) {
       return sql.concluintes.all({ trilha }).map((l) => ({ ...l }));

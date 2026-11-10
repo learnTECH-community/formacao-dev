@@ -34,6 +34,10 @@
  *   Quem concluiu mais vem antes; no empate, ordem alfabética (T6.2).
  * @property {(trilha: string) => Promise<{ usuario: string, concluiu_em: string }[]>} concluintesDaTrilha
  *   Quem tem conclusão em todos os itens da trilha, pela data em que fechou a trilha (T6.8).
+ * @property {() => Promise<{ posicao: number, usuario: string, concluidos: number, empatado: boolean }[]>} ranking
+ *   Quem mais concluiu; empate divide a posição e pula as seguintes (1, 1, 3) (T6.9).
+ * @property {() => Promise<{ semana: string, concluidas: number, acumulado: number }[]>} progressoSemanal
+ *   Conclusões por semana (segunda-feira, UTC) e o total acumulado (T6.9).
  */
 
 /** Funções que toda implementação precisa ter. */
@@ -48,6 +52,8 @@ export const FUNCOES_DO_REPOSITORIO = [
   'progressoPorTrilha',
   'progressoPorPessoa',
   'concluintesDaTrilha',
+  'ranking',
+  'progressoSemanal',
 ];
 
 /** Falha cedo, na criação do app, se o repositório não segue a interface. */

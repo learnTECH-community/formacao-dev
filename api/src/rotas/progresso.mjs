@@ -14,6 +14,15 @@ export function rotasDeProgresso({ rota, trilhas, repositorio }) {
     jsonComEtag(pedido, resposta, { pessoas: await repositorio.progressoPorPessoa() });
   });
 
+  // T6.9: ranking e progresso acumulado por semana.
+  rota('get', '/ranking', async (pedido, resposta) => {
+    jsonComEtag(pedido, resposta, { ranking: await repositorio.ranking() });
+  });
+
+  rota('get', '/progresso/semanas', async (pedido, resposta) => {
+    jsonComEtag(pedido, resposta, { semanas: await repositorio.progressoSemanal() });
+  });
+
   // T6.8: quem concluiu todos os itens de uma trilha.
   rota('get', '/trilhas/:codigo/concluintes', async (pedido, resposta) => {
     const { codigo } = pedido.params;
