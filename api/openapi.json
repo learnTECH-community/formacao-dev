@@ -392,6 +392,37 @@
           }
         }
       }
+    },
+    "/v1/progresso.csv": {
+      "get": {
+        "summary": "Progresso de todos os itens em CSV, enviado por stream",
+        "operationId": "progressoEmCsv",
+        "responses": {
+          "200": {
+            "description": "CSV com as colunas trilha, codigo, texto, feito, usuarios e prs",
+            "headers": {
+              "Content-Disposition": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema"
+          }
+        }
+      }
     }
   },
   "components": {
