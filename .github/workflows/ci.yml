@@ -157,15 +157,59 @@ jobs:
           curl -fsS http://127.0.0.1:4399/v1/health
           docker rm -f api-sozinha
       - name: Subir o compose e esperar a saúde
-        run: docker compose up --build --wait --wait-timeout 120
-      - name: Fumaça da API no compose
         run: |
-          curl -fsS http://127.0.0.1:4320/v1/health | tee health.json
+          inicio=$(date +%s)
+          docker compose up --build --wait --wait-timeout 180
+          echo "compose saudável em $(( $(date +%s) - inicio )) s (com o build)" | tee -a "$GITHUB_STEP_SUMMARY"
+      # T9.7: o Nginx entrega o painel e repassa /api para a API.
+      - name: Fumaça pelo Nginx (painel, API, compressão e cache)
+        run: |
+          html=$(curl -fsS http://127.0.0.1:8080/)
+          grep -q '<div id="app">' <<< "$html"
+          curl -fsS http://127.0.0.1:8080/trilha/T2 -o /dev/null
+          curl -fsS http://127.0.0.1:8080/api/v1/health | tee health.json; echo
           grep -q '"situacao":"ok"' health.json
-          curl -fsS http://127.0.0.1:4320/v1/catalogo | head -c 200; echo
+          js=$(grep -o '/assets/[^"]*\.js' <<< "$html" | sed -n 1p)
+          echo "arquivo: $js"
+          curl -fsS -D cabecalhos.txt -o /dev/null -H 'Accept-Encoding: gzip' "http://127.0.0.1:8080$js"
+          cat cabecalhos.txt
+          grep -qi '^content-encoding: gzip' cabecalhos.txt
+          grep -qi '^cache-control: max-age=31536000' cabecalhos.txt
+          curl -fsS -D index.txt -o /dev/null http://127.0.0.1:8080/
+          grep -qi '^cache-control: no-cache' index.txt
+          grep -qi '^x-content-type-options: nosniff' index.txt
+          ! grep -qi '^server: nginx/' index.txt
+          # As métricas não saem pelo Nginx.
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/api/metricas)" = 404
+      - name: O banco fica na rede interna, sem porta exposta
+        run: |
+          docker compose port banco 27017 && exit 1 || echo "banco sem porta publicada"
+          docker compose port api 4320 && exit 1 || echo "api sem porta publicada"
+          # O Nginx (rede borda) não alcança o banco (rede interna).
+          ! docker compose exec -T web wget -q -T 3 -O /dev/null http://banco:27017/
+          # A API (nas duas redes) alcança.
+          docker compose exec -T api node -e "require('node:net').connect(27017, 'banco').on('connect', () => process.exit(0)).on('error', () => process.exit(1))"
+      # T9.11: os dados sobrevivem a recriar os contêineres; só o down -v apaga.
+      - name: Volume nomeado mantém os dados entre down e up
+        run: |
+          conta() { curl -fsS http://127.0.0.1:8080/api/v1/health | node -e "let t='';process.stdin.on('data',d=>t+=d).on('end',()=>console.log(JSON.parse(t).repositorio.conclusoes))"; }
+          docker compose exec -T api node src/banco/semear-repositorio.mjs
+          antes=$(conta); echo "antes do down: $antes conclusões"
+          test "$antes" -gt 0
+          docker compose down
+          docker volume ls | grep formacao-dev_dados-do-banco
+          docker compose up --wait --wait-timeout 120
+          depois=$(conta); echo "depois do down e up: $depois conclusões"
+          test "$antes" = "$depois"
+          docker compose down -v
+          ! docker volume ls | grep -q formacao-dev_dados-do-banco
+          docker compose up --wait --wait-timeout 120
+          zerado=$(conta); echo "depois do down -v: $zerado conclusões"
+          test "$zerado" = 0
+          printf -- '- volume: %s antes, %s depois do down e up, %s depois do down -v\n' "$antes" "$depois" "$zerado" >> "$GITHUB_STEP_SUMMARY"
       - name: Logs do compose
         if: always()
         run: docker compose logs --no-color | tail -100
       - name: Descer o compose
         if: always()
-        run: docker compose down
+        run: docker compose down -v

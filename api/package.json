@@ -11,6 +11,7 @@
     "test": "node --test --test-timeout=60000 --test-reporter=spec \"test/**/*.test.mjs\"",
     "migrar": "node src/banco/migrar.mjs",
     "semear": "node src/banco/semear.mjs",
+    "semear:mongo": "node src/banco/semear-repositorio.mjs",
     "carga": "node carga/carga.mjs",
     "backup": "node src/banco/backup.mjs fazer",
     "restaurar": "node src/banco/backup.mjs restaurar"

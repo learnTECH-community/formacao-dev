@@ -100,15 +100,24 @@ Sem `VITE_API_URL`, o painel lê o `CATALOGO.md`, como antes. As variáveis est�
 
 ## Rodar com Docker
 
-A API e o banco (MongoDB) sobem num comando, com o `docker compose` (trilha T9). Requisito: Docker com o Compose v2.
+O painel, a API e o banco (MongoDB) sobem num comando, com o `docker compose` (trilha T9). Requisito: Docker com o Compose v2.
 
 ```bash
-docker compose up --build --wait     # sobe o banco e a API; espera os dois ficarem saudáveis
-curl http://127.0.0.1:4320/v1/health  # a API responde pelo compose
-docker compose down                  # para tudo; os dados ficam no volume dados-do-banco
+docker compose up --build --wait          # sobe banco, API e Nginx; espera os três ficarem saudáveis
+docker compose exec api npm run semear:mongo   # grava as conclusões fictícias no banco (pode rodar de novo)
+docker compose down                       # para tudo; os dados ficam no volume dados-do-banco
+docker compose down -v                    # para tudo e APAGA o volume: o banco volta vazio
 ```
 
-A imagem da API é feita em estágios (`api/Dockerfile`): a final leva só as dependências de produção e roda com o usuário `node`, sem root. O `.dockerignore` deixa de fora `node_modules`, `.env` e `.git`. No CI, o job `docker` constrói a imagem, confere o usuário e o conteúdo, mostra o tamanho e sobe o compose.
+O painel abre em http://127.0.0.1:8080/. O Nginx (`nginx/painel.conf`) entrega os arquivos do painel com gzip e cache (1 ano para `/assets/`, sem cache para o `index.html` e o `CATALOGO.md`) e repassa `/api/` para a API. Só o Nginx tem porta aberta; a API e o banco ficam nas redes do compose, e o banco numa rede interna, sem saída. Teste de fumaça:
+
+```bash
+curl -I http://127.0.0.1:8080/                                       # 200, X-Content-Type-Options, sem a versão do Nginx
+curl http://127.0.0.1:8080/api/v1/health                             # {"situacao":"ok",...}, pela API atrás do Nginx
+curl -sI -H 'Accept-Encoding: gzip' http://127.0.0.1:8080/assets/<arquivo>.js | grep -i 'content-encoding\|cache-control'
+```
+
+A imagem da API é feita em estágios (`api/Dockerfile`): a final leva só as dependências de produção e roda com o usuário `node`, sem root. O Nginx usa a imagem `nginx-unprivileged`, também sem root. O `.dockerignore` deixa de fora `node_modules`, `.env` e `.git`. No CI, o job `docker` constrói as imagens, confere o usuário e o conteúdo, mostra o tamanho, sobe o compose, faz a fumaça pelo Nginx, confere que o banco não tem porta nem é alcançado pelo Nginx e que os dados sobrevivem a `down` e `up` (e somem com `down -v`).
 
 ## Documentos
 
