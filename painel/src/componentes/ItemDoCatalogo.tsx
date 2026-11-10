@@ -7,13 +7,15 @@ interface Props {
   item: Item;
   fixado: boolean;
   aoAlternarFixado: (codigo: string) => void;
+  /** T4.15: com esta função, o item ganha o botão "Detalhes", que abre a janela modal. */
+  aoVerDetalhes?: (codigo: string) => void;
 }
 
 /**
  * T4.5: com memo, fixar um item ou mudar o filtro não renderiza de novo os outros itens
  * da lista (medido em renderizacoes.test.tsx: de 1.001 para 1 item ao fixar).
  */
-export const ItemDoCatalogo = memo(function ItemDoCatalogo({ item, fixado, aoAlternarFixado }: Props) {
+export const ItemDoCatalogo = memo(function ItemDoCatalogo({ item, fixado, aoAlternarFixado, aoVerDetalhes }: Props) {
   return (
     <li className="item" data-feito={String(item.feito)}>
       <span className="codigo-item">{item.codigo}</span>
@@ -30,6 +32,17 @@ export const ItemDoCatalogo = memo(function ItemDoCatalogo({ item, fixado, aoAlt
       >
         Fixar
       </button>
+      {aoVerDetalhes && (
+        <button
+          type="button"
+          className="botao-fixar"
+          aria-label={`Ver detalhes de ${item.codigo}`}
+          aria-haspopup="dialog"
+          onClick={() => aoVerDetalhes(item.codigo)}
+        >
+          Detalhes
+        </button>
+      )}
     </li>
   );
 });

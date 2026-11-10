@@ -1,8 +1,10 @@
 // T4.3: página de detalhe da trilha, em /trilha/<código>.
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { BarraProgresso } from '../componentes/BarraProgresso';
+import { DetalheDoItem } from '../componentes/DetalheDoItem';
 import { ItemDoCatalogo } from '../componentes/ItemDoCatalogo';
+import { JanelaModal } from '../componentes/JanelaModal';
 import { Roadmaps } from '../componentes/Roadmaps';
 import { useAcoesDePreferencias, useFixados } from '../estado/usePreferencias';
 import { progressoDe } from '../progresso';
@@ -16,6 +18,9 @@ export function DetalheTrilha({ catalogo, pedidoDeFoco }: PropsDePagina) {
   const despachar = useAcoesDePreferencias();
   const alternarFixado = useCallback((c: string) => despachar({ tipo: 'alternar-fixado', codigo: c }), [despachar]);
   const trilha = catalogo.situacao === 'pronto' ? catalogo.trilhas.find((t) => t.codigo === codigo) : undefined;
+  const [aberto, setAberto] = useState<string | null>(null);
+  const itemAberto = trilha?.itens.find((i) => i.codigo === aberto);
+  const fecharDetalhes = useCallback(() => setAberto(null), []);
   const naoExiste = catalogo.situacao !== 'carregando' && catalogo.situacao !== 'erro' && !trilha;
 
   useTituloDaAba(trilha ? `${trilha.codigo} ${trilha.nome}` : naoExiste ? 'Trilha não encontrada' : undefined);
@@ -42,6 +47,7 @@ export function DetalheTrilha({ catalogo, pedidoDeFoco }: PropsDePagina) {
                 item={item}
                 fixado={fixados.includes(item.codigo)}
                 aoAlternarFixado={alternarFixado}
+                aoVerDetalhes={setAberto}
               />
             ))}
           </ul>
@@ -50,6 +56,11 @@ export function DetalheTrilha({ catalogo, pedidoDeFoco }: PropsDePagina) {
         <h2 id="titulo-detalhe" tabIndex={-1} ref={titulo}>
           {naoExiste ? 'Trilha não encontrada' : `Trilha ${codigo}`}
         </h2>
+      )}
+      {trilha && itemAberto && (
+        <JanelaModal titulo={`${itemAberto.codigo} · ${trilha.nome}`} aoFechar={fecharDetalhes}>
+          <DetalheDoItem item={itemAberto} trilha={trilha} />
+        </JanelaModal>
       )}
       {naoExiste && <p>{`Não há trilha com o código "${codigo}" no catálogo.`}</p>}
     </section>

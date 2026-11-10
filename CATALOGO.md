@@ -92,7 +92,7 @@ Roadmap de referência: [React](https://roadmap.sh/react)
 - [ ] **T4.12** Formulário "Propor item" com validação. (#85)
 - [x] **T4.13** Error boundary por trilha. (#86)
 - [ ] **T4.14** Detalhe carregado sob demanda. (#87)
-- [ ] **T4.15** Detalhe do item em modal com portal. (#88)
+- [x] **T4.15** Detalhe do item em modal com portal. (#88)
 
 ## T5 · Backend com Node e APIs
 Roadmaps de referência: [Backend](https://roadmap.sh/backend) · [Node.js](https://roadmap.sh/nodejs) · [API Design](https://roadmap.sh/api-design)
