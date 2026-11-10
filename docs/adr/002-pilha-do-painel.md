@@ -27,7 +27,7 @@ Opção **A**.
 
 ## O que é preciso saber para contribuir
 
-- Node 20 ou mais novo e npm. Os comandos estão no README, seção "Rodar o painel".
+- Node 22.12 ou mais novo e npm (o mesmo do `engines` no `package.json`). Os comandos estão no README, seção "Rodar o painel".
 - O código do painel fica em `painel/`. O catálogo continua na raiz e é a única fonte dos dados: o painel não guarda cópia dele.
 - Funções que calculam ou transformam dados ficam separadas da parte que mexe na página, para ter teste de unidade.
 - Toda mudança de tela precisa passar no teste do navegador com axe, nos temas claro e escuro.
