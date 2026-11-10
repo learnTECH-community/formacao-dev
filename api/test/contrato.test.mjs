@@ -29,6 +29,10 @@ const CASOS = [
   ['erro: corpo grande', '/v1/conclusoes', post({ item: 'x'.repeat(11_000) }), 413],
   ['sincronizar com o GitHub', '/v1/sincronizar', { method: 'POST' }, 200],
   ['progresso em CSV', '/v1/progresso.csv', {}, 200],
+  ['erro: login sem configuração', '/v1/auth/entrar', {}, 503],
+  ['erro: retorno do login sem configuração', '/v1/auth/retorno?code=x&state=y', {}, 503],
+  ['sair', '/v1/auth/sair', { method: 'POST' }, 204],
+  ['erro: quem sou eu sem sessão', '/v1/auth/eu', {}, 401],
   ['progresso por trilha', '/v1/progresso/trilhas', {}, 200],
   ['progresso por pessoa', '/v1/progresso/pessoas', {}, 200],
   ['concluintes de uma trilha', '/v1/trilhas/T1/concluintes', {}, 200],
@@ -48,7 +52,8 @@ describe('contrato da API contra o openapi.json', () => {
 
   for (const [nome, caminho, opcoes, status] of CASOS) {
     test(`${nome}: ${opcoes.method ?? 'GET'} ${caminho} → ${status}`, async () => {
-      const r = await pedirComContrato(api.base, caminho, opcoes);
+      const comSessao = caminho === '/v1/conclusoes' ? { ...opcoes, headers: { ...opcoes.headers, Cookie: api.cookieDe() } } : opcoes;
+      const r = await pedirComContrato(api.base, caminho, comSessao);
       assert.equal(r.status, status);
       assert.deepEqual(r.problemas, []);
       cobertas.add(r.operacao);
@@ -70,6 +75,33 @@ describe('contrato da API contra o openapi.json', () => {
     const indisponivel = await pedirComContrato(falho.base, '/v1/health');
     assert.equal(indisponivel.status, 503);
     assert.deepEqual(indisponivel.problemas, []);
+  });
+
+  test('login (302), quem sou eu (200) e 401 e 403 da rota protegida seguem o contrato', async (t) => {
+    const buscar = async (url) =>
+      url.includes('access_token') ? Response.json({ access_token: 'token-ficticio' }) : Response.json({ login: 'pessoa-comum' });
+    const config = { clienteId: 'id', segredo: 'segredo', urlDeRetorno: 'http://x/v1/auth/retorno', urlDoPainel: 'http://x/', mantenedores: [] };
+    const login = await subir({ configDoLogin: config, buscarNoGitHub: buscar });
+    t.after(login.fechar);
+    const entrada = await pedirComContrato(login.base, '/v1/auth/entrar', { redirect: 'manual' });
+    assert.equal(entrada.status, 302);
+    assert.deepEqual(entrada.problemas, []);
+    const state = new URL(entrada.cabecalhos.get('location')).searchParams.get('state');
+    const cookie = entrada.cabecalhos.getSetCookie()[0].split(';')[0];
+    const retorno = await pedirComContrato(login.base, `/v1/auth/retorno?code=c&state=${state}`, { redirect: 'manual', headers: { Cookie: cookie } });
+    assert.equal(retorno.status, 302);
+    assert.deepEqual(retorno.problemas, []);
+    const sessao = retorno.cabecalhos.getSetCookie().find((c) => c.startsWith('sessao=')).split(';')[0];
+    const eu = await pedirComContrato(login.base, '/v1/auth/eu', { headers: { Cookie: sessao } });
+    assert.equal(eu.status, 200);
+    assert.deepEqual(eu.problemas, []);
+    const corpo = JSON.stringify(VALIDA);
+    const semSessao = await pedirComContrato(login.base, '/v1/conclusoes', { method: 'POST', headers: JSON_, body: corpo });
+    assert.equal(semSessao.status, 401);
+    assert.deepEqual(semSessao.problemas, []);
+    const semPapel = await pedirComContrato(login.base, '/v1/conclusoes', { method: 'POST', headers: { ...JSON_, Cookie: sessao }, body: corpo });
+    assert.equal(semPapel.status, 403);
+    assert.deepEqual(semPapel.problemas, []);
   });
 
   test('429, 502 e 503 também seguem o contrato', async (t) => {

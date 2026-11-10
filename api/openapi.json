@@ -175,6 +175,12 @@
           "400": {
             "$ref": "#/components/responses/Problema"
           },
+          "401": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema"
+          },
           "404": {
             "$ref": "#/components/responses/Problema"
           },
@@ -184,7 +190,13 @@
           "429": {
             "$ref": "#/components/responses/Problema"
           }
-        }
+        },
+        "security": [
+          {
+            "sessao": []
+          }
+        ],
+        "description": "Só para quem tem o papel mantenedor (T5.14)."
       }
     },
     "/v1/itens": {
@@ -556,6 +568,134 @@
             "description": "Nada mudou desde o ETag enviado"
           },
           "404": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problema"
+          }
+        }
+      }
+    },
+    "/v1/auth/entrar": {
+      "get": {
+        "summary": "Começa o login com o GitHub (OAuth)",
+        "operationId": "entrar",
+        "responses": {
+          "302": {
+            "description": "Vai ao GitHub, com o state guardado no cookie oauth_state",
+            "headers": {
+              "Location": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problema"
+          }
+        }
+      }
+    },
+    "/v1/auth/retorno": {
+      "get": {
+        "summary": "Volta do GitHub: confere o state, cria a sessão e volta ao painel",
+        "operationId": "retorno",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Sessão criada; volta ao painel",
+            "headers": {
+              "Location": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "502": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problema"
+          }
+        }
+      }
+    },
+    "/v1/auth/sair": {
+      "post": {
+        "summary": "Encerra a sessão no servidor e apaga o cookie",
+        "operationId": "sair",
+        "responses": {
+          "204": {
+            "description": "Sessão encerrada"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problema"
+          }
+        }
+      }
+    },
+    "/v1/auth/eu": {
+      "get": {
+        "summary": "Quem está na sessão",
+        "operationId": "eu",
+        "security": [
+          {
+            "sessao": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Usuário e papel",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sessao"
+                }
+              }
+            }
+          },
+          "401": {
             "$ref": "#/components/responses/Problema"
           },
           "429": {
@@ -1041,6 +1181,33 @@
             }
           }
         }
+      },
+      "Sessao": {
+        "type": "object",
+        "required": [
+          "usuario",
+          "papel"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "usuario": {
+            "type": "string"
+          },
+          "papel": {
+            "enum": [
+              "pessoa",
+              "mantenedor"
+            ]
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "sessao": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "sessao",
+        "description": "Cookie HttpOnly da sessão, criado pelo login com o GitHub (T5.13)"
       }
     }
   }

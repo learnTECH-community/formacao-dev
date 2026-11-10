@@ -5,10 +5,10 @@ import { subir } from './apoio.mjs';
 
 const VALIDA = { item: 'T1.2', usuario: 'pessoa-ficticia', pr: 'https://github.com/exemplo/repo/pull/3' };
 
-async function enviar(base, corpo, { bruto = false } = {}) {
-  const resposta = await fetch(`${base}/v1/conclusoes`, {
+async function enviar(api, corpo, { bruto = false, cookie = api.cookieDe() } = {}) {
+  const resposta = await fetch(`${api.base}/v1/conclusoes`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(cookie && { Cookie: cookie }) },
     body: bruto ? corpo : JSON.stringify(corpo),
   });
   return { status: resposta.status, tipo: resposta.headers.get('content-type'), corpo: await resposta.json() };
@@ -17,7 +17,7 @@ async function enviar(base, corpo, { bruto = false } = {}) {
 test('entrada válida grava a conclusão com a data do servidor e responde 201', async (t) => {
   const api = await subir({ relogio: () => new Date('2026-11-10T12:00:00.000Z') });
   t.after(api.fechar);
-  const r = await enviar(api.base, VALIDA);
+  const r = await enviar(api, VALIDA);
   assert.equal(r.status, 201);
   assert.deepEqual(r.corpo, { id: 1, ...VALIDA, concluidaEm: '2026-11-10T12:00:00.000Z' });
   assert.equal((await api.repositorio.listarConclusoes()).length, 1);
@@ -26,8 +26,8 @@ test('entrada válida grava a conclusão com a data do servidor e responde 201',
 test('a mesma conclusão de novo responde 200 com a que já existia', async (t) => {
   const api = await subir();
   t.after(api.fechar);
-  const primeira = await enviar(api.base, VALIDA);
-  const repetida = await enviar(api.base, { ...VALIDA, pr: 'https://github.com/exemplo/repo/pull/99' });
+  const primeira = await enviar(api, VALIDA);
+  const repetida = await enviar(api, { ...VALIDA, pr: 'https://github.com/exemplo/repo/pull/99' });
   assert.equal(repetida.status, 200);
   assert.deepEqual(repetida.corpo, primeira.corpo);
 });
@@ -48,7 +48,7 @@ for (const [nome, corpo, campo, mensagem] of INVALIDOS) {
   test(`400 para ${nome}, com o campo e o motivo`, async (t) => {
     const api = await subir();
     t.after(api.fechar);
-    const r = await enviar(api.base, corpo);
+    const r = await enviar(api, corpo);
     assert.equal(r.status, 400);
     assert.match(r.tipo, /application\/problem\+json/);
     assert.equal(r.corpo.title, 'Entrada inválida');
@@ -60,7 +60,7 @@ for (const [nome, corpo, campo, mensagem] of INVALIDOS) {
 test('400 lista todos os campos inválidos de uma vez', async (t) => {
   const api = await subir();
   t.after(api.fechar);
-  const r = await enviar(api.base, {});
+  const r = await enviar(api, {});
   assert.equal(r.status, 400);
   assert.deepEqual(
     r.corpo.erros.map((e) => e.campo),
@@ -72,7 +72,7 @@ test('400 lista todos os campos inválidos de uma vez', async (t) => {
 test('JSON malformado recebe 400', async (t) => {
   const api = await subir();
   t.after(api.fechar);
-  const r = await enviar(api.base, '{"item": "T1.2",', { bruto: true });
+  const r = await enviar(api, '{"item": "T1.2",', { bruto: true });
   assert.equal(r.status, 400);
   assert.equal(r.corpo.title, 'JSON malformado');
 });
@@ -80,7 +80,7 @@ test('JSON malformado recebe 400', async (t) => {
 test('item que não existe no catálogo recebe 404', async (t) => {
   const api = await subir();
   t.after(api.fechar);
-  const r = await enviar(api.base, { ...VALIDA, item: 'T9.9' });
+  const r = await enviar(api, { ...VALIDA, item: 'T9.9' });
   assert.equal(r.status, 404);
   assert.equal(r.corpo.detail, 'O item T9.9 não existe no catálogo.');
 });

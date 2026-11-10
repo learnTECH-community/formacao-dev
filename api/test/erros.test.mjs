@@ -21,7 +21,7 @@ function conferirProblema(r, status) {
 test('400: entrada inválida sai como Problem Details', async (t) => {
   const api = await subir();
   t.after(api.fechar);
-  const r = await pedir(`${api.base}/v1/conclusoes`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+  const r = await pedir(`${api.base}/v1/conclusoes`, { method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: api.cookieDe() }, body: '{}' });
   conferirProblema(r, 400);
   assert.equal(r.corpo.instance, '/v1/conclusoes');
 });

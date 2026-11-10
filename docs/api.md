@@ -165,6 +165,43 @@ curl -s $API/v1/trilhas/T1/concluintes
 { "trilha": "T1", "concluintes": [{ "usuario": "pessoa-ficticia-05", "concluiu_em": "2026-10-27T12:00:00.000Z" }] }
 ```
 
+### GET /v1/auth/entrar
+
+Começa o login com a conta do GitHub (OAuth). A API gera um `state` aleatório, guarda num cookie `oauth_state` (`HttpOnly`, `Secure`, `SameSite=Lax`, 10 minutos) e redireciona (302) para `github.com/login/oauth/authorize`. Sem `GITHUB_CLIENT_ID` e `GITHUB_CLIENT_SECRET` configurados, responde 503 e o resto da API segue funcionando. Criar o app OAuth no GitHub e pôr os segredos é do responsável.
+
+```bash
+curl -si $API/v1/auth/entrar | grep -i '^location'
+```
+
+### GET /v1/auth/retorno
+
+O GitHub volta aqui com `code` e `state`. A API confere o `state` contra o cookie (contra CSRF: um `state` diferente ou sem cookie recebe 403), troca o `code` por um token, lê o login do usuário e **descarta o token**. Cria a sessão no servidor e põe o cookie `sessao` (`HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/v1`, 8 horas). Depois redireciona ao painel (`URL_DO_PAINEL`).
+
+```bash
+# Quem chama é o navegador, vindo do GitHub; à mão, sem o cookie do state, a resposta é 403.
+curl -si "$API/v1/auth/retorno?code=x&state=y" | head -n 1
+```
+
+### POST /v1/auth/sair
+
+Apaga a sessão **no servidor** e o cookie. Quem guardou o cookie antigo não entra mais.
+
+```bash
+curl -si -X POST $API/v1/auth/sair -H "Cookie: sessao=$SESSAO" | head -n 1   # HTTP/1.1 204 No Content
+```
+
+### GET /v1/auth/eu
+
+Quem está na sessão: o usuário do GitHub e o papel. Sem sessão, 401.
+
+```bash
+curl -s $API/v1/auth/eu -H "Cookie: sessao=$SESSAO"
+```
+
+```json
+{ "usuario": "pessoa-ficticia", "papel": "mantenedor" }
+```
+
 ### GET /v1/catalogo.md
 
 **Rota antiga.** Devolve o texto do `CATALOGO.md`, para o painel que ainda lê o arquivo. Antiga desde 10/11/2026; sai do ar em 08/02/2027. Use `GET /v1/catalogo`. A resposta traz os cabeçalhos `Deprecation`, `Sunset` e `Link` (ver [Versões e desativação](#versões-e-desativação)).
@@ -183,7 +220,7 @@ Content-Type: text/markdown; charset=utf-8
 
 ### POST /v1/conclusoes
 
-Registra que uma pessoa fez um item. O servidor valida a entrada e põe a data. A mesma pessoa no mesmo item não duplica: a segunda vez responde 200 com a conclusão que já existia.
+Registra que uma pessoa fez um item. **Só para quem tem o papel `mantenedor`** (ver [Sessão e papéis](#sessão-e-papéis)). O servidor valida a entrada e põe a data. A mesma pessoa no mesmo item não duplica: a segunda vez responde 200 com a conclusão que já existia.
 
 | Campo | Regra |
 |---|---|
@@ -193,7 +230,7 @@ Registra que uma pessoa fez um item. O servidor valida a entrada e põe a data. 
 
 ```bash
 curl -s -X POST $API/v1/conclusoes \
-  -H 'Content-Type: application/json' \
+  -H 'Content-Type: application/json' -H "Cookie: sessao=$SESSAO" \
   -d '{"item":"T5.7","usuario":"pessoa-ficticia","pr":"https://github.com/exemplo/repo/pull/12"}'
 ```
 
@@ -215,6 +252,13 @@ Resposta `400`, com um campo inválido:
   "erros": [{ "campo": "item", "mensagem": "item precisa estar no formato Tn.m, como T2.3." }]
 }
 ```
+
+## Sessão e papéis
+
+- Há dois papéis: `pessoa` (qualquer conta que entrou) e `mantenedor` (os logins da variável `MANTENEDORES`). O papel é decidido no servidor, a cada login; nada que venha no pedido o muda.
+- `POST /v1/conclusoes` (conclusão manual) é só para `mantenedor`: sem sessão, 401 `nao-autenticado`; com sessão de `pessoa`, 403 `proibido`. A tela pode esconder o botão, mas quem barra é o servidor.
+- As sessões ficam na memória da API: reiniciar encerra todas. Com mais de um servidor, seria preciso um armazenamento comum (fora desta versão).
+- O cookie usa `SameSite=Lax`: outro site não consegue mandar um `POST` com ele. A rota também exige `Content-Type: application/json`, que um formulário de outro site não envia sem passar pelo CORS.
 
 ## Limite de pedidos
 
@@ -257,6 +301,8 @@ O 500 nunca traz a pilha nem a mensagem interna: elas vão para o log do servido
 |---|---|---|
 | 400 | `validacao` | Um ou mais campos fora da regra |
 | 400 | `json-malformado` | O corpo não é JSON |
+| 401 | `nao-autenticado` | A rota pede sessão e não há |
+| 403 | `proibido` | Sem o papel pedido, ou `state` do login que não confere |
 | 404 | `nao-encontrado` | Rota ou item que não existe |
 | 413 | `corpo-grande` | Corpo acima de 10 KB |
 | 429 | `limite-de-pedidos` | Pedidos demais no minuto (ver [Limite de pedidos](#limite-de-pedidos)) |
@@ -275,6 +321,12 @@ O corpo não pôde ser lido como JSON. Confira aspas, vírgulas e o cabeçalho `
 
 #### corpo-grande
 O corpo passou de 10 KB. Nenhuma rota precisa de tanto.
+
+#### nao-autenticado
+A rota precisa de sessão. Entre com a conta do GitHub em `/v1/auth/entrar`.
+
+#### proibido
+A sessão não tem o papel que a rota pede, ou o `state` do login não conferiu.
 
 #### nao-encontrado
 A rota não existe, ou o item pedido não está no catálogo.

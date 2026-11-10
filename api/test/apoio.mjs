@@ -47,6 +47,9 @@ export async function subir(opcoes = {}) {
   return {
     base,
     repositorio,
+    app,
+    /** Cabeçalho Cookie de uma sessão criada direto no servidor (T5.14). */
+    cookieDe: (usuario = 'pessoa-mantenedora', papel = 'mantenedor') => `sessao=${app.locals.sessoes.criar(usuario, papel)}`,
     fechar: () =>
       new Promise((r) => {
         servidor.closeAllConnections();
