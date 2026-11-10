@@ -4,7 +4,7 @@ Cada item tem um código (ex.: `T2.3`). O PR que pratica o item no **Painel de F
 
 O roadmap.sh é o nosso referencial: cada trilha cresce, na ordem dos tópicos do roadmap dela, até todo tópico ter um item prático aqui (issue de `cobertura` de cada trilha). Os itens foram escritos pela comunidade, com palavras próprias. O link de cada trilha leva ao roadmap correspondente no [roadmap.sh](https://roadmap.sh), onde está o conteúdo de estudo. Este repositório não copia o conteúdo do roadmap.sh: a licença dele só permite compartilhar os links (ver [ADR 001](docs/adr/001-roadmap-sh-so-por-link.md)).
 
-**Progresso:** 82 de 161 itens
+**Progresso:** 83 de 161 itens
 
 ## T0 · Fundamentos
 Roadmaps de referência: [Full Stack](https://roadmap.sh/full-stack) · [Computer Science](https://roadmap.sh/computer-science) · [Linux](https://roadmap.sh/linux)
@@ -176,7 +176,7 @@ Roadmaps de referência: [DevOps](https://roadmap.sh/devops) · [Docker](https:/
 - [x] **T9.6** Atualizar dependências com o Dependabot, sem quebrar o CI.
 - [x] **T9.7** Nginx na frente do painel e da API. (#124)
 - [ ] **T9.8** Checagem agendada de disponibilidade. (#125)
-- [ ] **T9.9** Métricas da API no compose. (#126)
+- [x] **T9.9** Métricas da API no compose. (#126)
 - [ ] **T9.10** Imagem da API no GHCR. (#127)
 - [x] **T9.11** Volume nomeado para o banco. (#128)
 - [x] **T9.12** Dockerfile em estágios. (#129)
