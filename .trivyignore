@@ -1,0 +1,6 @@
+# T9.13: exceções da varredura das imagens (Trivy). Toda exceção tem duas linhas:
+# um comentário com o motivo e a issue, e o id com o prazo (exp:), que o Trivy respeita:
+#   # motivo: <por que aceitamos por enquanto>; issue #N
+#   CVE-AAAA-NNNNN exp:AAAA-MM-DD
+# Depois do prazo, o Trivy volta a barrar sozinho. Sem motivo, a exceção não entra.
+# Hoje não há exceção.

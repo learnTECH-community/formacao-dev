@@ -4,7 +4,7 @@
   "type": "module",
   "description": "Catálogo de formação e Painel de Formação da learnTECH Community",
   "scripts": {
-    "test": "node --test scripts/catalogo.test.mjs scripts/servidor.test.mjs scripts/lcp.test.mjs scripts/orcamento.test.mjs scripts/segredos.test.mjs && vitest run",
+    "test": "node --test scripts/catalogo.test.mjs scripts/servidor.test.mjs scripts/lcp.test.mjs scripts/orcamento.test.mjs scripts/segredos.test.mjs scripts/zap.test.mjs && vitest run",
     "cobertura": "vitest run --coverage",
     "test:e2e": "playwright test",
     "dev": "vite",

@@ -104,7 +104,7 @@ O painel, a API e o banco (MongoDB) sobem num comando, com o `docker compose` (t
 
 ```bash
 docker compose up --build --wait          # sobe banco, API e Nginx; espera os três ficarem saudáveis
-docker compose exec api npm run semear:mongo   # grava as conclusões fictícias no banco (pode rodar de novo)
+docker compose exec api node src/banco/semear-repositorio.mjs   # grava as conclusões fictícias no banco (pode rodar de novo)
 docker compose down                       # para tudo; os dados ficam no volume dados-do-banco
 docker compose down -v                    # para tudo e APAGA o volume: o banco volta vazio
 ```
