@@ -54,11 +54,13 @@ npm test                               # testes do catálogo e do painel
 
 ## Rodar o painel
 
-O painel fica em `painel/` e lê o `CATALOGO.md` da raiz (pilha na [ADR 002](docs/adr/002-pilha-do-painel.md)). Requisito: Node 22.12 ou mais novo.
+O painel fica em `painel/` e lê o `CATALOGO.md` da raiz (pilha na [ADR 002](docs/adr/002-pilha-do-painel.md)). Requisitos: Git e Node 22.12 ou mais novo (o mesmo do `engines` no `package.json`). Tudo roda pelo terminal:
 
 ```bash
+git clone https://github.com/learnTECH-community/formacao-dev.git   # baixa o repositório
+cd formacao-dev                         # entra na pasta do projeto
 npm ci                                  # instala as dependências de desenvolvimento
-npm run painel                          # abre o painel em http://127.0.0.1:4317/ (Vite)
+npm run painel                          # abre o painel em http://127.0.0.1:4317/ (Vite); Ctrl+C para parar
 npm run typecheck                       # confere os tipos do painel (TypeScript, strict)
 npm test                                # testes do catálogo e das funções do painel (Vitest)
 npm run build                           # gera o site em dist/, com o CATALOGO.md junto
