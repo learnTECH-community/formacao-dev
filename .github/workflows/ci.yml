@@ -99,8 +99,9 @@ jobs:
       # shell: bash liga o pipefail: se o npm test falhar, o passo falha mesmo com o tee.
       - run: npm test | tee teste.log
         shell: bash
-      - name: Nenhum teste pulado (o MongoDB roda aqui)
-        run: grep -qx 'ℹ skipped 0' teste.log
+      # Os únicos pulados aceitos no Node 22 são os da trava de acesso (rodam no passo do Node 24).
+      - name: Nenhum teste do MongoDB pulado
+        run: '! grep -q "sem MONGO_URL" teste.log'
       - run: npm audit --omit=dev --audit-level=high
       # T6.11: o autorizador do node:sqlite chegou no Node 24.10; no 22, esses testes ficam
       # pulados com o motivo. Aqui eles rodam no 24 e não podem ser pulados.
