@@ -1,6 +1,6 @@
 # Banco de dados do painel
 
-No estudo, o banco é um arquivo SQLite aberto com o `node:sqlite` do próprio Node (22.13+), sem dependência nativa para compilar. As tabelas nascem das migrações em [`api/migracoes/`](../api/migracoes/). O `CATALOGO.md` continua sendo a fonte das trilhas e dos itens: o banco guarda uma cópia deles para as chaves estrangeiras e as consultas, e guarda o que só ele tem, as conclusões.
+No estudo, o banco é um arquivo SQLite aberto com o `node:sqlite` do próprio Node (24.10+), sem dependência nativa para compilar. As tabelas nascem das migrações em [`api/migracoes/`](../api/migracoes/). O `CATALOGO.md` continua sendo a fonte das trilhas e dos itens: o banco guarda uma cópia deles para as chaves estrangeiras e as consultas, e guarda o que só ele tem, as conclusões.
 
 ## Tabelas (T6.1)
 

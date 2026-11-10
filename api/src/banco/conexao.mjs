@@ -1,4 +1,4 @@
-// Abre o banco SQLite com node:sqlite (Node 22.13+), sem dependência nativa.
+// Abre o banco SQLite com node:sqlite (Node 24.10+: o autorizador da T6.11 pede essa versão), sem dependência nativa.
 // As chaves estrangeiras do SQLite vêm desligadas: liga em toda conexão.
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
