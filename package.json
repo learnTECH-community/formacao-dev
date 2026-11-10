@@ -5,6 +5,7 @@
   "description": "Catálogo de formação e Painel de Formação da learnTECH Community",
   "scripts": {
     "test": "node --test scripts/catalogo.test.mjs && vitest run",
+    "cobertura": "vitest run --coverage",
     "test:e2e": "playwright test",
     "dev": "vite",
     "build": "vite build",
@@ -29,6 +30,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.3.0",
+    "@vitest/coverage-v8": "^5.1.0",
     "jsdom": "^31.0.0",
     "oxlint": "^1.93.0",
     "typescript": "^5.9.3",

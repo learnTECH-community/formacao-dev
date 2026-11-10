@@ -36,5 +36,16 @@ export default defineConfig({
   base: process.env.BASE_DO_PAINEL ?? '/',
   plugins: [react(), servirCatalogo()],
   build: { outDir: '../dist', emptyOutDir: true },
-  test: { include: ['src/**/*.test.{js,ts,tsx}'], setupFiles: ['src/teste/preparar.ts'] },
+  test: {
+    include: ['src/**/*.test.{js,ts,tsx}'],
+    setupFiles: ['src/teste/preparar.ts'],
+    // T7.5: cobertura dos cálculos do painel (npm run cobertura). Abaixo de 90%, falha.
+    coverage: {
+      provider: 'v8',
+      include: ['src/progresso.ts', 'src/catalogo.ts', 'src/filtro.ts', 'src/filtroNoEndereco.ts'],
+      thresholds: { lines: 90, branches: 90, functions: 90, statements: 90 },
+      reporter: ['text', 'html', 'json-summary'],
+      reportsDirectory: '../cobertura',
+    },
+  },
 });
