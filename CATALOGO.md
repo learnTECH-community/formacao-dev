@@ -4,7 +4,7 @@ Cada item tem um código (ex.: `T2.3`). O PR que pratica o item no **Painel de F
 
 O roadmap.sh é o nosso referencial: cada trilha cresce, na ordem dos tópicos do roadmap dela, até todo tópico ter um item prático aqui (issue de `cobertura` de cada trilha). Os itens foram escritos pela comunidade, com palavras próprias. O link de cada trilha leva ao roadmap correspondente no [roadmap.sh](https://roadmap.sh), onde está o conteúdo de estudo. Este repositório não copia o conteúdo do roadmap.sh: a licença dele só permite compartilhar os links (ver [ADR 001](docs/adr/001-roadmap-sh-so-por-link.md)).
 
-**Progresso:** 63 de 161 itens
+**Progresso:** 65 de 161 itens
 
 ## T0 · Fundamentos
 Roadmaps de referência: [Full Stack](https://roadmap.sh/full-stack) · [Computer Science](https://roadmap.sh/computer-science) · [Linux](https://roadmap.sh/linux)
@@ -127,8 +127,8 @@ Roadmaps de referência: [SQL](https://roadmap.sh/sql) · [MongoDB](https://road
 - [x] **T6.9** Ranking e progresso semanal. (#102)
 - [x] **T6.10** View de progresso por trilha. (#103)
 - [ ] **T6.11** Acesso mínimo e backup testado. (#104)
-- [ ] **T6.12** Repositório MongoDB alternativo. (#105)
-- [ ] **T6.13** Progresso por trilha com agregação. (#106)
+- [x] **T6.12** Repositório MongoDB alternativo. (#105)
+- [x] **T6.13** Progresso por trilha com agregação. (#106)
 
 ## T7 · Qualidade
 Roadmaps de referência: [QA](https://roadmap.sh/qa) · [Desempenho no frontend](https://roadmap.sh/frontend-performance-best-practices)
