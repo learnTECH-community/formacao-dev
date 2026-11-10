@@ -59,3 +59,49 @@ Uma view é uma consulta com nome, guardada no banco. Usamos para o progresso po
 - **Mudança por migração.** Trocar a regra é uma migração nova, que troca a view para todo mundo.
 
 Quando não usar: a view não guarda resultado (no SQLite, ela roda a consulta toda vez). Se o cálculo ficar caro e for lido muito mais do que muda, a saída é uma tabela de resumo atualizada a cada conclusão, não uma view.
+
+## Quem concluiu uma trilha inteira (T6.8)
+
+A pergunta "quem tem conclusão em todos os itens da trilha" foi escrita de dois jeitos, com o mesmo resultado (testado nas 12 trilhas com os dados fictícios):
+
+- [`concluintes_da_trilha_join.sql`](../api/consultas/concluintes_da_trilha_join.sql): junta as conclusões aos itens da trilha, conta por pessoa e compara com o total de itens (tabela derivada, também por `JOIN`).
+- [`concluintes_da_trilha_subconsulta.sql`](../api/consultas/concluintes_da_trilha_subconsulta.sql): "divisão relacional". A pessoa entra se **não existe** item da trilha que ela **não** concluiu (`NOT EXISTS` dentro de `NOT EXISTS`).
+
+Plano da versão com JOIN (trilha T1):
+
+```text
+CO-ROUTINE t
+  SEARCH itens USING COVERING INDEX idx_itens_trilha (trilha=?)
+SEARCH i USING INDEX idx_itens_trilha (trilha=?)
+SEARCH c USING INDEX sqlite_autoindex_conclusoes_1 (item=?)
+SEARCH t USING AUTOMATIC PARTIAL COVERING INDEX (trilha=?)
+USE TEMP B-TREE FOR GROUP BY
+USE TEMP B-TREE FOR ORDER BY
+```
+
+Plano da versão com subconsulta:
+
+```text
+CO-ROUTINE p
+  SCAN conclusoes USING COVERING INDEX idx_conclusoes_usuario
+SEARCH itens EXISTS USING COVERING INDEX idx_itens_trilha (trilha=?)
+SCAN p
+CORRELATED SCALAR SUBQUERY 5
+  SEARCH i USING INDEX idx_itens_trilha (trilha=?)
+  CORRELATED SCALAR SUBQUERY 4
+    SEARCH c USING COVERING INDEX sqlite_autoindex_conclusoes_1 (item=? AND usuario=?)
+CORRELATED SCALAR SUBQUERY 1
+  SEARCH c USING INDEX idx_conclusoes_usuario (usuario=?)
+  SEARCH i USING INDEX sqlite_autoindex_itens_1 (codigo=?)
+USE TEMP B-TREE FOR ORDER BY
+```
+
+| | JOIN | Subconsulta |
+|---|---|---|
+| Ponto de partida | Os itens da trilha (pelo índice) | Todas as pessoas com alguma conclusão |
+| Trabalho | Uma passada: cada item da trilha, as suas conclusões | Para cada pessoa, cada item da trilha, uma busca; e outra subconsulta para a data |
+| Subconsultas correlacionadas | Nenhuma | Três |
+| Tempo medido (500 execuções, T1, dados fictícios) | 0,098 ms | 0,153 ms |
+| Cresce com | Conclusões da trilha | Pessoas × itens da trilha |
+
+**Escolhida: a versão com JOIN.** Ela parte só do que interessa (os itens da trilha) e não roda nada por pessoa. A subconsulta é mais fácil de ler como frase, mas o custo cresce com o número de pessoas, mesmo as que nunca tocaram na trilha. A rota `GET /v1/trilhas/{codigo}/concluintes` usa a versão com JOIN; um teste confere que o plano dela não tem subconsulta correlacionada.
