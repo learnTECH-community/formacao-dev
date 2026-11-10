@@ -44,21 +44,23 @@ Use as [Discussions](https://github.com/learnTECH-community/formacao-dev/discuss
 
 ## Rodar o catálogo
 
-Requisito: Node 20 ou mais novo.
+Requisito: Node 22.12 ou mais novo.
 
 ```bash
 node scripts/catalogo.mjs              # confere o catálogo e mostra o progresso
 node scripts/catalogo.mjs --atualizar  # reescreve a linha "Progresso"
-npm test                               # testes do catálogo
+npm test                               # testes do catálogo e do painel
 ```
 
 ## Rodar o painel
 
-O painel fica em `painel/`. Requisito: Node 20 ou mais novo.
+O painel fica em `painel/` e lê o `CATALOGO.md` da raiz (pilha na [ADR 002](docs/adr/002-pilha-do-painel.md)). Requisito: Node 22.12 ou mais novo.
 
 ```bash
 npm ci                                  # instala as dependências de desenvolvimento
-npm run painel                          # abre o painel em http://127.0.0.1:4317/
+npm run painel                          # abre o painel em http://127.0.0.1:4317/ (Vite)
+npm test                                # testes do catálogo e das funções do painel (Vitest)
+npm run build                           # gera o site em dist/, com o CATALOGO.md junto
 npx playwright install chromium         # baixa o navegador dos testes (uma vez)
 npm run test:e2e                        # testes do painel no navegador, temas claro e escuro
 ```

@@ -16,6 +16,7 @@
   --borda-forte: #6e7781;
   --trilho: #e6eaee;
   --preenchido: #1f7a4d;
+  --preenchido-texto: #1a6b43;
   --foco: #0b5cad;
   --foco-fundo: #ffffff;
   color-scheme: light;
@@ -33,6 +34,7 @@
     --borda-forte: #8b96a1;
     --trilho: #2a323b;
     --preenchido: #3fb27f;
+  --preenchido-texto: #6fd3a0;
     --foco: #79b8ff;
     --foco-fundo: #12161b;
     color-scheme: dark;
@@ -50,6 +52,7 @@
   --borda-forte: #8b96a1;
   --trilho: #2a323b;
   --preenchido: #3fb27f;
+  --preenchido-texto: #6fd3a0;
   --foco: #79b8ff;
   --foco-fundo: #12161b;
   color-scheme: dark;
@@ -259,4 +262,70 @@ main:focus {
 .botao-tema[aria-pressed="true"] {
   color: var(--fundo);
   background: var(--texto);
+}
+
+/* T3.1: progresso total no topo e lista de itens lida do catálogo. */
+.total {
+  max-width: 32rem;
+  margin-top: 1rem;
+}
+
+.total-rotulo {
+  margin: 0 0 0.25rem;
+  font-weight: 600;
+}
+
+.grupo h3 {
+  margin-top: 1.5rem;
+}
+
+.lista-itens {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--borda);
+}
+
+.item {
+  display: grid;
+  grid-template-columns: 3.5rem 1fr auto;
+  gap: 0.25rem 0.75rem;
+  align-items: baseline;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--borda);
+}
+
+.codigo-item {
+  font-weight: 600;
+  color: var(--texto-suave);
+}
+
+.situacao {
+  padding: 0 0.5rem;
+  border: 1px solid var(--borda-forte);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.item[data-feito="true"] .situacao {
+  color: var(--fundo);
+  background: var(--preenchido-texto);
+  border-color: var(--preenchido-texto);
+}
+
+@media (max-width: 30rem) {
+  .item {
+    grid-template-columns: 1fr auto;
+  }
+
+  .texto-item {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}
+
+.aviso {
+  padding: 1rem;
+  border: 1px solid var(--borda-forte);
+  border-radius: 0.5rem;
 }
