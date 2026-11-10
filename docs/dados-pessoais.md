@@ -1,6 +1,6 @@
 # Dados pessoais do painel (LGPD)
 
-> **Situação: proposta, aguardando a aprovação do responsável.** Escrita em 10/11/2026 (item T10.5). Ela vale como decisão só depois que o responsável aprovar na issue do item. Até lá, descreve o que o código faz hoje e o que propomos.
+> **Situação: proposta, aguardando a aprovação do responsável.** Escrita em 10/11/2026 (item T10.5). Ela vale como decisão só depois que o responsável aprovar na issue #248. Até lá, descreve o que o código faz hoje e o que propomos.
 
 A Lei Geral de Proteção de Dados (Lei 13.709/2018) pede que cada dado pessoal tenha uma finalidade, uma base legal e o mínimo necessário. Aqui está o que o painel e a API guardam, por quê e por quanto tempo.
 
@@ -24,7 +24,7 @@ A Lei Geral de Proteção de Dados (Lei 13.709/2018) pede que cada dado pessoal 
 ## Direitos de quem aparece no painel
 
 - **Ver**: `GET /v1/catalogo` mostra tudo o que a API guarda sobre conclusões.
-- **Apagar**: a pessoa pede numa issue; um mantenedor apaga a conclusão. O repositório já tem `apagarConclusao`, mas ainda não há rota HTTP para isso: hoje o apagamento é direto no banco. A rota está proposta na issue "Rota para apagar uma conclusão a pedido". Prazo proposto: 15 dias.
+- **Apagar**: a pessoa pede numa issue; um mantenedor apaga a conclusão. O repositório já tem `apagarConclusao`, mas ainda não há rota HTTP para isso: hoje o apagamento é direto no banco. A rota está proposta na issue #249. Prazo proposto: 15 dias.
 - **Corrigir**: do mesmo jeito, por um mantenedor.
 
 ## Dados de teste
