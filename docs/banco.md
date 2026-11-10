@@ -58,3 +58,32 @@ npm run semear                 # migra, leva o catálogo e grava os dados fictí
 ```
 
 O arquivo do banco (`api/dados/`) não vai para o Git.
+
+## Repositório SQLite (T6.6)
+
+`api/src/repositorios/sqlite.mjs` segue a mesma interface do repositório em memória (`contrato.mjs`). A mesma bateria de testes (`api/test/repositorio.test.mjs`) roda contra os dois.
+
+| Operação | Função | SQL |
+|---|---|---|
+| Gravar | `registrarConclusao` | `INSERT ... ON CONFLICT (item, usuario) DO NOTHING RETURNING ...` |
+| Ler | `listarConclusoes`, `obterConclusao` | `SELECT ... WHERE (:item IS NULL OR item = :item) ...` |
+| Atualizar | `atualizarConclusao` | `UPDATE conclusoes SET pr = ? WHERE id = ? RETURNING ...` |
+| Apagar | `apagarConclusao` | `DELETE FROM conclusoes WHERE id = ?` |
+
+- Toda consulta é preparada uma vez e recebe os valores por parâmetro (`?` ou `:nome`). Nenhum texto que vem de fora entra na string SQL; um teste lê o arquivo e falha se achar uma interpolação. Outro teste manda `x' OR '1'='1` como filtro e confere que nada vaza.
+- O filtro opcional usa `:item IS NULL OR item = :item`, em vez de montar o `WHERE` com texto.
+
+### Apagar de verdade ou marcar como apagado
+
+**Decisão: apagar de verdade (`DELETE`).** Motivos:
+- A conclusão liga uma pessoa a um PR. Se a pessoa pedir para sair, a LGPD pede que o dado suma; uma coluna `apagada_em` deixaria o dado no banco.
+- O histórico já existe fora do banco: o PR fica no GitHub. O banco não precisa guardar uma auditoria própria.
+- Sem a coluna, toda consulta fica mais simples: não há `WHERE apagada_em IS NULL` para esquecer.
+
+Se um dia precisarmos de auditoria (quem apagou e quando), o caminho é uma tabela de eventos à parte, não uma marca na linha.
+
+## Conclusão sem duplicar (T6.5)
+
+A restrição `UNIQUE (item, usuario)` é a garantia. O código não faz "existe? se não, grava": entre a pergunta e a gravação, outro pedido pode gravar primeiro. A gravação usa `INSERT ... ON CONFLICT DO NOTHING RETURNING`: se a linha nasceu, a rota responde 201; se já existia, lê a que existia e responde 200.
+
+O teste `api/test/concorrencia.test.mjs` sobe dois apps (como dois servidores), cada um com a sua conexão no mesmo arquivo, e dispara 20 pedidos iguais ao mesmo tempo: um 201, dezenove 200 e uma linha só no banco.
