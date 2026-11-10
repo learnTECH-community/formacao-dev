@@ -115,6 +115,20 @@ Se o GitHub falhar, as conclusões já gravadas continuam em `GET /v1/catalogo`:
 | Rede fora, demora acima de 5 s, erro 5xx ou outro 4xx | 502 `falha-do-github` |
 | Limite de pedidos esgotado (403 com `x-ratelimit-remaining: 0`, ou 429) | 503 `github-indisponivel`, com `Retry-After` |
 
+### GET /v1/progresso.csv
+
+O progresso de todos os itens em CSV, para abrir numa planilha. O arquivo sai por stream, uma linha por vez (`Transfer-Encoding: chunked`), sem ser montado inteiro na memória. Colunas: `trilha`, `codigo`, `texto`, `feito` (`sim` ou `não`), `usuarios` e `prs` (separados por espaço). Campos com vírgula, aspas ou quebra de linha vão entre aspas, com as aspas dobradas (RFC 4180); texto que começa com `=`, `+`, `-` ou `@` ganha um apóstrofo, para a planilha não o tratar como fórmula. O arquivo começa com o BOM do UTF-8, para os acentos abrirem certos.
+
+```bash
+curl -s -o progresso.csv $API/v1/progresso.csv && head -n 3 progresso.csv
+```
+
+```text
+trilha,codigo,texto,feito,usuarios,prs
+T0,T0.1,"Explicar, num documento do repositório, o caminho de uma requisição: do endereço digitado até a página do painel na tela.",sim,,
+T0,T0.2,"Rodar o projeto só pelo terminal: clonar, instalar, testar e subir, com os comandos no README.",sim,,
+```
+
 ### GET /v1/catalogo.md
 
 **Rota antiga.** Devolve o texto do `CATALOGO.md`, para o painel que ainda lê o arquivo. Antiga desde 10/11/2026; sai do ar em 08/02/2027. Use `GET /v1/catalogo`. A resposta traz os cabeçalhos `Deprecation`, `Sunset` e `Link` (ver [Versões e desativação](#versões-e-desativação)).
