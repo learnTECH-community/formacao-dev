@@ -38,8 +38,24 @@ test('T3.3: filtra por trilha, por situação e pelos dois juntos', async ({ pag
   const t11Feitos = t11.itens.filter((i) => i.feito).length;
   await page.getByLabel('Trilha', { exact: true }).selectOption('T11');
   await page.getByLabel('Situação', { exact: true }).selectOption('feitos');
-  if (t11Feitos === 0) await expect(page.locator('#contagem')).toHaveText('Nenhum item com esses filtros.');
+  await expect(page.locator('#contagem')).toHaveText(
+    t11Feitos === 0 ? 'Nenhum item com esses filtros.' : `Mostrando ${t11Feitos} de ${todos.length} itens.`,
+  );
   await expect(page.locator('#lista-itens .item')).toHaveCount(t11Feitos);
+});
+
+test('T3.3: filtro sem resultado diz que não há itens', async ({ page }) => {
+  await page.route('**/CATALOGO.md', (rota) =>
+    rota.fulfill({
+      status: 200,
+      contentType: 'text/markdown',
+      body: '## T0 · Fundamentos\nRoadmap de referência: [Linux](https://roadmap.sh/linux)\n\n- [ ] **T0.1** a fazer\n',
+    }),
+  );
+  await abrir(page);
+  await page.getByLabel('Situação', { exact: true }).selectOption('feitos');
+  await expect(page.locator('#contagem')).toHaveText('Nenhum item com esses filtros.');
+  await expect(page.locator('#lista-itens .item')).toHaveCount(0);
 });
 
 test('T3.3: muda os filtros só pelo teclado', async ({ page }) => {

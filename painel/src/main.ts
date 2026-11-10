@@ -13,6 +13,9 @@ function pegar<T extends HTMLElement>(id: string, tipo: new () => T): T {
 }
 
 const estado = pegar('estado', HTMLDivElement);
+const avisoStatus = pegar('aviso-status', HTMLParagraphElement);
+const avisoErro = pegar('aviso-erro', HTMLDivElement);
+const tituloTrilhas = pegar('titulo-trilhas', HTMLHeadingElement);
 const alvos: Alvos = {
   total: pegar('total', HTMLDivElement),
   cartoes: pegar('lista-trilhas', HTMLOListElement),
@@ -36,6 +39,18 @@ function ocupado(sim: boolean): void {
 function limparCatalogo(): void {
   for (const alvo of Object.values(alvos)) alvo.replaceChildren();
   filtros.contagem.textContent = '';
+}
+
+/** Sem catálogo carregado, os filtros ficam desligados: não há o que filtrar. */
+function filtrosLigados(sim: boolean): void {
+  filtros.trilha.disabled = !sim;
+  filtros.situacao.disabled = !sim;
+}
+
+/** Troca só o texto das regiões de aviso, que ficam sempre na página. */
+function avisar(status: string, erro: (Node | string)[] = []): void {
+  avisoStatus.textContent = status;
+  avisoErro.replaceChildren(...erro);
 }
 
 /** T3.3: mostra só os itens que passam no filtro e diz quantos aparecem. */
@@ -69,33 +84,28 @@ function mensagemDeErro(erro: unknown): string {
 }
 
 function mostrarCarregando(): void {
-  estado.replaceChildren(el('p', { class: 'aviso', role: 'status' }, ['Carregando o catálogo…']));
+  avisar('Carregando o catálogo…');
 }
 
 function mostrarErro(erro: unknown): void {
   const botao = el('button', { type: 'button', class: 'botao' }, ['Tentar de novo']);
   botao.addEventListener('click', () => {
     estado.focus(); // o botão some durante a nova tentativa; o foco não se perde
-    void carregar();
+    void carregar({ levarFoco: true });
   });
-  estado.replaceChildren(
-    el('div', { class: 'aviso aviso-erro', role: 'alert' }, [
-      el('p', {}, [el('strong', {}, ['Não foi possível carregar o catálogo.']), ` ${mensagemDeErro(erro)}`]),
-      el('p', {}, [botao]),
-    ]),
-  );
+  avisar('', [
+    el('p', {}, [el('strong', {}, ['Não foi possível carregar o catálogo.']), ` ${mensagemDeErro(erro)}`]),
+    el('p', {}, [botao]),
+  ]);
 }
 
 function mostrarVazio(): void {
-  estado.replaceChildren(
-    el('p', { class: 'aviso', role: 'status' }, [
-      'O catálogo ainda não tem itens. Proponha o primeiro com o modelo "Novo item" no GitHub.',
-    ]),
-  );
+  avisar('O catálogo ainda não tem itens. Proponha o primeiro com o modelo "Novo item" no GitHub.');
 }
 
-async function carregar(): Promise<void> {
+async function carregar({ levarFoco = false } = {}): Promise<void> {
   ocupado(true);
+  filtrosLigados(false);
   limparCatalogo();
   mostrarCarregando();
   try {
@@ -109,7 +119,10 @@ async function carregar(): Promise<void> {
     catalogo = trilhas;
     mostrarCatalogo(trilhas, alvos);
     prepararFiltro();
-    estado.replaceChildren();
+    filtrosLigados(true);
+    avisar('');
+    // Depois de "Tentar de novo", o foco vai para o começo do catálogo, que agora está na tela.
+    if (levarFoco) tituloTrilhas.focus();
   } catch (erro) {
     mostrarErro(erro);
   } finally {

@@ -23,6 +23,22 @@ test('T3.1: o texto entre crases vira código, sem virar HTML', async ({ page })
   await expect(item.locator('code')).toHaveText('docs/MVP.md');
 });
 
+test('T3.1: HTML dentro do catálogo aparece como texto e não roda', async ({ page }) => {
+  await page.route('**/CATALOGO.md', (rota) =>
+    rota.fulfill({
+      status: 200,
+      contentType: 'text/markdown',
+      body: '## T0 · Fundamentos\nRoadmap de referência: [Linux](https://roadmap.sh/linux)\n\n- [ ] **T0.1** <img src=x onerror="window.invadido=1"> e `<b>código</b>`\n',
+    }),
+  );
+  await page.goto('/');
+  const item = page.locator('#lista-itens .item').first();
+  await expect(item).toContainText('<img src=x onerror="window.invadido=1">');
+  await expect(item.locator('code')).toHaveText('<b>código</b>');
+  await expect(page.locator('#lista-itens img, #lista-itens b')).toHaveCount(0);
+  expect(await page.evaluate(() => window.invadido)).toBeUndefined();
+});
+
 test('T3.2: a barra do total e a de cada trilha usam o progresso calculado', async ({ page }) => {
   await abrir(page);
   const barraTotal = page.getByRole('progressbar', { name: 'Progresso do catálogo' });

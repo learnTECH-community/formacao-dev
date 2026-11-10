@@ -1,4 +1,5 @@
-// T3.4: o código do painel não usa "any", nem escrito nem implícito.
+// T3.4: o código do painel não usa "any" escrito. O "any" implícito é barrado pelo
+// `tsc --noEmit` com `strict` (npm run typecheck, no CI).
 import { describe, it, expect } from 'vitest';
 import { readdirSync, readFileSync } from 'node:fs';
 

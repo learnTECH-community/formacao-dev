@@ -338,12 +338,20 @@ main:focus {
   margin-block: 1rem;
 }
 
-.estado:empty {
-  margin-block: 0; /* vazio, não ocupa espaço, mas continua podendo receber o foco */
+/* As regiões de aviso ficam sempre na página (leitores de tela anunciam melhor
+   uma região viva que já existe); vazias, não ocupam espaço. */
+.estado .aviso:empty {
+  padding: 0;
+  border: 0;
 }
 
-.estado:focus {
-  outline: none;
+.estado:has(.aviso:empty + .aviso:empty) {
+  margin-block: 0;
+}
+
+.estado:focus,
+h2:focus {
+  outline: none; /* recebem o foco só pelo código, para guiar o leitor de tela */
 }
 
 .estado .aviso p {

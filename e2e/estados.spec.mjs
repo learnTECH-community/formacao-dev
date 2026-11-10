@@ -18,7 +18,7 @@ test('T3.5: enquanto busca, diz que está carregando (aria-busy e texto)', async
   liberar();
   await expect(page.locator('#lista-trilhas > li').first()).toBeVisible();
   await expect(page.locator('#trilhas')).toHaveAttribute('aria-busy', 'false');
-  await expect(page.locator('#estado')).toBeEmpty();
+  await expect(page.getByRole('status')).toBeEmpty();
 });
 
 test('T3.5: falha de rede mostra a mensagem e "Tentar de novo" carrega o catálogo', async ({ page }) => {
@@ -28,6 +28,7 @@ test('T3.5: falha de rede mostra a mensagem e "Tentar de novo" carrega o catálo
   await expect(alerta).toContainText('Não foi possível carregar o catálogo.');
   await expect(alerta).toContainText('Confira a conexão.');
   await expect(page.locator('#lista-trilhas > li')).toHaveCount(0);
+  await expect(page.getByLabel('Trilha', { exact: true })).toBeDisabled(); // sem catálogo, sem filtro
   expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);
 
   await page.unroute(CATALOGO);
@@ -35,8 +36,10 @@ test('T3.5: falha de rede mostra a mensagem e "Tentar de novo" carrega o catálo
   await botao.focus();
   await page.keyboard.press('Enter');
   await expect(page.locator('#lista-trilhas > li').first()).toBeVisible();
-  await expect(page.getByRole('alert')).toHaveCount(0);
-  await expect(page.locator('#estado')).toBeFocused(); // o foco não caiu no body
+  await expect(page.getByRole('alert')).toBeEmpty();
+  // O foco vai para o título das trilhas, visível, e não cai no body nem num aviso vazio.
+  await expect(page.getByRole('heading', { name: 'Trilhas', level: 2 })).toBeFocused();
+  await expect(page.getByLabel('Trilha', { exact: true })).toBeEnabled();
 });
 
 test('T3.5: erro do servidor (HTTP 500) diz o código', async ({ page }) => {
@@ -56,6 +59,7 @@ test('T3.5: catálogo sem itens mostra o aviso de vazio', async ({ page }) => {
 
 test('T3.5: com o catálogo carregado, não sobra aviso na tela', async ({ page }) => {
   await abrir(page);
-  await expect(page.locator('#estado')).toBeEmpty();
+  await expect(page.getByRole('status')).toBeEmpty();
+  await expect(page.getByRole('alert')).toBeEmpty();
   await expect(page.locator('#estado')).toBeHidden();
 });
