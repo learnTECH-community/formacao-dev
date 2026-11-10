@@ -96,7 +96,7 @@ cd api && npm start                                   # num terminal: API em 127
 VITE_API_URL=http://127.0.0.1:4320 npm run painel     # noutro, na raiz: o painel lê a API e ouve /v1/eventos
 ```
 
-Sem `VITE_API_URL`, o painel lê o `CATALOGO.md`, como antes. As variáveis estão em `api/.env.example` (só os nomes e valores de exemplo). A API não está publicada: publicar é decisão do responsável.
+Sem `VITE_API_URL`, o painel lê o `CATALOGO.md`, como antes. As variáveis estão em `api/.env.example` (só os nomes e valores de exemplo). A API não está publicada: publicar é decisão do responsável. O `render.yaml` e o passo a passo estão em [docs/publicar.md](docs/publicar.md) (#230).
 
 ## Rodar com Docker
 
@@ -153,7 +153,7 @@ A imagem da API é feita em estágios (`api/Dockerfile`): a final leva só as de
 - [docs/ameacas.md](docs/ameacas.md): modelagem de ameaças (STRIDE), com os riscos aceitos.
 - [docs/dados-pessoais.md](docs/dados-pessoais.md): que dados pessoais o painel guarda e por quê (proposta para o responsável aprovar).
 - [docs/publicar.md](docs/publicar.md): publicar o painel (Pages), a API (Render) e a imagem (GHCR), e a checagem de disponibilidade.
-- [docs/seguranca.md](docs/seguranca.md): cabeçalhos, CORS, segredos e o endurecimento da API (T10).
+- [docs/seguranca.md](docs/seguranca.md): o que protege o painel e a API, item por item da T10, com o teste de cada proteção.
 - [docs/plano-de-testes.md](docs/plano-de-testes.md): o que se testa em cada nível e os riscos que cada teste cobre.
 - [docs/como-a-web-funciona.md](docs/como-a-web-funciona.md): do endereço digitado até o painel na tela.
 - [docs/adr/](docs/adr/): decisões.
