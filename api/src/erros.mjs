@@ -9,6 +9,8 @@ export const PROBLEMAS = {
   validacao: { status: 400, title: 'Entrada inválida' },
   'json-malformado': { status: 400, title: 'JSON malformado' },
   'corpo-grande': { status: 413, title: 'Corpo grande demais' },
+  'nao-autenticado': { status: 401, title: 'Sessão necessária' },
+  proibido: { status: 403, title: 'Sem permissão' },
   'nao-encontrado': { status: 404, title: 'Não encontrado' },
   'limite-de-pedidos': { status: 429, title: 'Pedidos demais' },
   'falha-do-github': { status: 502, title: 'Falha ao falar com o GitHub' },

@@ -38,7 +38,8 @@ export function problemasDoContrato({ metodo, caminho, status, tipo, corpo }) {
   let declarada = operacao.responses[String(status)];
   if (!declarada) return [`${metodo} ${modelo} não declara a resposta ${status}`];
   if (declarada.$ref) declarada = especificacao.components.responses[declarada.$ref.split('/').at(-1)];
-  if (!declarada.content) return corpo === undefined || corpo === '' ? [] : [`${status} não deveria ter corpo`];
+  // 204 e 304 não têm corpo pela HTTP; num redirecionamento (3xx), o corpo é só um texto de cortesia.
+  if (!declarada.content) return [204, 304].includes(status) && corpo !== undefined && corpo !== '' ? [`${status} não deveria ter corpo`] : [];
   const midia = (tipo ?? '').split(';')[0].trim();
   const conteudo = declarada.content[midia];
   if (!conteudo) return [`${metodo} ${modelo} ${status}: tipo ${midia || '(nenhum)'} fora da especificação`];

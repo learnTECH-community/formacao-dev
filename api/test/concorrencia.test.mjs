@@ -28,7 +28,7 @@ test('pedidos simultâneos em dois servidores gravam uma linha só: 201 uma vez,
   await Promise.all(apis.map((a) => fetch(`${a.base}/v1/catalogo`)));
 
   const pedidos = Array.from({ length: 20 }, (_, i) =>
-    fetch(`${apis[i % 2].base}/v1/conclusoes`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(CONCLUSAO) }),
+    fetch(`${apis[i % 2].base}/v1/conclusoes`, { method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: apis[i % 2].cookieDe() }, body: JSON.stringify(CONCLUSAO) }),
   );
   const respostas = await Promise.all(pedidos);
   const status = respostas.map((r) => r.status).sort();

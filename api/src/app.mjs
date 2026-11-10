@@ -4,6 +4,7 @@
 // repositório em memória.
 import express from 'express';
 import helmet from 'helmet';
+import { configDoAmbiente, criarSessoes, exigirPapel, lerSessao, rotasDeAutenticacao } from './autenticacao.mjs';
 import { emCache, jsonComEtag, tempoDoCache } from './cache.mjs';
 import { comConclusoes, itemExiste, leitorDeArquivo, trilhasDoTexto } from './catalogo.mjs';
 import { ErroDaApi, rotaNaoEncontrada, tratarErros } from './erros.mjs';
@@ -27,6 +28,8 @@ import { OBSOLETAS, obsoleta } from './versao.mjs';
  * @param {number} [opcoes.segundosDoCache] Tempo de vida do cache do catálogo (T5.7).
  * @param {ReturnType<typeof criarClienteDoGitHub>} [opcoes.github] Cliente da API do GitHub (T5.4).
  * @param {number} [opcoes.limitePorMinuto] Pedidos por minuto por endereço (T5.5).
+ * @param {ReturnType<typeof configDoAmbiente>} [opcoes.configDoLogin] OAuth do GitHub e mantenedores (T5.13, T5.14).
+ * @param {typeof fetch} [opcoes.buscarNoGitHub] fetch do login (simulado nos testes).
  */
 export function criarApp({
   repositorio,
@@ -37,6 +40,8 @@ export function criarApp({
   segundosDoCache = tempoDoCache(),
   github = criarClienteDoGitHub({ token: process.env.GITHUB_TOKEN || undefined }),
   limitePorMinuto = limiteDoAmbiente(),
+  configDoLogin = configDoAmbiente(),
+  buscarNoGitHub = fetch,
 }) {
   conferirRepositorio(repositorio);
   const app = express();
@@ -47,6 +52,9 @@ export function criarApp({
   app.use(helmet());
   app.use(cors(origens));
   app.use(express.json({ limit: '10kb' }));
+  const sessoes = criarSessoes({ agora: () => relogio().getTime() });
+  app.locals.sessoes = sessoes;
+  app.use(lerSessao(sessoes));
 
   // T5.7: o texto do catálogo fica em cache pelo tempo de vida.
   // A cada leitura nova, as trilhas e os itens vão também para o repositório (T6.6).
@@ -88,7 +96,8 @@ export function criarApp({
   });
 
   // T5.2: registrar uma conclusão. 201 na primeira vez; 200 se já existia (T6.5).
-  rota('post', '/conclusoes', async (pedido, resposta) => {
+  // T5.14: só mantenedor registra uma conclusão manual; a checagem é aqui, no servidor.
+  rota('post', '/conclusoes', exigirPapel('mantenedor'), async (pedido, resposta) => {
     const dados = validar(esquemaDaConclusao, pedido.body);
     if (!itemExiste(await trilhas(), dados.item)) {
       throw new ErroDaApi('nao-encontrado', `O item ${dados.item} não existe no catálogo.`);
@@ -97,6 +106,7 @@ export function criarApp({
     resposta.status(criada ? 201 : 200).json(conclusao);
   });
 
+  rotasDeAutenticacao({ rota, sessoes, config: configDoLogin, buscar: buscarNoGitHub });
   rotasDeItens({ rota, trilhas, repositorio });
   rotaDoCsv({ rota, trilhas, repositorio });
   rotasDeProgresso({ rota, trilhas, repositorio });
@@ -129,6 +139,8 @@ function cors(origens) {
       resposta.set('Access-Control-Allow-Headers', 'Content-Type, If-None-Match');
       resposta.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
       resposta.set('Access-Control-Expose-Headers', 'X-Request-Id, ETag');
+      // O painel manda o cookie da sessão (fetch com credentials: "include").
+      resposta.set('Access-Control-Allow-Credentials', 'true');
     }
     if (pedido.method === 'OPTIONS') return resposta.sendStatus(204);
     seguir();
