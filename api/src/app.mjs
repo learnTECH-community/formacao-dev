@@ -9,6 +9,7 @@ import { ErroDaApi, rotaNaoEncontrada, tratarErros } from './erros.mjs';
 import { criarLog, registrarPedidos } from './log.mjs';
 import { conferirRepositorio } from './repositorios/contrato.mjs';
 import { esquemaDaConclusao, validar } from './validacao.mjs';
+import { rotasDeItens } from './rotas/itens.mjs';
 import { OBSOLETAS, obsoleta } from './versao.mjs';
 
 /**
@@ -63,6 +64,8 @@ export function criarApp({ repositorio, lerCatalogo = leitorDeArquivo(), origens
     const { conclusao, criada } = await repositorio.registrarConclusao({ ...dados, concluidaEm: relogio().toISOString() });
     resposta.status(criada ? 201 : 200).json(conclusao);
   });
+
+  rotasDeItens({ rota, trilhas, repositorio });
 
   // T5.15: rota antiga, mantida até a data de remoção, com os cabeçalhos de aviso.
   rota('get', '/catalogo.md', obsoleta(OBSOLETAS['/v1/catalogo.md']), async (_pedido, resposta) => {
