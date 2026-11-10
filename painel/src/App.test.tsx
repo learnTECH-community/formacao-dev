@@ -89,7 +89,8 @@ describe('rotas (T4.3)', () => {
     expect(screen.getByRole('progressbar', { name: 'T2 Frontend base' })).toHaveAttribute('aria-valuetext', '0 de 1 item');
     expect(screen.getByText('Montar a página.')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Voltar ao painel' })).toHaveAttribute('href', '/');
-    expect(document.title).toBe('T2 Frontend base · Painel de Formação · learnTECH Community');
+    // O título da aba muda num efeito, depois da renderização: esperar, não ler na hora.
+    await waitFor(() => expect(document.title).toBe('T2 Frontend base · Painel de Formação · learnTECH Community'));
   });
 
   it('trilha que não existe mostra "Trilha não encontrada"', async () => {
