@@ -48,9 +48,18 @@ export function criarApp({
   app.use(express.json({ limit: '10kb' }));
 
   // T5.7: o texto do catálogo fica em cache pelo tempo de vida.
-  const textoDoCatalogo = emCache(lerCatalogo, { segundos: segundosDoCache, agora: () => relogio().getTime() });
-  const trilhas = async () => trilhasDoTexto(await textoDoCatalogo());
-  app.locals.limparCache = textoDoCatalogo.limpar;
+  // A cada leitura nova, as trilhas e os itens vão também para o repositório (T6.6).
+  const catalogo = emCache(
+    async () => {
+      const texto = await lerCatalogo();
+      const lidas = trilhasDoTexto(texto);
+      await repositorio.gravarCatalogo(lidas);
+      return { texto, trilhas: lidas };
+    },
+    { segundos: segundosDoCache, agora: () => relogio().getTime() },
+  );
+  const trilhas = async () => (await catalogo()).trilhas;
+  app.locals.limparCache = catalogo.limpar;
 
   const v1 = express.Router();
   // T5.3: toda rota passa por aqui e fica listada em app.locals.rotas; um teste
@@ -98,7 +107,7 @@ export function criarApp({
 
   // T5.15: rota antiga, mantida até a data de remoção, com os cabeçalhos de aviso.
   rota('get', '/catalogo.md', obsoleta(OBSOLETAS['/v1/catalogo.md']), async (_pedido, resposta) => {
-    resposta.type('text/markdown; charset=utf-8').send(await textoDoCatalogo());
+    resposta.type('text/markdown; charset=utf-8').send((await catalogo()).texto);
   });
 
   app.use('/v1', limitarPedidos({ porMinuto: limitePorMinuto, agora: () => relogio().getTime() }), v1);
