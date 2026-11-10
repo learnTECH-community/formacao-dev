@@ -29,5 +29,5 @@ export default defineConfig({
   base: './',
   plugins: [react(), servirCatalogo()],
   build: { outDir: '../dist', emptyOutDir: true },
-  test: { include: ['src/**/*.test.{js,ts,tsx}'] },
+  test: { include: ['src/**/*.test.{js,ts,tsx}'], setupFiles: ['src/teste/preparar.ts'] },
 });
