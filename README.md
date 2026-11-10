@@ -75,6 +75,20 @@ npm run lcp                             # Lighthouse móvel 3 vezes no dist/ (ou
 
 O painel tem rotas: `/` (trilhas e itens, com o filtro no endereço, como `/?trilha=T2&situacao=feitos`) e `/trilha/T2` (detalhe da trilha). Para publicar numa subpasta, gere o build com a base dela: `BASE_DO_PAINEL=/formacao-dev/ npm run build`. O build traz um `404.html` igual ao `index.html`, para a hospedagem estática abrir as rotas.
 
+## Rodar a API
+
+A API fica em `api/`, com Node 22.13 ou mais novo, Express 5, `helmet` e `zod` (trilhas T5 e T6). Ela tem o próprio `package.json` e lê o `CATALOGO.md` da raiz. Os testes usam o repositório em memória e não precisam de banco.
+
+```bash
+cd api
+npm ci                                  # instala as dependências da API
+npm test                                # testes das rotas e do repositório (node:test)
+npm start                               # sobe em http://127.0.0.1:4320/v1/health; Ctrl+C para parar
+curl http://127.0.0.1:4320/v1/catalogo  # trilhas, itens e quem fez cada item
+```
+
+As variáveis estão em `api/.env.example` (só os nomes e valores de exemplo). A API não está publicada: publicar é decisão do responsável.
+
 ## Documentos
 
 - [CATALOGO.md](CATALOGO.md): as trilhas e os itens.
