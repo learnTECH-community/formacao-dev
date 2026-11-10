@@ -94,6 +94,27 @@ curl -s $API/v1/itens/T5.1
 { "codigo": "T5.1", "texto": "Criar uma API com `/health` e uma rota que devolve o catálogo.", "feito": true, "issue": 207, "conclusoes": [], "trilha": "T5" }
 ```
 
+### POST /v1/sincronizar
+
+Lê, pela API do GitHub, os PRs mesclados na `main` ou numa sprint (`developer/sprint-*`, onde os PRs de item entram) e grava uma conclusão para cada código de item no título (`T2.3: ...`; vários códigos seguidos de dois-pontos valem todos). A conclusão leva o usuário que abriu o PR, o link e a data do merge. Rodar de novo não duplica. Código que não existe no catálogo é ignorado.
+
+A API pública do GitHub basta para um repositório público (60 pedidos por hora). Com a variável `GITHUB_TOKEN` (do responsável), o limite sobe; o token nunca vai para o log.
+
+```bash
+curl -s -X POST $API/v1/sincronizar
+```
+
+```json
+{ "lidas": 12, "novas": 3, "repetidas": 9 }
+```
+
+Se o GitHub falhar, as conclusões já gravadas continuam em `GET /v1/catalogo`:
+
+| Falha do GitHub | Resposta |
+|---|---|
+| Rede fora, demora acima de 5 s, erro 5xx ou outro 4xx | 502 `falha-do-github` |
+| Limite de pedidos esgotado (403 com `x-ratelimit-remaining: 0`, ou 429) | 503 `github-indisponivel`, com `Retry-After` |
+
 ### GET /v1/catalogo.md
 
 **Rota antiga.** Devolve o texto do `CATALOGO.md`, para o painel que ainda lê o arquivo. Antiga desde 10/11/2026; sai do ar em 08/02/2027. Use `GET /v1/catalogo`. A resposta traz os cabeçalhos `Deprecation`, `Sunset` e `Link` (ver [Versões e desativação](#versões-e-desativação)).
@@ -145,6 +166,12 @@ Resposta `400`, com um campo inválido:
 }
 ```
 
+## Limite de pedidos
+
+Cada endereço pode fazer até `LIMITE_POR_MINUTO` pedidos por minuto (padrão 60), numa janela fixa de 60 s. Toda resposta traz `RateLimit-Limit`, `RateLimit-Remaining` e `RateLimit-Reset` (segundos até a janela virar). Acima do limite, a resposta é 429 `limite-de-pedidos`, com `Retry-After`.
+
+O limite fica na memória do processo: com mais de um servidor, cada um conta o seu.
+
 ## Cache e ETag
 
 O texto do `CATALOGO.md` fica em memória pelo tempo de `TEMPO_DO_CACHE_EM_SEGUNDOS` (padrão 60): nesse tempo, a API não lê o arquivo de novo. Uma mudança no arquivo aparece depois que o tempo vence.
@@ -182,8 +209,11 @@ O 500 nunca traz a pilha nem a mensagem interna: elas vão para o log do servido
 | 400 | `json-malformado` | O corpo não é JSON |
 | 404 | `nao-encontrado` | Rota ou item que não existe |
 | 413 | `corpo-grande` | Corpo acima de 10 KB |
+| 429 | `limite-de-pedidos` | Pedidos demais no minuto (ver [Limite de pedidos](#limite-de-pedidos)) |
 | 500 | `interno` | Falha inesperada do nosso lado |
+| 502 | `falha-do-github` | O GitHub falhou ou demorou |
 | 503 | `indisponivel` | O repositório de dados não respondeu |
+| 503 | `github-indisponivel` | O limite da API do GitHub acabou |
 
 ### Tipos de erro
 
@@ -198,6 +228,15 @@ O corpo passou de 10 KB. Nenhuma rota precisa de tanto.
 
 #### nao-encontrado
 A rota não existe, ou o item pedido não está no catálogo.
+
+#### limite-de-pedidos
+Mais pedidos por minuto do que o limite. Espere os segundos de `Retry-After`.
+
+#### falha-do-github
+O GitHub não respondeu, demorou demais ou respondeu com erro. As conclusões já gravadas continuam disponíveis; tente sincronizar mais tarde.
+
+#### github-indisponivel
+O limite de pedidos da API do GitHub acabou. Espere os segundos de `Retry-After`.
 
 #### indisponivel
 O repositório de dados não respondeu. Tente de novo em instantes.

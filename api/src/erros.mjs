@@ -10,6 +10,9 @@ export const PROBLEMAS = {
   'json-malformado': { status: 400, title: 'JSON malformado' },
   'corpo-grande': { status: 413, title: 'Corpo grande demais' },
   'nao-encontrado': { status: 404, title: 'Não encontrado' },
+  'limite-de-pedidos': { status: 429, title: 'Pedidos demais' },
+  'falha-do-github': { status: 502, title: 'Falha ao falar com o GitHub' },
+  'github-indisponivel': { status: 503, title: 'GitHub indisponível por agora' },
   indisponivel: { status: 503, title: 'Serviço indisponível' },
   interno: { status: 500, title: 'Erro interno' },
 };

@@ -27,13 +27,16 @@ const CASOS = [
   ['erro: JSON malformado', '/v1/conclusoes', post('{'), 400],
   ['erro: item inexistente', '/v1/conclusoes', post({ ...VALIDA, item: 'T9.9' }), 404],
   ['erro: corpo grande', '/v1/conclusoes', post({ item: 'x'.repeat(11_000) }), 413],
+  ['sincronizar com o GitHub', '/v1/sincronizar', { method: 'POST' }, 200],
 ];
+
+const PR_FICTICIO = { base: { ref: 'main' }, title: 'T1.1: primeiro', user: { login: 'pessoa-b' }, html_url: 'https://github.com/exemplo/repo/pull/8', merged_at: '2026-11-10T15:00:00Z' };
 
 describe('contrato da API contra o openapi.json', () => {
   let api;
   const cobertas = new Set();
   before(async () => {
-    api = await subir();
+    api = await subir({ github: { prsMesclados: async () => [PR_FICTICIO] } });
     await api.repositorio.registrarConclusao(conclusao('T2.1', 'pessoa-ficticia', 7));
   });
   after(() => api.fechar());
@@ -62,6 +65,20 @@ describe('contrato da API contra o openapi.json', () => {
     const indisponivel = await pedirComContrato(falho.base, '/v1/health');
     assert.equal(indisponivel.status, 503);
     assert.deepEqual(indisponivel.problemas, []);
+  });
+
+  test('429, 502 e 503 também seguem o contrato', async (t) => {
+    const { ErroDaApi } = await import('../src/erros.mjs');
+    const falhas = [new ErroDaApi('falha-do-github', 'x'), new ErroDaApi('github-indisponivel', 'y', { cabecalhos: { 'Retry-After': '9' } })];
+    const outra = await subir({ limitePorMinuto: 2, github: { prsMesclados: async () => Promise.reject(falhas.shift()) } });
+    t.after(outra.fechar);
+    assert.deepEqual((await pedirComContrato(outra.base, '/v1/sincronizar', { method: 'POST' })).problemas, []);
+    const indisponivel = await pedirComContrato(outra.base, '/v1/sincronizar', { method: 'POST' });
+    assert.equal(indisponivel.status, 503);
+    assert.deepEqual(indisponivel.problemas, []);
+    const limite = await pedirComContrato(outra.base, '/v1/catalogo');
+    assert.equal(limite.status, 429);
+    assert.deepEqual(limite.problemas, []);
   });
 
   test('toda rota do app foi chamada por algum caso acima', () => {

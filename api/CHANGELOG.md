@@ -12,4 +12,6 @@ Tipos de mudança: **Novo**, **Mudou**, **Antiga** (vai sair, com data), **Remov
 - **Novo:** `GET /v1/itens`, com filtros por trilha e situação e paginação, e `GET /v1/itens/{codigo}` (T5.12).
 - **Novo:** log em JSON com `X-Request-Id` (T5.10).
 - **Novo:** cache do catálogo com tempo de vida, `ETag`, `Cache-Control` e 304 (T5.7).
+- **Novo:** `POST /v1/sincronizar`, que lê os PRs mesclados na `main` ou numa sprint e grava quem fez cada item (T5.4).
+- **Novo:** limite de pedidos por minuto e falhas do GitHub em 502 e 503 (T5.5).
 - **Antiga:** `GET /v1/catalogo.md` devolve o texto do `CATALOGO.md` para o painel atual. Antiga desde 10/11/2026; sai do ar em 08/02/2027. Use `GET /v1/catalogo` (T5.15).
