@@ -2,7 +2,13 @@
 import type { Trilha } from '../tipos';
 import { ItemDoCatalogo } from './ItemDoCatalogo';
 
-export function GrupoDeItens({ trilha }: { trilha: Trilha }) {
+interface Props {
+  trilha: Trilha;
+  fixados: readonly string[];
+  aoAlternarFixado: (codigo: string) => void;
+}
+
+export function GrupoDeItens({ trilha, fixados, aoAlternarFixado }: Props) {
   const id = `itens-${trilha.codigo.toLowerCase()}`;
   return (
     <section className="grupo" aria-labelledby={id}>
@@ -12,7 +18,12 @@ export function GrupoDeItens({ trilha }: { trilha: Trilha }) {
       </h3>
       <ul className="lista-itens">
         {trilha.itens.map((item) => (
-          <ItemDoCatalogo key={item.codigo} item={item} />
+          <ItemDoCatalogo
+            key={item.codigo}
+            item={item}
+            fixado={fixados.includes(item.codigo)}
+            aoAlternarFixado={aoAlternarFixado}
+          />
         ))}
       </ul>
     </section>

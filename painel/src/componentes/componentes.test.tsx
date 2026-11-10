@@ -42,8 +42,8 @@ describe('ItemDoCatalogo', () => {
   it('mostra o código, o texto e a situação escrita', () => {
     render(
       <ul>
-        <ItemDoCatalogo item={TRILHAS[0].itens[0]} />
-        <ItemDoCatalogo item={TRILHAS[0].itens[1]} />
+        <ItemDoCatalogo item={TRILHAS[0].itens[0]} fixado={false} aoAlternarFixado={() => {}} />
+        <ItemDoCatalogo item={TRILHAS[0].itens[1]} fixado={false} aoAlternarFixado={() => {}} />
       </ul>,
     );
     const [feito, aFazer] = screen.getAllByRole('listitem');
@@ -56,13 +56,29 @@ describe('ItemDoCatalogo', () => {
   it('o trecho entre crases vira código, e HTML do catálogo continua texto', () => {
     render(
       <ul>
-        <ItemDoCatalogo item={{ codigo: 'T0.1', texto: '<img src=x onerror="alert(1)"> e `<b>negrito</b>`', feito: false }} />
+        <ItemDoCatalogo item={{ codigo: 'T0.1', texto: '<img src=x onerror="alert(1)"> e `<b>negrito</b>`', feito: false }} fixado={false} aoAlternarFixado={() => {}} />
       </ul>,
     );
     const item = screen.getByRole('listitem');
     expect(item).toHaveTextContent('<img src=x onerror="alert(1)">');
     expect(within(item).getByText('<b>negrito</b>').tagName).toBe('CODE');
     expect(within(item).queryByRole('img')).toBeNull();
+  });
+});
+
+describe('ItemDoCatalogo: fixar', () => {
+  it('o botão "Fixar" tem o código no nome, diz se está fixado e avisa o clique', async () => {
+    const pessoa = userEvent.setup();
+    const aoAlternar = vi.fn();
+    render(
+      <ul>
+        <ItemDoCatalogo item={TRILHAS[0].itens[1]} fixado aoAlternarFixado={aoAlternar} />
+      </ul>,
+    );
+    const botao = screen.getByRole('button', { name: 'Fixar T1.2' });
+    expect(botao).toHaveAttribute('aria-pressed', 'true');
+    await pessoa.click(botao);
+    expect(aoAlternar).toHaveBeenCalledWith('T1.2');
   });
 });
 
