@@ -11,14 +11,31 @@ export function leitorDeArquivo(caminho = process.env.CAMINHO_CATALOGO ?? CAMINH
 }
 
 const ISSUE = /\s*\(#(\d+)\)\s*$/;
+const TRILHA = /^## (T\d+) · /;
+const ROADMAPS = /^Roadmaps? de referência:/;
+const LINK = /\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g;
+
+/** Links do roadmap.sh de cada trilha (linha "Roadmap de referência:"), como no painel. */
+function roadmapsDoTexto(texto) {
+  const porTrilha = new Map();
+  let atual;
+  for (const linha of texto.split(/\r?\n/)) {
+    const t = linha.match(TRILHA);
+    if (t) atual = t[1];
+    else if (atual && ROADMAPS.test(linha)) porTrilha.set(atual, [...linha.matchAll(LINK)].map(([, nome, url]) => ({ nome, url })));
+  }
+  return porTrilha;
+}
 
 /** Texto do catálogo → trilhas com itens. O número da issue, "(#89)", vira um campo. */
 export function trilhasDoTexto(texto) {
   const { trilhas, erros } = lerCatalogo(texto);
   if (erros.length) throw new Error(`catálogo fora do formato: ${erros[0]}`);
+  const roadmaps = roadmapsDoTexto(texto);
   return trilhas.map((t) => ({
     codigo: t.codigo,
     nome: t.nome,
+    roadmaps: roadmaps.get(t.codigo) ?? [],
     itens: t.itens.map((i) => {
       const issue = i.texto.match(ISSUE);
       return {

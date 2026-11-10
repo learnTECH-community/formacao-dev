@@ -92,7 +92,8 @@ export function criarClienteDoGitHub({ fetch: buscar = fetch, repositorio = REPO
 /** Lê os PRs e grava as conclusões. Devolve quantas eram novas e quantas já existiam. */
 export async function sincronizar({ github, repositorio, existe }) {
   const conclusoes = conclusoesDosPrs(await github.prsMesclados(), existe);
-  let novas = 0;
-  for (const c of conclusoes) if ((await repositorio.registrarConclusao(c)).criada) novas++;
-  return { lidas: conclusoes.length, novas, repetidas: conclusoes.length - novas };
+  const itensNovos = [];
+  for (const c of conclusoes) if ((await repositorio.registrarConclusao(c)).criada) itensNovos.push(c.item);
+  const novas = itensNovos.length;
+  return { lidas: conclusoes.length, novas, repetidas: conclusoes.length - novas, itensNovos: [...new Set(itensNovos)] };
 }

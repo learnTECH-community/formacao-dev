@@ -703,6 +703,28 @@
           }
         }
       }
+    },
+    "/v1/eventos": {
+      "get": {
+        "summary": "Avisos em tempo real (Server-Sent Events)",
+        "operationId": "eventos",
+        "description": "Conexão aberta. Cada conclusão nova manda event: conclusao, com data {motivo, itens}. O campo retry diz quanto esperar para reconectar.",
+        "responses": {
+          "200": {
+            "description": "Fluxo de eventos",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/Problema"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -769,6 +791,7 @@
         "required": [
           "codigo",
           "nome",
+          "roadmaps",
           "itens"
         ],
         "additionalProperties": false,
@@ -779,6 +802,26 @@
           },
           "nome": {
             "type": "string"
+          },
+          "roadmaps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "nome",
+                "url"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "nome": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              }
+            }
           },
           "itens": {
             "type": "array",

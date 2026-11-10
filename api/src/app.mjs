@@ -8,6 +8,7 @@ import { configDoAmbiente, criarSessoes, exigirPapel, lerSessao, rotasDeAutentic
 import { emCache, jsonComEtag, tempoDoCache } from './cache.mjs';
 import { comConclusoes, itemExiste, leitorDeArquivo, trilhasDoTexto } from './catalogo.mjs';
 import { ErroDaApi, rotaNaoEncontrada, tratarErros } from './erros.mjs';
+import { criarCanalDeEventos } from './eventos.mjs';
 import { criarClienteDoGitHub, sincronizar } from './github.mjs';
 import { limitarPedidos, limiteDoAmbiente } from './limite.mjs';
 import { criarLog, registrarPedidos } from './log.mjs';
@@ -30,6 +31,7 @@ import { OBSOLETAS, obsoleta } from './versao.mjs';
  * @param {number} [opcoes.limitePorMinuto] Pedidos por minuto por endereço (T5.5).
  * @param {ReturnType<typeof configDoAmbiente>} [opcoes.configDoLogin] OAuth do GitHub e mantenedores (T5.13, T5.14).
  * @param {typeof fetch} [opcoes.buscarNoGitHub] fetch do login (simulado nos testes).
+ * @param {ReturnType<typeof criarCanalDeEventos>} [opcoes.eventos] Avisos em tempo real (T5.8).
  */
 export function criarApp({
   repositorio,
@@ -42,6 +44,7 @@ export function criarApp({
   limitePorMinuto = limiteDoAmbiente(),
   configDoLogin = configDoAmbiente(),
   buscarNoGitHub = fetch,
+  eventos = criarCanalDeEventos(),
 }) {
   conferirRepositorio(repositorio);
   const app = express();
@@ -103,8 +106,13 @@ export function criarApp({
       throw new ErroDaApi('nao-encontrado', `O item ${dados.item} não existe no catálogo.`);
     }
     const { conclusao, criada } = await repositorio.registrarConclusao({ ...dados, concluidaEm: relogio().toISOString() });
+    if (criada) eventos.enviar('conclusao', { motivo: 'conclusao', itens: [conclusao.item] });
     resposta.status(criada ? 201 : 200).json(conclusao);
   });
+
+  // T5.8: avisos em tempo real para o painel aberto.
+  app.locals.eventos = eventos;
+  rota('get', '/eventos', eventos.rota);
 
   rotasDeAutenticacao({ rota, sessoes, config: configDoLogin, buscar: buscarNoGitHub });
   rotasDeItens({ rota, trilhas, repositorio });
@@ -114,7 +122,9 @@ export function criarApp({
   // T5.4: lê os PRs mesclados na main e grava quem fez cada item.
   rota('post', '/sincronizar', async (_pedido, resposta) => {
     const codigos = new Set((await trilhas()).flatMap((t) => t.itens.map((i) => i.codigo)));
-    resposta.json(await sincronizar({ github, repositorio, existe: (c) => codigos.has(c) }));
+    const { itensNovos, ...resultado } = await sincronizar({ github, repositorio, existe: (c) => codigos.has(c) });
+    if (itensNovos.length) eventos.enviar('conclusao', { motivo: 'sincronizacao', itens: itensNovos });
+    resposta.json(resultado);
   });
 
   // T5.15: rota antiga, mantida até a data de remoção, com os cabeçalhos de aviso.
