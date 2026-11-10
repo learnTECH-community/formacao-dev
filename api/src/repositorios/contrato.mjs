@@ -32,6 +32,8 @@
  *   Na ordem do catálogo. Feito = marcado no catálogo ou com conclusão (T6.2, T6.10).
  * @property {() => Promise<{ usuario: string, concluidos: number, trilhas: number, percentual: number, primeira: string, ultima: string }[]>} progressoPorPessoa
  *   Quem concluiu mais vem antes; no empate, ordem alfabética (T6.2).
+ * @property {(trilha: string) => Promise<{ usuario: string, concluiu_em: string }[]>} concluintesDaTrilha
+ *   Quem tem conclusão em todos os itens da trilha, pela data em que fechou a trilha (T6.8).
  */
 
 /** Funções que toda implementação precisa ter. */
@@ -45,6 +47,7 @@ export const FUNCOES_DO_REPOSITORIO = [
   'apagarConclusao',
   'progressoPorTrilha',
   'progressoPorPessoa',
+  'concluintesDaTrilha',
 ];
 
 /** Falha cedo, na criação do app, se o repositório não segue a interface. */

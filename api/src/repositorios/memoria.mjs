@@ -51,6 +51,15 @@ export function criarRepositorioEmMemoria() {
         return { trilha: t.codigo, nome: t.nome, feitos, total, percentual: total === 0 ? 0 : Math.floor((feitos * 100) / total) };
       });
     },
+    async concluintesDaTrilha(codigo) {
+      const itens = trilhas.find((t) => t.codigo === codigo)?.itens ?? [];
+      if (itens.length === 0) return [];
+      const daTrilha = conclusoes.filter((c) => itens.some((i) => i.codigo === c.item));
+      return [...Map.groupBy(daTrilha, (c) => c.usuario)]
+        .filter(([, lista]) => lista.length === itens.length)
+        .map(([usuario, lista]) => ({ usuario, concluiu_em: lista.map((c) => c.concluidaEm).sort().at(-1) }))
+        .sort((a, b) => (a.concluiu_em < b.concluiu_em ? -1 : a.concluiu_em > b.concluiu_em ? 1 : a.usuario < b.usuario ? -1 : 1));
+    },
     async progressoPorPessoa() {
       const trilhaDo = new Map(trilhas.flatMap((t) => t.itens.map((i) => [i.codigo, t.codigo])));
       const totalDeItens = trilhaDo.size;
