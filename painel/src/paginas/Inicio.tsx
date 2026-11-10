@@ -7,6 +7,7 @@ import { Fixados } from '../componentes/Fixados';
 import { Filtros } from '../componentes/Filtros';
 import { GrupoDeItens } from '../componentes/GrupoDeItens';
 import { ComoParticipar } from '../componentes/Moldura';
+import { Ranking } from '../componentes/Ranking';
 import { useAcoesDePreferencias, useFixados } from '../estado/usePreferencias';
 import { filtrarItens, textoDaContagem } from '../filtro';
 import { escreverFiltro, lerFiltro, type FiltroEscolhido } from '../filtroNoEndereco';
@@ -88,6 +89,7 @@ export function Inicio({ catalogo, pedidoDeFoco }: PropsDePagina) {
           ))}
         </div>
       </section>
+      <Ranking />
       <ComoParticipar />
     </>
   );
