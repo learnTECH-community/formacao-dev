@@ -135,6 +135,7 @@ jobs:
           RUN npm ci
           COPY api ./
           COPY CATALOGO.md /app/CATALOGO.md
+          COPY scripts/catalogo.mjs /app/scripts/catalogo.mjs
           CMD ["node", "src/servidor.mjs"]
           DOCKERFILE
       - name: Tamanho das imagens (antes e depois)
@@ -149,6 +150,12 @@ jobs:
           # ajv e autocannon são de desenvolvimento: não podem estar na imagem.
           docker run --rm formacao-dev-api:ci sh -c 'test ! -d node_modules/ajv && test ! -d node_modules/autocannon && test -d node_modules/express'
           docker run --rm formacao-dev-api:ci sh -c 'test ! -e /app/.git && test ! -e /app/api/.env && test ! -d /app/api/test && test -f /app/CATALOGO.md'
+          # A imagem sobe sozinha (sem banco, com o repositório em memória) e responde.
+          docker run -d --name api-sozinha -e REPOSITORIO=memoria -p 127.0.0.1:4399:4320 formacao-dev-api:ci
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:4399/v1/health && break; sleep 1; done
+          docker logs api-sozinha
+          curl -fsS http://127.0.0.1:4399/v1/health
+          docker rm -f api-sozinha
       - name: Subir o compose e esperar a saúde
         run: docker compose up --build --wait --wait-timeout 120
       - name: Fumaça da API no compose
