@@ -66,7 +66,7 @@ describe('painel com a API (VITE_API_URL)', () => {
     vi.stubEnv('VITE_API_URL', 'http://api.teste/');
     vi.stubGlobal('EventSource', Fonte);
     let feitos = 1;
-    const buscar = vi.fn(async () => json(catalogo(feitos)));
+    const buscar = vi.fn(async (url: string) => (url.endsWith('/v1/ranking') ? json({ ranking: [] }) : json(catalogo(feitos))));
     vi.stubGlobal('fetch', buscar);
     render(
       <Provedores>
@@ -81,7 +81,7 @@ describe('painel com a API (VITE_API_URL)', () => {
     feitos = 2;
     act(() => FonteFalsa.instancias[0].emitir('conclusao'));
     await vi.waitFor(() => expect(screen.getByRole('progressbar', { name: 'Progresso do catálogo' })).toHaveAttribute('aria-valuetext', '2 de 3 itens'));
-    expect(buscar).toHaveBeenCalledTimes(2);
+    expect(buscar.mock.calls.filter(([url]) => url.endsWith('/v1/catalogo'))).toHaveLength(2);
   });
 
   it('sem VITE_API_URL, o painel não abre avisos e lê o CATALOGO.md', () => {
