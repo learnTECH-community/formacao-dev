@@ -7,7 +7,16 @@
     <meta name="description" content="Progresso das 12 trilhas do catálogo de formação fullstack da learnTECH Community.">
     <meta name="color-scheme" content="light dark">
     <link rel="stylesheet" href="estilo.css">
-    <script src="%BASE_URL%tema.js"></script>
+    <script>
+      // T2.5: aplica o tema guardado antes da primeira pintura, para não piscar.
+      // Inline e pequeno de propósito (T7.12): sem pedido de rede, não atrasa a página.
+      try {
+        var tema = localStorage.getItem(painel-tema);
+        if (tema === claro || tema === escuro) document.documentElement.dataset.tema = tema;
+      } catch (erro) {
+        // armazenamento bloqueado: segue o tema do sistema
+      }
+    </script>
     <script type="module" src="./src/main.tsx"></script>
   </head>
   <body>

@@ -1,5 +1,5 @@
 // T2.5: tema claro e escuro. Segue o sistema até a pessoa escolher pelo botão.
-// O public/tema.js aplica a escolha guardada antes da primeira pintura;
+// O script inline do index.html aplica a escolha guardada antes da primeira pintura;
 // este módulo lê e troca o tema depois que o React monta a página.
 
 export type Tema = 'claro' | 'escuro';
