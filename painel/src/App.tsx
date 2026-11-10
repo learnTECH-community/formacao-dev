@@ -7,11 +7,14 @@ import { Route, Routes } from 'react-router';
 import { Avisos } from './componentes/Avisos';
 import { BarraProgresso } from './componentes/BarraProgresso';
 import { Rodape, Topo } from './componentes/Moldura';
-import { DetalheTrilha } from './paginas/DetalheTrilha';
 import { Inicio } from './paginas/Inicio';
 import { NaoEncontrada } from './paginas/NaoEncontrada';
 import { progressoTotal } from './progresso';
 import { mensagemDeErro, useCatalogo } from './useCatalogo';
+
+// T4.14: o detalhe da trilha (com a janela modal da T4.15) vira um arquivo separado no
+// build e só é baixado quando alguém abre /trilha/<código>.
+const DetalheTrilha = lazy(() => import('./paginas/DetalheTrilha').then((m) => ({ default: m.DetalheTrilha })));
 
 // T4.12: o formulário (com o Zod) só é baixado ao abrir /propor.
 const ProporItem = lazy(() => import('./paginas/ProporItem').then((m) => ({ default: m.ProporItem })));
@@ -79,7 +82,14 @@ export function App() {
         <Avisos ref={estado} status={status} erro={erro} />
         <Routes>
           <Route path="/" element={<Inicio {...pagina} />} />
-          <Route path="/trilha/:codigo" element={<DetalheTrilha {...pagina} />} />
+          <Route
+            path="/trilha/:codigo"
+            element={
+              <Suspense fallback={<CarregandoPagina />}>
+                <DetalheTrilha {...pagina} />
+              </Suspense>
+            }
+          />
           <Route
             path="/propor"
             element={
@@ -93,5 +103,15 @@ export function App() {
       </main>
       <Rodape />
     </>
+  );
+}
+
+/** Espera do detalhe sob demanda: anunciada ao leitor de tela, com aria-busy na região. */
+function CarregandoPagina() {
+  return (
+    <section className="faixa" aria-busy="true" aria-labelledby="titulo-carregando">
+      <h2 id="titulo-carregando">Carregando a página</h2>
+      <p role="status">Carregando o detalhe da trilha…</p>
+    </section>
   );
 }
