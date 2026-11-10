@@ -70,6 +70,7 @@ npm run orcamento                       # confere o peso do dist/: até 500 KB n
 npx playwright install chromium         # baixa o navegador dos testes (uma vez)
 npm run test:e2e                        # testes do painel no navegador, temas claro e escuro
 npm run servir                          # serve o dist/ com Brotli/gzip e cache, como a hospedagem deve fazer (porta 4318)
+npm run lcp                             # Lighthouse móvel 3 vezes no dist/ (ou: node scripts/lcp.mjs <endereço>); meta: LCP até 2,5 s
 ```
 
 O painel tem rotas: `/` (trilhas e itens, com o filtro no endereço, como `/?trilha=T2&situacao=feitos`) e `/trilha/T2` (detalhe da trilha). Para publicar numa subpasta, gere o build com a base dela: `BASE_DO_PAINEL=/formacao-dev/ npm run build`. O build traz um `404.html` igual ao `index.html`, para a hospedagem estática abrir as rotas.
