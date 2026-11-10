@@ -77,7 +77,7 @@ O painel tem rotas: `/` (trilhas e itens, com o filtro no endereço, como `/?tri
 
 ## Rodar a API
 
-A API fica em `api/`, com Node 22.13 ou mais novo, Express 5, `helmet` e `zod` (trilhas T5 e T6). Ela tem o próprio `package.json` e lê o `CATALOGO.md` da raiz. Os testes usam o repositório em memória e não precisam de banco.
+A API fica em `api/`, com Node 22.13 ou mais novo (a trava de acesso ao banco, T6.11, pede o 24.10), Express 5, `helmet` e `zod` (trilhas T5 e T6). Ela tem o próprio `package.json` e lê o `CATALOGO.md` da raiz. Os testes usam o repositório em memória e não precisam de banco.
 
 ```bash
 cd api
@@ -106,6 +106,7 @@ Sem `VITE_API_URL`, o painel lê o `CATALOGO.md`, como antes. As variáveis est�
 - [docs/api.md](docs/api.md): rotas da API, exemplos, erros e a política de versão.
 - [docs/banco.md](docs/banco.md): tabelas, migrações e dados de teste do banco.
 - [docs/consultas.md](docs/consultas.md): consultas do painel, plano de execução e quando usar view.
+- [docs/backup.md](docs/backup.md): acesso mínimo ao banco, backup e restauração.
 - [docs/carga.md](docs/carga.md): teste de carga da API, meta e resultado.
 - [docs/plano-de-testes.md](docs/plano-de-testes.md): o que se testa em cada nível e os riscos que cada teste cobre.
 - [docs/como-a-web-funciona.md](docs/como-a-web-funciona.md): do endereço digitado até o painel na tela.

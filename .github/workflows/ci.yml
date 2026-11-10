@@ -85,3 +85,12 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm audit --omit=dev --audit-level=high
+      # T6.11: o autorizador do node:sqlite chegou no Node 24.10; no 22, esses testes ficam
+      # pulados com o motivo. Aqui eles rodam no 24 e não podem ser pulados.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: node --test --test-timeout=60000 --test-reporter=spec test/acesso.test.mjs | tee acesso.log
+        shell: bash
+      - name: Testes de acesso sem nenhum pulado (Node 24)
+        run: grep -qx 'ℹ skipped 0' acesso.log

@@ -3,6 +3,7 @@
 //   CAMINHO_CATALOGO (padrão: o CATALOGO.md da raiz),
 //   REPOSITORIO (sqlite ou memoria; padrão sqlite), CAMINHO_DO_BANCO (padrão dados/painel.db).
 import { criarApp } from './app.mjs';
+import { limitarAoUsoDaApi } from './banco/acesso.mjs';
 import { abrirBanco, caminhoDoBanco } from './banco/conexao.mjs';
 import { migrar } from './banco/migrar.mjs';
 import { criarRepositorioEmMemoria } from './repositorios/memoria.mjs';
@@ -18,9 +19,19 @@ function repositorioDoAmbiente(tipo = process.env.REPOSITORIO ?? 'sqlite') {
   if (tipo === 'memoria') return { repositorio: criarRepositorioEmMemoria(), descricao: 'memória' };
   if (tipo !== 'sqlite') throw new Error(`REPOSITORIO inválido: ${tipo}. Use sqlite ou memoria.`);
   const caminho = caminhoDoBanco();
+  // T6.11: as migrações rodam numa conexão própria, que fecha em seguida;
+  // a API usa outra, que só lê e grava linhas.
+  const deMigracao = abrirBanco(caminho);
+  migrar(deMigracao);
+  deMigracao.close();
   const banco = abrirBanco(caminho);
-  migrar(banco);
-  return { repositorio: criarRepositorioSqlite(banco), descricao: `SQLite em ${caminho}` };
+  let acesso = 'só leitura e gravação de linhas';
+  try {
+    limitarAoUsoDaApi(banco);
+  } catch (erro) {
+    acesso = `sem a trava de acesso: ${erro.message}`;
+  }
+  return { repositorio: criarRepositorioSqlite(banco), descricao: `SQLite em ${caminho}, ${acesso}` };
 }
 
 const { repositorio, descricao } = repositorioDoAmbiente();
