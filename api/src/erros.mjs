@@ -58,6 +58,12 @@ export function rotaNaoEncontrada(pedido, resposta) {
 export function tratarErros(log) {
   // O Express reconhece o middleware de erro pelos quatro parâmetros.
   return (erro, pedido, resposta, _seguir) => {
+    // Erro no meio de uma resposta já começada (um stream): não dá para mandar outro
+    // cabeçalho; registra e corta a conexão, para o cliente saber que veio incompleta.
+    if (resposta.headersSent) {
+      log.error({ msg: 'erro depois do início da resposta', id: pedido.id, rota: pedido.path, erro: erro?.message });
+      return resposta.destroy();
+    }
     if (erro instanceof ErroDaApi) {
       return responder(resposta, erro.tipo, erro.message, { instance: pedido.path, ...erro.extras }, erro.cabecalhos);
     }
