@@ -35,6 +35,8 @@ const CASOS = [
   ['erro: quem sou eu sem sessão', '/v1/auth/eu', {}, 401],
   ['progresso por trilha', '/v1/progresso/trilhas', {}, 200],
   ['progresso por pessoa', '/v1/progresso/pessoas', {}, 200],
+  ['ranking', '/v1/ranking', {}, 200],
+  ['progresso por semana', '/v1/progresso/semanas', {}, 200],
   ['concluintes de uma trilha', '/v1/trilhas/T1/concluintes', {}, 200],
   ['erro: concluintes de trilha que não existe', '/v1/trilhas/T9/concluintes', {}, 404],
 ];

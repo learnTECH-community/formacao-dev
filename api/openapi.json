@@ -725,6 +725,94 @@
           }
         }
       }
+    },
+    "/v1/ranking": {
+      "get": {
+        "summary": "Quem mais concluiu itens; empate divide a posição",
+        "operationId": "ranking",
+        "parameters": [
+          {
+            "name": "If-None-Match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Quem mais concluiu itens; empate divide a posição",
+            "headers": {
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ranking"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Nada mudou desde o ETag enviado"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema"
+          }
+        }
+      }
+    },
+    "/v1/progresso/semanas": {
+      "get": {
+        "summary": "Conclusões por semana e o total acumulado",
+        "operationId": "progressoSemanal",
+        "parameters": [
+          {
+            "name": "If-None-Match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Conclusões por semana e o total acumulado",
+            "headers": {
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProgressoSemanal"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Nada mudou desde o ETag enviado"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1241,6 +1329,79 @@
               "pessoa",
               "mantenedor"
             ]
+          }
+        }
+      },
+      "Ranking": {
+        "type": "object",
+        "required": [
+          "ranking"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "ranking": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "posicao",
+                "usuario",
+                "concluidos",
+                "empatado"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "posicao": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "usuario": {
+                  "type": "string"
+                },
+                "concluidos": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "empatado": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      },
+      "ProgressoSemanal": {
+        "type": "object",
+        "required": [
+          "semanas"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "semanas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "semana",
+                "concluidas",
+                "acumulado"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "semana": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "concluidas": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "acumulado": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
           }
         }
       }

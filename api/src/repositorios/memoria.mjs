@@ -51,6 +51,29 @@ export function criarRepositorioEmMemoria() {
         return { trilha: t.codigo, nome: t.nome, feitos, total, percentual: total === 0 ? 0 : Math.floor((feitos * 100) / total) };
       });
     },
+    async ranking() {
+      const contagem = [...Map.groupBy(conclusoes, (c) => c.usuario)].map(([usuario, l]) => ({ usuario, concluidos: l.length }));
+      const vezes = Map.groupBy(contagem, (p) => p.concluidos);
+      return contagem
+        .map((p) => ({
+          posicao: 1 + contagem.filter((o) => o.concluidos > p.concluidos).length,
+          usuario: p.usuario,
+          concluidos: p.concluidos,
+          empatado: vezes.get(p.concluidos).length > 1,
+        }))
+        .sort((a, b) => a.posicao - b.posicao || (a.usuario < b.usuario ? -1 : 1));
+    },
+    async progressoSemanal() {
+      const segunda = (iso) => {
+        const d = new Date(iso);
+        const dia = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+        dia.setUTCDate(dia.getUTCDate() - ((dia.getUTCDay() + 6) % 7));
+        return dia.toISOString().slice(0, 10);
+      };
+      const porSemana = [...Map.groupBy(conclusoes, (c) => segunda(c.concluidaEm))].sort(([a], [b]) => (a < b ? -1 : 1));
+      let acumulado = 0;
+      return porSemana.map(([semana, l]) => ({ semana, concluidas: l.length, acumulado: (acumulado += l.length) }));
+    },
     async concluintesDaTrilha(codigo) {
       const itens = trilhas.find((t) => t.codigo === codigo)?.itens ?? [];
       if (itens.length === 0) return [];
