@@ -40,11 +40,13 @@ Todo PR para a `main` ou para uma `developer/**` roda o workflow `.github/workfl
 
 | Job | O que faz |
 |---|---|
-| `catalogo` | tipos (`npm run typecheck`), `npm test` e o catálogo |
-| `app` | lint (`npm run lint`), build e orçamento de peso |
+| `catalogo` | tipos (`npm run typecheck`), `npm test`, o catálogo e a busca de segredos (`node scripts/segredos.mjs`) |
+| `app` | lint (`npm run lint`), build, orçamento de peso e `npm audit --omit=dev` |
 | `cobertura` | cobertura dos cálculos, com limite de 90% |
 | `painel` | testes no navegador (Playwright e axe) |
 | `api` | testes da API com SQLite e MongoDB e `npm audit` |
+
+Segredos nunca entram no Git: só variáveis de ambiente, com os nomes no `api/.env.example` e os valores vazios. O `.env` está no `.gitignore`. O `npm audit` barra vulnerabilidade alta ou crítica nas dependências de produção; baixa e média aparecem no log para tratar numa issue.
 
 Se um job falha, o PR não está pronto. Rode o mesmo comando local antes do push.
 
