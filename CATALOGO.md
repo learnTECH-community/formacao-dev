@@ -4,7 +4,7 @@ Cada item tem um código (ex.: `T2.3`). O PR que pratica o item no **Painel de F
 
 O roadmap.sh é o nosso referencial: cada trilha cresce, na ordem dos tópicos do roadmap dela, até todo tópico ter um item prático aqui (issue de `cobertura` de cada trilha). Os itens foram escritos pela comunidade, com palavras próprias. O link de cada trilha leva ao roadmap correspondente no [roadmap.sh](https://roadmap.sh), onde está o conteúdo de estudo. Este repositório não copia o conteúdo do roadmap.sh: a licença dele só permite compartilhar os links (ver [ADR 001](docs/adr/001-roadmap-sh-so-por-link.md)).
 
-**Progresso:** 42 de 161 itens
+**Progresso:** 43 de 161 itens
 
 ## T0 · Fundamentos
 Roadmaps de referência: [Full Stack](https://roadmap.sh/full-stack) · [Computer Science](https://roadmap.sh/computer-science) · [Linux](https://roadmap.sh/linux)
@@ -140,7 +140,7 @@ Roadmaps de referência: [QA](https://roadmap.sh/qa) · [Desempenho no frontend]
 - [x] **T7.5** Ter cobertura dos cálculos de progresso acima de 90%.
 - [x] **T7.6** Plano de testes do painel. (#107)
 - [ ] **T7.7** Sessão de teste exploratório. (#108)
-- [ ] **T7.8** Teste de contrato da API. (#109)
+- [x] **T7.8** Teste de contrato da API. (#109)
 - [x] **T7.9** Ponta a ponta no celular e em vários navegadores. (#110)
 - [ ] **T7.10** Teste de carga da API. (#111)
 - [x] **T7.11** Relatório do Playwright no CI. (#112)
