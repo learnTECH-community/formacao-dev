@@ -1,0 +1,9 @@
+# T9.9: o Prometheus do compose lê as métricas da API pela rede do compose.
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+scrape_configs:
+  - job_name: api
+    metrics_path: /metricas
+    static_configs:
+      - targets: ["api:4320"]

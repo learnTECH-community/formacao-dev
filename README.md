@@ -117,6 +117,13 @@ curl http://127.0.0.1:8080/api/v1/health                             # {"situaca
 curl -sI -H 'Accept-Encoding: gzip' http://127.0.0.1:8080/assets/<arquivo>.js | grep -i 'content-encoding\|cache-control'
 ```
 
+Métricas (T9.9): com `METRICAS=sim` (ligado no compose), a API expõe `GET /metricas` no formato do Prometheus: `api_pedidos_total` (por método, rota e status) e o histograma `api_duracao_segundos`. A rota é o modelo (`/v1/itens/:codigo`), sem dado pessoal. O Prometheus do compose lê as métricas a cada 5 s e abre em http://127.0.0.1:9090/. Consultas de exemplo:
+
+```bash
+curl -G http://127.0.0.1:9090/api/v1/query --data-urlencode 'query=sum by (rota, status) (api_pedidos_total)'
+curl -G http://127.0.0.1:9090/api/v1/query --data-urlencode 'query=histogram_quantile(0.95, sum by (le) (rate(api_duracao_segundos_bucket[5m])))'   # p95 da latência
+```
+
 A imagem da API é feita em estágios (`api/Dockerfile`): a final leva só as dependências de produção e roda com o usuário `node`, sem root. O Nginx usa a imagem `nginx-unprivileged`, também sem root. O `.dockerignore` deixa de fora `node_modules`, `.env` e `.git`. No CI, o job `docker` constrói as imagens, confere o usuário e o conteúdo, mostra o tamanho, sobe o compose, faz a fumaça pelo Nginx, confere que o banco não tem porta nem é alcançado pelo Nginx e que os dados sobrevivem a `down` e `up` (e somem com `down -v`).
 
 ## Documentos

@@ -406,6 +406,15 @@ O log nunca guarda a query, o corpo nem os cabeçalhos do pedido; campos como `t
 {"hora":"2026-11-10T12:00:00.000Z","nivel":"info","msg":"pedido","id":"3f1c...","metodo":"GET","rota":"/v1/catalogo","status":200,"ms":4.2}
 ```
 
+## Métricas
+
+Com `METRICAS=sim`, a API responde `GET /metricas` (fora do `/v1`, sem limite de pedidos) no formato de texto do Prometheus (T9.9):
+
+- `api_pedidos_total{metodo, rota, status}`: contador de pedidos;
+- `api_duracao_segundos{metodo, rota}`: histograma da latência, com baldes de 5 ms a 5 s.
+
+A `rota` é o modelo (`/v1/itens/:codigo`); caminho que não existe vira `(sem rota)`. Nenhum rótulo carrega valor do pedido, query ou usuário. Sem a variável, a rota não existe (404). No compose, só o Prometheus a lê; o Nginx devolve 404 para `/api/metricas`.
+
 ## Versões e desativação
 
 - A versão vai no caminho: `/v1`. Mudança que quebra um cliente (tirar um campo, mudar o tipo, mudar o sentido) só entra numa versão nova, `/v2`.

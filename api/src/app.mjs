@@ -13,6 +13,7 @@ import { criarClienteDoGitHub, sincronizar } from './github.mjs';
 import { HSTS, redirecionarParaHttps, soHttpsDoAmbiente } from './https.mjs';
 import { limitarPedidos, limiteDoAmbiente } from './limite.mjs';
 import { criarLog, registrarPedidos } from './log.mjs';
+import { criarMetricas, metricasDoAmbiente } from './metricas.mjs';
 import { conferirRepositorio } from './repositorios/contrato.mjs';
 import { rotaDoCsv } from './rotas/csv.mjs';
 import { rotasDeItens } from './rotas/itens.mjs';
@@ -35,6 +36,7 @@ import { OBSOLETAS, obsoleta } from './versao.mjs';
  * @param {ReturnType<typeof criarCanalDeEventos>} [opcoes.eventos] Avisos em tempo real (T5.8).
  * @param {string[]} [opcoes.chavesDaSessao] Chaves HMAC do cookie da sessão (T10.9).
  * @param {boolean} [opcoes.soHttps] Redireciona HTTP para HTTPS atrás do proxy (T10.10).
+ * @param {boolean} [opcoes.metricas] Liga GET /metricas, no formato do Prometheus (T9.9).
  */
 export function criarApp({
   repositorio,
@@ -50,6 +52,7 @@ export function criarApp({
   eventos = criarCanalDeEventos(),
   chavesDaSessao: chaves = chavesDaSessao(),
   soHttps = soHttpsDoAmbiente(),
+  metricas = metricasDoAmbiente(),
 }) {
   conferirRepositorio(repositorio);
   const app = express();
@@ -59,6 +62,9 @@ export function criarApp({
   // T10.10: atrás do proxy da hospedagem, confia no primeiro salto para o IP e o protocolo.
   if (soHttps) app.set('trust proxy', 1);
   app.use(registrarPedidos(log));
+  // T9.9: com METRICAS=sim, conta os pedidos e mede a latência por rota.
+  const medidor = metricas ? criarMetricas() : undefined;
+  if (medidor) app.use(medidor.middleware);
   // T10.10: HTTP vira HTTPS (com SO_HTTPS) e o HSTS vai em toda resposta.
   app.use(redirecionarParaHttps(soHttps));
   app.use(helmet({ strictTransportSecurity: HSTS }));
@@ -143,6 +149,7 @@ export function criarApp({
     resposta.type('text/markdown; charset=utf-8').send((await catalogo()).texto);
   });
 
+  if (medidor) app.get('/metricas', medidor.rota);
   app.use('/v1', limitarPedidos({ porMinuto: limitePorMinuto, agora: () => relogio().getTime() }), v1);
   app.use(rotaNaoEncontrada);
   app.use(tratarErros(log));
