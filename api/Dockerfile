@@ -10,14 +10,20 @@ WORKDIR /app/api
 COPY api/package.json api/package-lock.json ./
 RUN npm ci --omit=dev --ignore-scripts --no-audit --no-fund && npm cache clean --force
 
-# Estágio de desenvolvimento (T9.14): todas as dependências, código montado pelo compose.
+# Estágio de desenvolvimento (T9.14): todas as dependências e o código. No compose de
+# desenvolvimento, o "watch" copia cada arquivo salvo para cá e o node --watch reinicia.
 FROM node:24-alpine AS desenvolvimento
 WORKDIR /app/api
 COPY api/package.json api/package-lock.json ./
 RUN npm ci --ignore-scripts --no-audit --no-fund
+COPY api/src ./src
+COPY api/migracoes ./migracoes
+COPY api/consultas ./consultas
+COPY CATALOGO.md /app/CATALOGO.md
+COPY scripts/catalogo.mjs /app/scripts/catalogo.mjs
 ENV ENDERECO=0.0.0.0 PORTA=4320
 EXPOSE 4320
-CMD ["node", "--watch-path=src", "src/servidor.mjs"]
+CMD ["node", "--watch", "src/servidor.mjs"]
 
 # Estágio final: Node, as dependências de produção e o código. Nada de testes nem do npm cache.
 FROM node:24-alpine AS final

@@ -231,3 +231,46 @@ jobs:
       - name: Descer o compose
         if: always()
         run: docker compose down -v
+  # T9.14: o compose de desenvolvimento sobe num comando e recarrega a API ao salvar.
+  compose-dev:
+    runs-on: ubuntu-latest
+    env:
+      COMPOSE_FILE: compose.yaml:compose.dev.yaml
+    steps:
+      - uses: actions/checkout@v4
+      - name: Subir o compose de desenvolvimento e medir o tempo
+        run: |
+          inicio=$(date +%s)
+          docker compose up --build --wait --wait-timeout 240
+          echo "compose de desenvolvimento saudável em $(( $(date +%s) - inicio )) s (com o build)" | tee -a "$GITHUB_STEP_SUMMARY"
+          docker compose down
+          inicio=$(date +%s)
+          docker compose up --wait --wait-timeout 120
+          echo "e em $(( $(date +%s) - inicio )) s com as imagens prontas" | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: O painel (Vite) e a API respondem
+        run: |
+          html=$(curl -fsS http://127.0.0.1:4317/)
+          grep -q '/@vite/client' <<< "$html"
+          curl -fsS http://127.0.0.1:4320/v1/health
+      - name: Salvar um arquivo da API reinicia a API
+        run: |
+          nohup docker compose watch --no-up > watch.log 2>&1 &
+          sleep 5
+          antes=$(docker compose logs api | grep -c 'API em http' || true)
+          echo "inícios da API antes: $antes"
+          echo "// mudança de teste do CI (T9.14)" >> api/src/versao.mjs
+          for i in $(seq 1 30); do
+            depois=$(docker compose logs api | grep -c 'API em http' || true)
+            [ "$depois" -gt "$antes" ] && break
+            sleep 1
+          done
+          echo "inícios da API depois: $depois (em ${i} s)" | tee -a "$GITHUB_STEP_SUMMARY"
+          cat watch.log
+          test "$depois" -gt "$antes"
+          for i in $(seq 1 20); do curl -fsS http://127.0.0.1:4320/v1/health && break; sleep 1; done
+      - name: Logs do compose
+        if: always()
+        run: docker compose logs --no-color | tail -60
+      - name: Descer o compose
+        if: always()
+        run: docker compose down -v
