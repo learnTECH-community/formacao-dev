@@ -1,6 +1,6 @@
 // Partes fixas da página: cabeçalho com navegação e rodapé.
 import type { ReactNode } from 'react';
-import { useLocation } from 'react-router';
+import { Link, useLocation } from 'react-router';
 import { BotaoTema } from './BotaoTema';
 
 const GITHUB = 'https://github.com/learnTECH-community/formacao-dev';
@@ -30,6 +30,9 @@ export function Topo({ total, ocupado }: PropsTopo) {
             </li>
             <li>
               <a href={`${inicio}#como-participar`}>Como participar</a>
+            </li>
+            <li>
+              <Link to="/propor">Propor item</Link>
             </li>
             <li>
               <a href={`${GITHUB}/blob/main/CATALOGO.md`}>Catálogo no GitHub</a>

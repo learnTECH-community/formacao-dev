@@ -16,6 +16,9 @@ import { mensagemDeErro, useCatalogo } from './useCatalogo';
 // build e só é baixado quando alguém abre /trilha/<código>.
 const DetalheTrilha = lazy(() => import('./paginas/DetalheTrilha').then((m) => ({ default: m.DetalheTrilha })));
 
+// T4.12: o formulário (com o Zod) só é baixado ao abrir /propor.
+const ProporItem = lazy(() => import('./paginas/ProporItem').then((m) => ({ default: m.ProporItem })));
+
 export function App() {
   const catalogo = useCatalogo();
   const estado = useRef<HTMLDivElement>(null);
@@ -84,6 +87,14 @@ export function App() {
             element={
               <Suspense fallback={<CarregandoPagina />}>
                 <DetalheTrilha {...pagina} />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/propor"
+            element={
+              <Suspense fallback={<p className="faixa" role="status">Carregando o formulário…</p>}>
+                <ProporItem {...pagina} />
               </Suspense>
             }
           />
