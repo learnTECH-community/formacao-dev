@@ -77,6 +77,7 @@ O painel tem rotas: `/` (trilhas e itens, com o filtro no endereço, como `/?tri
 - [CATALOGO.md](CATALOGO.md): as trilhas e os itens.
 - [CONTRIBUTING.md](CONTRIBUTING.md): fluxo, PR e revisão.
 - [docs/MVP.md](docs/MVP.md): estado do projeto pela régua da comunidade.
+- [docs/plano-de-testes.md](docs/plano-de-testes.md): o que se testa em cada nível e os riscos que cada teste cobre.
 - [docs/como-a-web-funciona.md](docs/como-a-web-funciona.md): do endereço digitado até o painel na tela.
 - [docs/adr/](docs/adr/): decisões.
 
