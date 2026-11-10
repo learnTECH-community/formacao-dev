@@ -10,16 +10,16 @@
 |---|---|---|---|
 | 1 | Problema e público claros | Atende | Ver "Problema e público", abaixo |
 | 2 | Hipótese a validar | Atende | Ver "Hipótese", abaixo |
-| 3 | Fluxo principal completo | Atende | 10/11/2026, `npm run test:e2e -- e2e/fluxo.spec.mjs` → 2 passed (claro e escuro): abrir o painel, filtrar por trilha e situação, abrir o detalhe da trilha pelo link do cartão e voltar com o filtro mantido, só por papéis e nomes (T7.1). Rotas e filtro no endereço em `e2e/rotas.spec.mjs` (T4.2, T4.3) |
+| 3 | Fluxo principal completo | Atende | 10/11/2026, `npm run test:e2e -- e2e/fluxo.spec.mjs` → passa no Chromium (claro e escuro), no WebKit e num celular emulado (Pixel 7): abrir o painel, filtrar por trilha e situação, abrir o detalhe da trilha pelo link do cartão e voltar com o filtro mantido, só por papéis e nomes (T7.1, T7.9). CI do PR #193 (run 42871151673): 154 passed, 28 deles no WebKit e no celular. Rotas e filtro no endereço em `e2e/rotas.spec.mjs` (T4.2, T4.3) |
 | 4 | Escopo enxuto | Atende | Ver "Fora do MVP", abaixo |
 | 5 | Medição de uso | Não se aplica (N1) | — |
-| 6 | Falhas tratadas | Atende | 10/11/2026, CI do PR #176 (run 42854916013): no navegador, `e2e/estados.spec.mjs` (espera com `aria-busy`, falha de rede com "Tentar de novo", HTTP 500 e catálogo vazio) → pass nos temas claro e escuro; na unidade, `useCatalogo.test.ts` e `App.test.tsx` com `fetch` simulado (ok, HTTP 500, falha de rede, vazio, demora, cancelamento e nova tentativa) → 70 passed, `# skipped 0` (T3.5, T4.7, T7.4) |
+| 6 | Falhas tratadas | Atende | 10/11/2026: no navegador, `e2e/estados.spec.mjs` (espera com `aria-busy`, falha de rede com "Tentar de novo", HTTP 500 e catálogo vazio) passa em todos os projetos; na unidade, `useCatalogo.test.ts` contra servidor simulado (msw): HTTP 500, falha de rede com até duas novas tentativas, vazio, demora, cancelamento e nova tentativa; `App.test.tsx` e `LimiteDeErro.test.tsx` (erro num cartão não derruba a página) (T3.5, T4.7, T4.11, T4.13, T7.4) |
 | 7 | Desempenho aceitável | Não se aplica (N1) | — |
-| 8 | Acessibilidade básica | Atende | 10/11/2026, `npm run test:e2e` → axe (WCAG 2.1 A e AA) sem violações nos temas claro e escuro, em 1440 e 320 px, com o catálogo real; teste de teclado: "Pular para o conteúdo", foco visível em toda parada do Tab, ordem do Tab, nada prende o foco, filtros pelo teclado (T2.4, T2.5, T2.6, T3.3). `e2e/axe-telas.spec.mjs` → 16 passed: axe em 7 telas (início, com filtro, detalhe, trilha e página não encontradas, erro, vazio), claro e escuro (T7.2). Falta o teste com leitor de tela real (T2.3, #27) |
-| 9 | Segurança e conformidade | Parcial | 10/11/2026: `npm audit --omit=dev` → `found 0 vulnerabilities` (o projeto não tem dependência de produção); `gh api repos/learnTECH-community/formacao-dev/dependabot/alerts` → `[]`; sem segredo no código; o painel não guarda dado pessoal. Falta o `SECURITY.md` (T10.4) e a decisão por escrito sobre dados pessoais (T10.5) |
-| 10 | Entrega confiável | Parcial | CI com os jobs `catalogo` (typecheck, `npm test`, catálogo), `app` (lint e build do React) e `painel` (Playwright) em todo PR para `developer/**` e `main`. A `main` está sem proteção por decisão do responsável em 10/11/2026 (`gh api repos/learnTECH-community/formacao-dev/rulesets` → `[]`); issue #38, `depende-do-responsavel` |
-| 11 | Testes dos fluxos críticos | Atende | 10/11/2026, CI do PR #153 (run 42845843272): `npm test` (3 testes do catálogo + 30 do Vitest) e `npm run test:e2e` (62 testes) sem nenhum `skipped`. Com os ajustes da revisão, 66 testes no navegador (local, 10/11/2026) |
-| 12 | Documentação honesta | Atende | 10/11/2026, clone novo da sprint: os comandos de "Rodar o painel" do README (`npm ci`, `npm run typecheck`, `npm test`, `npm run build`, `npx playwright install chromium`, `npm run test:e2e`, `npm run painel`) rodaram sem erro (T0.2) |
+| 8 | Acessibilidade básica | Atende | 10/11/2026, `npm run test:e2e` → axe (WCAG 2.1 A e AA) sem violações nos temas claro e escuro, em 1440 e 320 px, com o catálogo real; `e2e/axe-telas.spec.mjs` em 7 telas (início, com filtro, detalhe, trilha e página não encontradas, erro, vazio) (T7.2), mais a janela modal aberta (`e2e/modal.spec.mjs`, foco preso e Esc, T4.15), o formulário com erros (`e2e/proposta.spec.mjs`, T4.12) e a espera do detalhe sob demanda (T4.14). Teclado: "Pular para o conteúdo", foco visível em toda parada do Tab, ordem do Tab, nada prende o foco, filtros pelo teclado (T2.4, T2.6, T3.3). Falta o teste com leitor de tela real (T2.3, #27) |
+| 9 | Segurança e conformidade | Parcial | 10/11/2026: `npm audit --omit=dev` → `found 0 vulnerabilities` (dependências de produção: `react`, `react-dom`, `react-router`, `@tanstack/react-query` e `zod`); `gh api repos/learnTECH-community/formacao-dev/dependabot/alerts` → `0`; sem segredo no código; o painel só guarda no navegador o tema e os itens fixados, e o formulário "Propor item" não envia nada (gera um link do GitHub). Falta o `SECURITY.md` (T10.4) e a decisão por escrito sobre dados pessoais (T10.5) |
+| 10 | Entrega confiável | Parcial | CI em todo PR para `developer/**` e `main`, com os jobs `catalogo` (typecheck, `npm test`, catálogo), `app` (lint, build e orçamento de peso, T7.12), `cobertura` (limite de 90%, T7.5) e `painel` (Playwright no Chromium, WebKit e celular, com relatório HTML como artefato, T7.11). A `main` está sem proteção por decisão do responsável em 10/11/2026 (`gh api repos/learnTECH-community/formacao-dev/rulesets` → `[]`); issue #38, `depende-do-responsavel` |
+| 11 | Testes dos fluxos críticos | Atende | 10/11/2026, local: `npm test` → 15 testes de scripts (catálogo, servidor, LCP, orçamento) + 135 do Vitest (funções, componentes, hooks, app, rotas, renderizações), e `npm run test:e2e` → 160 passed, sem nenhum `skipped`; o CI do PR #204 roda os mesmos testes. Cobertura dos cálculos: 100% das linhas e 97,7% dos ramos (`npm run cobertura`) |
+| 12 | Documentação honesta | Atende | 10/11/2026, nos clones novos deste ciclo: os comandos de "Rodar o painel" do README (`npm ci`, `npm run typecheck`, `npm run lint`, `npm test`, `npm run cobertura`, `npm run build`, `npm run orcamento`, `npx playwright install chromium webkit`, `npm run test:e2e`, `npm run servir`, `npm run lcp`, `npm run painel`) rodaram sem erro. Plano de testes em `docs/plano-de-testes.md` (T7.6) |
 
 ## Problema e público
 
@@ -39,6 +39,10 @@ Acreditamos que itens pequenos e práticos, num projeto comum e com o progresso 
 - Medição de uso: o projeto é N1.
 
 ## Histórico
+
+### Ciclo de 10/11/2026 (painel em JS e TS, antes do React)
+
+**Resumo:** 8 de 10 aplicáveis atendidos. Parcial: 9 e 10. O React (T4) e a trilha de qualidade (T7) não mudaram a conta: reforçaram as evidências dos critérios 3, 6, 8, 10, 11 e 12.
 
 ### Ciclo de 10/11/2026 (antes do painel)
 

@@ -67,8 +67,8 @@ npm test                                # testes do catálogo e das funções do
 npm run cobertura                       # cobertura dos cálculos (progresso, catálogo, filtro); abaixo de 90% falha
 npm run build                           # gera o site em dist/, com o CATALOGO.md junto
 npm run orcamento                       # confere o peso do dist/: até 500 KB no total e 150 KB de JS (gzip)
-npx playwright install chromium         # baixa o navegador dos testes (uma vez)
-npm run test:e2e                        # testes do painel no navegador, temas claro e escuro
+npx playwright install chromium webkit  # baixa os navegadores dos testes (uma vez)
+npm run test:e2e                        # testes no navegador: Chromium (claro e escuro), WebKit e celular
 npm run servir                          # serve o dist/ com Brotli/gzip e cache, como a hospedagem deve fazer (porta 4318)
 npm run lcp                             # Lighthouse móvel 3 vezes no dist/ (ou: node scripts/lcp.mjs <endereço>); meta: LCP até 2,5 s
 ```
