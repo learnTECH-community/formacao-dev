@@ -4,7 +4,7 @@ Cada item tem um código (ex.: `T2.3`). O PR que pratica o item no **Painel de F
 
 O roadmap.sh é o nosso referencial: cada trilha cresce, na ordem dos tópicos do roadmap dela, até todo tópico ter um item prático aqui (issue de `cobertura` de cada trilha). Os itens foram escritos pela comunidade, com palavras próprias. O link de cada trilha leva ao roadmap correspondente no [roadmap.sh](https://roadmap.sh), onde está o conteúdo de estudo. Este repositório não copia o conteúdo do roadmap.sh: a licença dele só permite compartilhar os links (ver [ADR 001](docs/adr/001-roadmap-sh-so-por-link.md)).
 
-**Progresso:** 19 de 161 itens
+**Progresso:** 20 de 161 itens
 
 ## T0 · Fundamentos
 Roadmaps de referência: [Full Stack](https://roadmap.sh/full-stack) · [Computer Science](https://roadmap.sh/computer-science) · [Linux](https://roadmap.sh/linux)
@@ -136,7 +136,7 @@ Roadmaps de referência: [QA](https://roadmap.sh/qa) · [Desempenho no frontend]
 - [ ] **T7.1** Teste de ponta a ponta (Playwright) do fluxo principal: abrir, filtrar, ver o detalhe.
 - [ ] **T7.2** Checar acessibilidade com axe no teste de ponta a ponta, em tema claro e escuro.
 - [ ] **T7.3** Medir o LCP no celular com Lighthouse, 3 execuções, e manter abaixo de 2,5 s.
-- [ ] **T7.4** Simular falha de rede e lista vazia nos testes.
+- [x] **T7.4** Simular falha de rede e lista vazia nos testes.
 - [ ] **T7.5** Ter cobertura dos cálculos de progresso acima de 90%.
 - [ ] **T7.6** Plano de testes do painel. (#107)
 - [ ] **T7.7** Sessão de teste exploratório. (#108)
