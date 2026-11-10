@@ -105,3 +105,10 @@ USE TEMP B-TREE FOR ORDER BY
 | Cresce com | Conclusões da trilha | Pessoas × itens da trilha |
 
 **Escolhida: a versão com JOIN.** Ela parte só do que interessa (os itens da trilha) e não roda nada por pessoa. A subconsulta é mais fácil de ler como frase, mas o custo cresce com o número de pessoas, mesmo as que nunca tocaram na trilha. A rota `GET /v1/trilhas/{codigo}/concluintes` usa a versão com JOIN; um teste confere que o plano dela não tem subconsulta correlacionada.
+
+## Ranking e progresso por semana (T6.9)
+
+- [`ranking.sql`](../api/consultas/ranking.sql): a CTE `por_pessoa` conta as conclusões de cada pessoa; `RANK() OVER (ORDER BY concluidos DESC)` dá a posição. **Empate**: `RANK` repete a posição e pula as seguintes (1, 2, 2, 4). `DENSE_RANK` daria 1, 2, 2, 3, e `ROW_NUMBER` desempataria por acaso; escolhemos `RANK` porque "quarto lugar" deve dizer que três pessoas fizeram mais. `count(*) OVER (PARTITION BY concluidos) > 1` marca quem divide a posição, e a ordem alfabética só deixa a lista estável dentro dela.
+- [`progresso_semanal.sql`](../api/consultas/progresso_semanal.sql): a CTE `por_semana` agrupa pela segunda-feira da semana (`date(concluida_em, '-6 days', 'weekday 1')`, em UTC; domingo ainda é a semana que começou na segunda anterior). `sum(concluidas) OVER (ORDER BY semana ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)` soma do começo até a semana da linha.
+- Semana sem nenhuma conclusão não aparece na lista (a CTE só tem semanas com linhas). Para um gráfico contínuo, quem desenha preenche o buraco com o acumulado anterior.
+- O painel, com a API configurada, mostra a tabela "Quem mais concluiu" na página inicial, com o resultado do ranking.
