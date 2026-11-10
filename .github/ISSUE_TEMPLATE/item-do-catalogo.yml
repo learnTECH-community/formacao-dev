@@ -1,0 +1,23 @@
+name: Item do catálogo
+description: Praticar um item do CATALOGO.md no Painel de Formação
+labels: [item-do-catalogo]
+body:
+  - type: input
+    id: codigo
+    attributes: { label: Código do item, placeholder: "T2.3" }
+    validations: { required: true }
+  - type: textarea
+    id: objetivo
+    attributes: { label: Objetivo, description: O que muda, em uma frase }
+    validations: { required: true }
+  - type: textarea
+    id: motivo
+    attributes: { label: Motivo }
+    validations: { required: true }
+  - type: textarea
+    id: criterios
+    attributes: { label: Critérios de entrega, description: De 3 a 5, verificáveis, value: "- [ ] \n- [ ] \n- [ ] " }
+    validations: { required: true }
+  - type: textarea
+    id: fora
+    attributes: { label: Fora desta issue }

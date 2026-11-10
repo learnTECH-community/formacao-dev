@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Dúvida sobre uma trilha
+    url: https://github.com/learnTECH-community/formacao-dev/discussions
+    about: Pergunte nas Discussions. Quem perguntou marca a resposta que resolveu.
