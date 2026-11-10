@@ -1,6 +1,7 @@
 // Grupo de itens de uma trilha na seção "Itens".
 import type { Trilha } from '../tipos';
 import { ItemDoCatalogo } from './ItemDoCatalogo';
+import { LimiteDeErro } from './LimiteDeErro';
 
 interface Props {
   trilha: Trilha;
@@ -16,16 +17,18 @@ export function GrupoDeItens({ trilha, fixados, aoAlternarFixado }: Props) {
         <span className="codigo">{trilha.codigo}</span>
         {` ${trilha.nome}`}
       </h3>
-      <ul className="lista-itens">
-        {trilha.itens.map((item) => (
-          <ItemDoCatalogo
-            key={item.codigo}
-            item={item}
-            fixado={fixados.includes(item.codigo)}
-            aoAlternarFixado={aoAlternarFixado}
-          />
-        ))}
-      </ul>
+      <LimiteDeErro nome={`os itens da trilha ${trilha.codigo}`}>
+        <ul className="lista-itens">
+          {trilha.itens.map((item) => (
+            <ItemDoCatalogo
+              key={item.codigo}
+              item={item}
+              fixado={fixados.includes(item.codigo)}
+              aoAlternarFixado={aoAlternarFixado}
+            />
+          ))}
+        </ul>
+      </LimiteDeErro>
     </section>
   );
 }
