@@ -71,6 +71,12 @@ Regra: **nenhuma consulta é montada com texto do usuário**. O teste `injecao.t
 - Primeira análise, 10/11/2026, PR #254: `gh api repos/learnTECH-community/formacao-dev/code-scanning/analyses` → `javascript-typescript` com 201 regras e **0 alertas**; `actions` com 27 regras e **0 alertas**. Nenhum alerta para corrigir nem dispensar.
 - Regra para os próximos: alerta alto se corrige ou ganha issue com prazo; dispensa só com motivo escrito (`CONTRIBUTING.md`).
 
+## Varredura das imagens e varredura dinâmica (T9.13, T10.12)
+
+- Workflow `Varreduras` (`.github/workflows/varreduras.yml`), em PR que muda as imagens, as dependências, a API ou o painel.
+- **Trivy** (job `trivy`): relatório completo das imagens da API e do Nginx no artefato `relatorio-trivy`; falha com vulnerabilidade alta ou crítica que já tem correção. Exceções no `.trivyignore`, com motivo, issue e prazo (`exp:`). A primeira rodada achou 64 altas e 3 críticas na imagem do Nginx 1.27; com o Nginx 1.30 e o `apk upgrade` nas imagens finais, ficou em 0 (10/11/2026, PR #258).
+- **OWASP ZAP** (job `zap`): sobe o compose no próprio CI, roda o baseline no painel e a varredura ativa nas rotas do `api/openapi.json`, pelo Nginx. Relatórios no artefato `relatorio-zap`. Falha com alerta alto fora do `zap/regras.tsv` (`scripts/zap.mjs`). Primeira rodada (10/11/2026, PR #258): 15 alertas, **nenhum alto**; o médio é a falta de CSP no painel. Os médios e os 5xx da varredura ativa viraram issues.
+
 ## Segredos e dependências (T10.1, T10.2)
 
 - Nenhum segredo no Git: só variáveis de ambiente, com os nomes em `api/.env.example`. O `node scripts/segredos.mjs` roda no CI e falha se achar `.env` versionado ou texto com cara de credencial.
