@@ -1,7 +1,7 @@
 // T5.11: GET /v1/progresso.csv exporta o progresso por stream: as linhas saem uma
-// a uma, com pressão de volta (pipeline), sem montar o arquivo inteiro na memória.
-import { Readable } from 'node:stream';
-import { pipeline } from 'node:stream/promises';
+// a uma, com pressão de volta (espera o "drain" quando o buffer enche), sem montar
+// o arquivo inteiro na memória. Se quem pediu fechar a conexão, a escrita para.
+import { once } from 'node:events';
 import { comConclusoes } from '../catalogo.mjs';
 
 export const COLUNAS = ['trilha', 'codigo', 'texto', 'feito', 'usuarios', 'prs'];
@@ -43,10 +43,12 @@ export function rotaDoCsv({ rota, trilhas, repositorio }) {
     resposta.set('Content-Type', 'text/csv; charset=utf-8');
     resposta.set('Content-Disposition', 'attachment; filename="progresso.csv"');
     // BOM: o Excel abre o UTF-8 com acentos certos.
-    const linhas = (function* () {
-      yield '﻿';
-      yield* linhasDoProgresso(dados);
-    })();
-    await pipeline(Readable.from(linhas), resposta);
+    resposta.write(String.fromCharCode(0xfeff));
+    for (const linha of linhasDoProgresso(dados)) {
+      if (resposta.destroyed) return; // quem pediu foi embora
+      // write devolve false quando o buffer está cheio: espera esvaziar.
+      if (!resposta.write(linha)) await Promise.race([once(resposta, 'drain'), once(resposta, 'close')]);
+    }
+    resposta.end();
   });
 }
