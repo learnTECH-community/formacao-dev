@@ -1,18 +1,14 @@
 // T3.1: transforma o texto do CATALOGO.md em dados.
 // Função pura: recebe o texto e devolve as trilhas. Não mexe na página.
+import type { Pedaco, Trilha } from './tipos';
 
 const TRILHA = /^## (T\d+) · (.+)$/;
 const ITEM = /^- \[( |x)\] \*\*(T\d+\.\d+)\*\* (.+)$/;
 const ROADMAPS = /^Roadmaps? de referência:/;
 const LINK = /\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g;
 
-/**
- * @param {string} texto conteúdo do CATALOGO.md
- * @returns {{ codigo: string, nome: string, roadmaps: { nome: string, url: string }[],
- *   itens: { codigo: string, texto: string, feito: boolean }[] }[]}
- */
-export function lerCatalogo(texto) {
-  const trilhas = [];
+export function lerCatalogo(texto: string): Trilha[] {
+  const trilhas: Trilha[] = [];
   for (const linha of texto.split(/\r?\n/)) {
     const trilha = linha.match(TRILHA);
     if (trilha) {
@@ -31,12 +27,8 @@ export function lerCatalogo(texto) {
   return trilhas;
 }
 
-/**
- * Divide o texto de um item em pedaços de texto e de código (entre crases).
- * @param {string} texto
- * @returns {{ codigo: boolean, texto: string }[]}
- */
-export function pedacosDoTexto(texto) {
+/** Divide o texto de um item em pedaços de texto e de código (entre crases). */
+export function pedacosDoTexto(texto: string): Pedaco[] {
   return texto
     .split(/(`[^`]+`)/)
     .filter(Boolean)
