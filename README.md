@@ -98,6 +98,18 @@ VITE_API_URL=http://127.0.0.1:4320 npm run painel     # noutro, na raiz: o paine
 
 Sem `VITE_API_URL`, o painel lê o `CATALOGO.md`, como antes. As variáveis estão em `api/.env.example` (só os nomes e valores de exemplo). A API não está publicada: publicar é decisão do responsável.
 
+## Rodar com Docker
+
+A API e o banco (MongoDB) sobem num comando, com o `docker compose` (trilha T9). Requisito: Docker com o Compose v2.
+
+```bash
+docker compose up --build --wait     # sobe o banco e a API; espera os dois ficarem saudáveis
+curl http://127.0.0.1:4320/v1/health  # a API responde pelo compose
+docker compose down                  # para tudo; os dados ficam no volume dados-do-banco
+```
+
+A imagem da API é feita em estágios (`api/Dockerfile`): a final leva só as dependências de produção e roda com o usuário `node`, sem root. O `.dockerignore` deixa de fora `node_modules`, `.env` e `.git`. No CI, o job `docker` constrói a imagem, confere o usuário e o conteúdo, mostra o tamanho e sobe o compose.
+
 ## Documentos
 
 - [CATALOGO.md](CATALOGO.md): as trilhas e os itens.
