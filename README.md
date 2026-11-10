@@ -66,6 +66,7 @@ npm run lint                            # confere o código com o oxlint (React,
 npm test                                # testes do catálogo e das funções do painel (Vitest)
 npm run cobertura                       # cobertura dos cálculos (progresso, catálogo, filtro); abaixo de 90% falha
 npm run build                           # gera o site em dist/, com o CATALOGO.md junto
+npm run orcamento                       # confere o peso do dist/: até 500 KB no total e 150 KB de JS (gzip)
 npx playwright install chromium         # baixa o navegador dos testes (uma vez)
 npm run test:e2e                        # testes do painel no navegador, temas claro e escuro
 ```
