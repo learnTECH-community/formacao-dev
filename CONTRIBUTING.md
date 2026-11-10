@@ -34,6 +34,27 @@ Ao estudar um tópico da trilha no roadmap.sh, na ordem do site, proponha um ite
 - O item marcado com `[x]` no `CATALOGO.md` e a linha "Progresso" atualizada (`node scripts/catalogo.mjs --atualizar`).
 - CI verde antes de pedir revisão.
 
+## O que o CI confere
+
+Todo PR para a `main` ou para uma `developer/**` roda o workflow `.github/workflows/ci.yml` (T9.1):
+
+| Job | O que faz |
+|---|---|
+| `catalogo` | tipos (`npm run typecheck`), `npm test` e o catálogo |
+| `app` | lint (`npm run lint`), build e orçamento de peso |
+| `cobertura` | cobertura dos cálculos, com limite de 90% |
+| `painel` | testes no navegador (Playwright e axe) |
+| `api` | testes da API com SQLite e MongoDB e `npm audit` |
+
+Se um job falha, o PR não está pronto. Rode o mesmo comando local antes do push.
+
+## Dependências (Dependabot)
+
+O `.github/dependabot.yml` abre, toda segunda, PRs de atualização para a `main`: um para o painel, um para a API e um para as Actions (T9.6). Versões menores e correções vêm agrupadas num PR só; versão maior vem sozinha.
+- O PR do Dependabot passa pelo mesmo CI. Vermelho não entra.
+- Versão maior: leia as notas de migração antes de aprovar.
+- Quem mescla é o responsável.
+
 ## Revisão
 
 Uma boa revisão tem três partes:
