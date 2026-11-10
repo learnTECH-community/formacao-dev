@@ -4,7 +4,7 @@ Cada item tem um código (ex.: `T2.3`). Ele é marcado com `[x]` quando o PR que
 
 O roadmap.sh é o nosso referencial: cada trilha cresce, na ordem dos tópicos do roadmap dela, até todo tópico ter um item prático aqui (issue de `cobertura` de cada trilha). Os itens foram escritos pela comunidade, com palavras próprias. O link de cada trilha leva ao roadmap correspondente no [roadmap.sh](https://roadmap.sh), onde está o conteúdo de estudo. Este repositório não copia o conteúdo do roadmap.sh: a licença dele só permite compartilhar os links (ver [ADR 001](docs/adr/001-roadmap-sh-so-por-link.md)).
 
-**Progresso:** 8 de 63 itens
+**Progresso:** 9 de 63 itens
 
 ## T0 · Fundamentos
 Roadmaps de referência: [Full Stack](https://roadmap.sh/full-stack) · [Computer Science](https://roadmap.sh/computer-science) · [Linux](https://roadmap.sh/linux)
@@ -41,7 +41,7 @@ Roadmaps de referência: [JavaScript](https://roadmap.sh/javascript) · [TypeScr
 - [x] **T3.2** Calcular o progresso por trilha e o total, com testes de unidade.
 - [ ] **T3.3** Filtrar os itens por trilha e por situação (feito ou a fazer).
 - [ ] **T3.4** Tipar os dados do catálogo com TypeScript, sem `any`.
-- [ ] **T3.5** Tratar erro, vazio e carregamento ao buscar o catálogo.
+- [x] **T3.5** Tratar erro, vazio e carregamento ao buscar o catálogo.
 
 ## T4 · React
 Roadmap de referência: [React](https://roadmap.sh/react)

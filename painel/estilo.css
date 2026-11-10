@@ -17,6 +17,7 @@
   --trilho: #e6eaee;
   --preenchido: #1f7a4d;
   --preenchido-texto: #1a6b43;
+  --erro: #b42318;
   --foco: #0b5cad;
   --foco-fundo: #ffffff;
   color-scheme: light;
@@ -35,6 +36,7 @@
     --trilho: #2a323b;
     --preenchido: #3fb27f;
   --preenchido-texto: #6fd3a0;
+  --erro: #ff8b80;
     --foco: #79b8ff;
     --foco-fundo: #12161b;
     color-scheme: dark;
@@ -53,6 +55,7 @@
   --trilho: #2a323b;
   --preenchido: #3fb27f;
   --preenchido-texto: #6fd3a0;
+  --erro: #ff8b80;
   --foco: #79b8ff;
   --foco-fundo: #12161b;
   color-scheme: dark;
@@ -328,4 +331,40 @@ main:focus {
   padding: 1rem;
   border: 1px solid var(--borda-forte);
   border-radius: 0.5rem;
+}
+
+/* T3.5: carregamento, erro e vazio. */
+.estado {
+  margin-block: 1rem;
+}
+
+.estado:empty {
+  margin-block: 0; /* vazio, não ocupa espaço, mas continua podendo receber o foco */
+}
+
+.estado:focus {
+  outline: none;
+}
+
+.estado .aviso p {
+  margin: 0 0 0.5rem;
+}
+
+.estado .aviso p:last-child {
+  margin-bottom: 0;
+}
+
+.aviso-erro {
+  border-color: var(--erro);
+  border-left-width: 0.5rem;
+}
+
+.botao {
+  padding: 0.5rem 1rem;
+  font: inherit;
+  color: var(--texto);
+  background: var(--fundo);
+  border: 1px solid var(--borda-forte);
+  border-radius: 0.25rem;
+  cursor: pointer;
 }
