@@ -5,13 +5,16 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { App } from './App';
+import { PreferenciasProvider } from './estado/PreferenciasProvider';
 import { CATALOGO_MD, CATALOGO_VAZIO, resposta } from './teste/dados';
 
 function abrir(endereco = '/') {
   return render(
-    <MemoryRouter initialEntries={[endereco]}>
-      <App />
-    </MemoryRouter>,
+    <PreferenciasProvider>
+      <MemoryRouter initialEntries={[endereco]}>
+        <App />
+      </MemoryRouter>
+    </PreferenciasProvider>,
   );
 }
 

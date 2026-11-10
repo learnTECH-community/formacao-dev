@@ -3,9 +3,11 @@
 import { useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { CartaoTrilha } from '../componentes/CartaoTrilha';
+import { Fixados } from '../componentes/Fixados';
 import { Filtros } from '../componentes/Filtros';
 import { GrupoDeItens } from '../componentes/GrupoDeItens';
 import { ComoParticipar } from '../componentes/Moldura';
+import { useAcoesDePreferencias, usePreferencias } from '../estado/usePreferencias';
 import { filtrarItens, textoDaContagem } from '../filtro';
 import { escreverFiltro, lerFiltro, type FiltroEscolhido } from '../filtroNoEndereco';
 import type { PropsDePagina } from '../rotas';
@@ -19,6 +21,10 @@ export function Inicio({ catalogo, pedidoDeFoco }: PropsDePagina) {
   const titulo = useRef<HTMLHeadingElement>(null);
   useTituloDaAba();
   useFocoNoTitulo(titulo, pedidoDeFoco);
+
+  const { fixados } = usePreferencias();
+  const despachar = useAcoesDePreferencias();
+  const alternarFixado = (codigo: string) => despachar({ tipo: 'alternar-fixado', codigo });
 
   const carregando = catalogo.situacao === 'carregando';
   const pronto = catalogo.situacao === 'pronto';
@@ -61,6 +67,14 @@ export function Inicio({ catalogo, pedidoDeFoco }: PropsDePagina) {
           ))}
         </ol>
       </section>
+      {pronto && (
+        <Fixados
+          trilhas={trilhas}
+          fixados={fixados}
+          aoAlternarFixado={alternarFixado}
+          aoLimpar={() => despachar({ tipo: 'limpar-fixados' })}
+        />
+      )}
       <section className="faixa" id="itens" aria-labelledby="titulo-itens" aria-busy={carregando}>
         <h2 id="titulo-itens">Itens</h2>
         <Filtros trilhas={trilhas} filtro={filtro} ligado={pronto} aoMudar={aoMudar} />
@@ -69,7 +83,7 @@ export function Inicio({ catalogo, pedidoDeFoco }: PropsDePagina) {
         </p>
         <div id="lista-itens">
           {visiveis.map((t) => (
-            <GrupoDeItens key={t.codigo} trilha={t} />
+            <GrupoDeItens key={t.codigo} trilha={t} fixados={fixados} aoAlternarFixado={alternarFixado} />
           ))}
         </div>
       </section>
