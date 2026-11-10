@@ -2,7 +2,7 @@
 
 Formação de desenvolvedor fullstack em comunidade, da **learnTECH Community**.
 
-Seguimos as trilhas do [roadmap.sh](https://roadmap.sh) com um **catálogo próprio de 63 itens práticos**, em 12 trilhas. Cada item é praticado num projeto real, o **Painel de Formação**. Quando o PR que pratica um item entra na `main`, o item ganha o `[x]` no catálogo.
+Seguimos as trilhas do [roadmap.sh](https://roadmap.sh) com um **catálogo próprio de 161 itens práticos**, em 12 trilhas. Cada item é praticado num projeto real, o **Painel de Formação**. O PR que pratica um item já traz o `[x]`; o item conta como feito quando o PR chega à `main`.
 
 > Sem afiliação com o roadmap.sh. Usamos só os links das trilhas: a licença do roadmap.sh não permite copiar o conteúdo dele ([ADR 001](docs/adr/001-roadmap-sh-so-por-link.md)). Para estudar cada tema, siga o link da trilha.
 
