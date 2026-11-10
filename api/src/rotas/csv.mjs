@@ -36,9 +36,8 @@ export function* linhasDoProgresso(trilhas) {
 }
 
 /**
- * Espera o buffer da resposta esvaziar: o evento "drain", ou, se ele não vier,
- * a checagem de writableNeedDrain a cada 20 ms (no Node 24.22.2 do CI o "drain"
- * não chegou com cliente e servidor no mesmo processo). Para se a conexão fechar.
+ * Espera o buffer da resposta esvaziar: o evento "drain" ou, por segurança, a
+ * checagem de writableNeedDrain a cada 20 ms. Para se a conexão fechar.
  */
 function esvaziar(resposta) {
   return new Promise((pronto) => {

@@ -1,6 +1,6 @@
 # API do Painel de Formação
 
-A API fica em `api/` (Node 24.10+, Express 5, `helmet` e `zod`). Ela lê o `CATALOGO.md` da raiz e guarda quem fez cada item. A especificação OpenAPI 3.1 está em [`api/openapi.json`](../api/openapi.json) e as mudanças em [`api/CHANGELOG.md`](../api/CHANGELOG.md).
+A API fica em `api/` (Node 22.13+; a trava de acesso da T6.11 pede o 24.10), Express 5, `helmet` e `zod`). Ela lê o `CATALOGO.md` da raiz e guarda quem fez cada item. A especificação OpenAPI 3.1 está em [`api/openapi.json`](../api/openapi.json) e as mudanças em [`api/CHANGELOG.md`](../api/CHANGELOG.md).
 
 A API não está publicada: publicar é decisão do responsável. Os exemplos usam a API local (`npm start` dentro de `api/`).
 

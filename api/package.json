@@ -4,7 +4,7 @@
   "type": "module",
   "description": "API do Painel de Formação (trilhas T5 e T6)",
   "engines": {
-    "node": ">=24.10"
+    "node": ">=22.13"
   },
   "scripts": {
     "start": "node src/servidor.mjs",

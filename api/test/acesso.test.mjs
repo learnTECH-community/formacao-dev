@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { DatabaseSync } from 'node:sqlite';
 import { limitarAoUsoDaApi } from '../src/banco/acesso.mjs';
 import { contarLinhas, fazerBackup, restaurar } from '../src/banco/backup.mjs';
 import { abrirBanco } from '../src/banco/conexao.mjs';
@@ -25,18 +26,23 @@ function pasta() {
   return p;
 }
 
+// O autorizador chegou no Node 24.10. No 22, os testes dele ficam pulados com o motivo;
+// o CI roda este arquivo também num passo com o Node 24, que não aceita nenhum pulado.
+const SEM_AUTORIZADOR =
+  typeof DatabaseSync.prototype.setAuthorizer === 'function' ? false : 'este Node não tem DatabaseSync.setAuthorizer (Node 24.10+); no CI, roda no passo com o Node 24';
+
 /** Banco num arquivo: a conexão de migração semeia e fecha; a da API abre trancada. */
-function prepararArquivo(t) {
+function prepararArquivo(t, { trancar = true } = {}) {
   const caminho = join(pasta(), 'painel.db');
   const deMigracao = abrirBanco(caminho);
   semear(deMigracao);
   deMigracao.close();
-  const daApi = limitarAoUsoDaApi(abrirBanco(caminho));
+  const daApi = trancar ? limitarAoUsoDaApi(abrirBanco(caminho)) : abrirBanco(caminho);
   t.after(() => daApi.close());
   return { caminho, daApi };
 }
 
-test('a conexão da API não cria, não muda e não apaga tabela, índice nem view', (t) => {
+test('a conexão da API não cria, não muda e não apaga tabela, índice nem view', { skip: SEM_AUTORIZADOR }, (t) => {
   const { daApi } = prepararArquivo(t);
   const recusadas = [
     'CREATE TABLE intrusa (x INTEGER)',
@@ -54,7 +60,7 @@ test('a conexão da API não cria, não muda e não apaga tabela, índice nem vi
   assert.ok(contarLinhas(daApi).conclusoes > 0);
 });
 
-test('a conexão da API lê e grava linhas normalmente (o repositório funciona)', async (t) => {
+test('a conexão da API lê e grava linhas normalmente (o repositório funciona)', { skip: SEM_AUTORIZADOR }, async (t) => {
   const { daApi } = prepararArquivo(t);
   const r = criarRepositorioSqlite(daApi);
   const antes = (await r.saude()).conclusoes;
@@ -67,7 +73,7 @@ test('a conexão da API lê e grava linhas normalmente (o repositório funciona)
   assert.ok((await r.ranking()).length > 0);
 });
 
-test('as migrações rodam com a outra conexão, sem a trava', (t) => {
+test('as migrações rodam com a outra conexão, sem a trava', { skip: SEM_AUTORIZADOR }, (t) => {
   const caminho = join(pasta(), 'painel.db');
   const trancada = limitarAoUsoDaApi(abrirBanco(caminho));
   t.after(() => trancada.close());
@@ -78,7 +84,7 @@ test('as migrações rodam com a outra conexão, sem a trava', (t) => {
 });
 
 test('backup restaurado num banco vazio, com a contagem de linhas conferida', async (t) => {
-  const { caminho, daApi } = prepararArquivo(t);
+  const { caminho, daApi } = prepararArquivo(t, { trancar: !SEM_AUTORIZADOR });
   const dir = pasta();
   const arquivoDoBackup = join(dir, 'backup.db');
   const doOriginal = await fazerBackup(daApi, arquivoDoBackup);
@@ -97,7 +103,7 @@ test('backup restaurado num banco vazio, com a contagem de linhas conferida', as
 });
 
 test('o backup não sobrescreve um arquivo, e a restauração só vai para um banco vazio', async (t) => {
-  const { daApi } = prepararArquivo(t);
+  const { daApi } = prepararArquivo(t, { trancar: !SEM_AUTORIZADOR });
   const dir = pasta();
   const arquivo = join(dir, 'backup.db');
   await fazerBackup(daApi, arquivo);
