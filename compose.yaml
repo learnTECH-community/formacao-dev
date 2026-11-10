@@ -1,0 +1,40 @@
+# T9.4: a API e o banco para rodar local com um comando.
+#   docker compose up --build --wait    sobe tudo e espera ficar saudável
+#   docker compose down                 para e remove os contêineres (os dados ficam no volume)
+# Só valores de exemplo aqui; nenhum segredo (os nomes das variáveis estão em api/.env.example).
+name: formacao-dev
+
+services:
+  banco:
+    image: mongo:7
+    volumes:
+      - dados-do-banco:/data/db
+    networks: [interna]
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+      target: final
+    environment:
+      REPOSITORIO: mongo
+      MONGO_URL: mongodb://banco:27017
+      MONGO_BANCO: painel
+      ORIGENS_PERMITIDAS: http://127.0.0.1:4317,http://localhost:4317
+    depends_on:
+      banco:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:4320:4320"
+    networks: [interna]
+
+volumes:
+  dados-do-banco:
+
+networks:
+  interna:

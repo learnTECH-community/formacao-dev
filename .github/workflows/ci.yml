@@ -118,3 +118,47 @@ jobs:
         shell: bash
       - name: Testes de acesso sem nenhum pulado (Node 24)
         run: grep -qx 'ℹ skipped 0' acesso.log
+  # T9.4 e T9.12: a imagem da API em estágios e o compose. O Docker roda nos runners do
+  # GitHub; na máquina de quem não tem Docker, este job é a prova.
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build da imagem em estágios
+        run: docker build -f api/Dockerfile --target final -t formacao-dev-api:ci .
+      - name: Build de comparação, num estágio só (todas as dependências, imagem cheia)
+        run: |
+          docker build -t formacao-dev-api:um-estagio -f - . <<'DOCKERFILE'
+          FROM node:24
+          WORKDIR /app/api
+          COPY api/package.json api/package-lock.json ./
+          RUN npm ci
+          COPY api ./
+          COPY CATALOGO.md /app/CATALOGO.md
+          CMD ["node", "src/servidor.mjs"]
+          DOCKERFILE
+      - name: Tamanho das imagens (antes e depois)
+        run: |
+          docker image ls --format '{{.Repository}}:{{.Tag}} {{.Size}}' | grep formacao-dev-api | tee tamanhos.txt
+          echo '### Tamanho da imagem da API' >> "$GITHUB_STEP_SUMMARY"
+          sed 's/^/- /' tamanhos.txt >> "$GITHUB_STEP_SUMMARY"
+      - name: Usuário sem privilégio, só dependências de produção e nada do .dockerignore
+        run: |
+          uid=$(docker run --rm formacao-dev-api:ci id -u)
+          echo "uid do processo: $uid"; test "$uid" != "0"
+          # ajv e autocannon são de desenvolvimento: não podem estar na imagem.
+          docker run --rm formacao-dev-api:ci sh -c 'test ! -d node_modules/ajv && test ! -d node_modules/autocannon && test -d node_modules/express'
+          docker run --rm formacao-dev-api:ci sh -c 'test ! -e /app/.git && test ! -e /app/api/.env && test ! -d /app/api/test && test -f /app/CATALOGO.md'
+      - name: Subir o compose e esperar a saúde
+        run: docker compose up --build --wait --wait-timeout 120
+      - name: Fumaça da API no compose
+        run: |
+          curl -fsS http://127.0.0.1:4320/v1/health | tee health.json
+          grep -q '"situacao":"ok"' health.json
+          curl -fsS http://127.0.0.1:4320/v1/catalogo | head -c 200; echo
+      - name: Logs do compose
+        if: always()
+        run: docker compose logs --no-color | tail -100
+      - name: Descer o compose
+        if: always()
+        run: docker compose down

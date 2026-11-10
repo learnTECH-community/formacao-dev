@@ -1,0 +1,17 @@
+# T9.12: o que nunca entra no contexto do build (nem na imagem).
+.git
+.github
+**/node_modules
+**/.env
+**/.env.*
+!**/.env.example
+dist
+cobertura
+playwright-report
+test-results
+api/dados
+api/test
+api/carga
+**/*.log
+docs
+e2e
