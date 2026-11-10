@@ -90,7 +90,7 @@ Roadmap de referência: [React](https://roadmap.sh/react)
 - [ ] **T4.10** Filtro com componente headless acessível. (#83)
 - [ ] **T4.11** Dados com TanStack Query. (#84)
 - [ ] **T4.12** Formulário "Propor item" com validação. (#85)
-- [ ] **T4.13** Error boundary por trilha. (#86)
+- [x] **T4.13** Error boundary por trilha. (#86)
 - [ ] **T4.14** Detalhe carregado sob demanda. (#87)
 - [ ] **T4.15** Detalhe do item em modal com portal. (#88)
 
