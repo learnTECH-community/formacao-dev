@@ -21,4 +21,5 @@ Tipos de mudança: **Novo**, **Mudou**, **Antiga** (vai sair, com data), **Remov
 - **Mudou:** `POST /v1/conclusoes` passa a exigir sessão com o papel `mantenedor`: 401 sem sessão, 403 sem o papel (T5.14).
 - **Novo:** `GET /v1/eventos`, avisos em tempo real com SSE (T5.8); `GET /v1/catalogo` passa a trazer os `roadmaps` de cada trilha.
 - **Novo:** `GET /v1/ranking` e `GET /v1/progresso/semanas` (T6.9).
+- **Novo:** `REPOSITORIO=mongo`: o mesmo contrato com o MongoDB (T6.12, T6.13).
 - **Antiga:** `GET /v1/catalogo.md` devolve o texto do `CATALOGO.md` para o painel atual. Antiga desde 10/11/2026; sai do ar em 08/02/2027. Use `GET /v1/catalogo` (T5.15).

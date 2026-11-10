@@ -72,6 +72,19 @@ jobs:
           retention-days: 14
   api:
     runs-on: ubuntu-latest
+    # T6.12: MongoDB para a mesma bateria de testes do repositório.
+    services:
+      mongo:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      MONGO_URL: mongodb://127.0.0.1:27017
     defaults:
       run:
         working-directory: api
@@ -83,7 +96,12 @@ jobs:
           cache: npm
           cache-dependency-path: api/package-lock.json
       - run: npm ci
-      - run: npm test
+      # shell: bash liga o pipefail: se o npm test falhar, o passo falha mesmo com o tee.
+      - run: npm test | tee teste.log
+        shell: bash
+      # Os únicos pulados aceitos no Node 22 são os da trava de acesso (rodam no passo do Node 24).
+      - name: Nenhum teste do MongoDB pulado
+        run: '! grep -q "sem MONGO_URL" teste.log'
       - run: npm audit --omit=dev --audit-level=high
       # T6.11: o autorizador do node:sqlite chegou no Node 24.10; no 22, esses testes ficam
       # pulados com o motivo. Aqui eles rodam no 24 e não podem ser pulados.

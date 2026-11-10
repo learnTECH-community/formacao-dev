@@ -1,5 +1,5 @@
 // T5.6: o contrato do repositório. A mesma bateria roda contra todas as
-// implementações listadas em IMPLEMENTACOES: memória e SQLite (T6.6).
+// implementações listadas em IMPLEMENTACOES: memória, SQLite (T6.6) e MongoDB (T6.12).
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -9,6 +9,7 @@ import { trilhasDoTexto } from '../src/catalogo.mjs';
 import { criarRepositorioEmMemoria } from '../src/repositorios/memoria.mjs';
 import { criarRepositorioSqlite } from '../src/repositorios/sqlite.mjs';
 import { CATALOGO_DE_TESTE, conclusao } from './apoio.mjs';
+import { SEM_MONGO, repositorioMongoDeTeste } from './mongo.mjs';
 
 const TRILHAS = trilhasDoTexto(CATALOGO_DE_TESTE);
 
@@ -22,16 +23,18 @@ export const IMPLEMENTACOES = [
       return criarRepositorioSqlite(banco);
     },
   ],
+  // T6.12: a mesma bateria contra o MongoDB (no CI).
+  ['MongoDB', repositorioMongoDeTeste, SEM_MONGO],
 ];
 
-for (const [nome, criarVazio] of IMPLEMENTACOES) {
+for (const [nome, criarVazio, pular = false] of IMPLEMENTACOES) {
   const criar = async () => {
     const r = await criarVazio();
     await r.gravarCatalogo(TRILHAS);
     return r;
   };
 
-  describe(`repositório: ${nome}`, () => {
+  describe(`repositório: ${nome}`, { skip: pular }, () => {
     test('começa vazio', async () => {
       const r = await criar();
       assert.deepEqual(await r.saude(), { conclusoes: 0 });

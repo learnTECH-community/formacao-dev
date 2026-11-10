@@ -9,6 +9,7 @@ import { trilhasDoTexto } from '../src/catalogo.mjs';
 import { criarRepositorioEmMemoria } from '../src/repositorios/memoria.mjs';
 import { criarRepositorioSqlite } from '../src/repositorios/sqlite.mjs';
 import { CATALOGO_DE_TESTE, subir } from './apoio.mjs';
+import { SEM_MONGO, repositorioMongoDeTeste } from './mongo.mjs';
 
 const VERSOES = ['concluintes_da_trilha_join', 'concluintes_da_trilha_subconsulta'];
 const em = (dia) => `2026-11-${String(dia).padStart(2, '0')}T12:00:00.000Z`;
@@ -65,6 +66,12 @@ test('as duas versões concordam com o catálogo real e os dados de teste, em to
 
 test('o repositório em memória dá o mesmo resultado', async () => {
   const r = await preparar(criarRepositorioEmMemoria());
+  assert.deepEqual(await r.concluintesDaTrilha('T1'), ESPERADO);
+  assert.deepEqual(await r.concluintesDaTrilha('T2'), []);
+});
+
+test('o repositório MongoDB dá o mesmo resultado (T6.12)', { skip: SEM_MONGO }, async () => {
+  const r = await preparar(await repositorioMongoDeTeste());
   assert.deepEqual(await r.concluintesDaTrilha('T1'), ESPERADO);
   assert.deepEqual(await r.concluintesDaTrilha('T2'), []);
 });
