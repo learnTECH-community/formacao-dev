@@ -83,6 +83,7 @@ A API fica em `api/`, com Node 22.13 ou mais novo, Express 5, `helmet` e `zod` (
 cd api
 npm ci                                  # instala as dependências da API
 npm test                                # testes das rotas e do repositório (node:test)
+npm run semear                          # cria o banco SQLite (api/dados/) com dados fictícios
 npm start                               # sobe em http://127.0.0.1:4320/v1/health; Ctrl+C para parar
 curl http://127.0.0.1:4320/v1/catalogo  # trilhas, itens e quem fez cada item
 ```
@@ -95,6 +96,7 @@ As variáveis estão em `api/.env.example` (só os nomes e valores de exemplo). 
 - [CONTRIBUTING.md](CONTRIBUTING.md): fluxo, PR e revisão.
 - [docs/MVP.md](docs/MVP.md): estado do projeto pela régua da comunidade.
 - [docs/api.md](docs/api.md): rotas da API, exemplos, erros e a política de versão.
+- [docs/banco.md](docs/banco.md): tabelas, migrações e dados de teste do banco.
 - [docs/plano-de-testes.md](docs/plano-de-testes.md): o que se testa em cada nível e os riscos que cada teste cobre.
 - [docs/como-a-web-funciona.md](docs/como-a-web-funciona.md): do endereço digitado até o painel na tela.
 - [docs/adr/](docs/adr/): decisões.
