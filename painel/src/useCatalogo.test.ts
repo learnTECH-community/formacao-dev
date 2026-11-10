@@ -166,12 +166,12 @@ describe('deveTentarDeNovo', () => {
 });
 
 describe('quem busca o catálogo', () => {
-  it('só o useCatalogo chama fetch; os componentes usam o hook', () => {
+  it('só o useCatalogo e o cliente da API (api.ts) chamam fetch; os componentes usam os hooks', () => {
     const pasta = join(process.cwd(), 'painel/src'); // no jsdom, import.meta.url não é file://
     const arquivos = readdirSync(pasta, { recursive: true, encoding: 'utf8' })
       .map((f) => f.replaceAll('\\', '/'))
       .filter((f) => /\.tsx?$/.test(f) && !/\.test\.tsx?$/.test(f) && !f.startsWith('teste/'));
     const comFetch = arquivos.filter((f) => /\bfetch\(/.test(readFileSync(`${pasta}/${f}`, 'utf8')));
-    expect(comFetch).toEqual(['useCatalogo.ts']);
+    expect(comFetch.sort()).toEqual(['api.ts', 'useCatalogo.ts']);
   });
 });

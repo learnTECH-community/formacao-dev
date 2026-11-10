@@ -10,6 +10,7 @@ import { Rodape, Topo } from './componentes/Moldura';
 import { Inicio } from './paginas/Inicio';
 import { NaoEncontrada } from './paginas/NaoEncontrada';
 import { progressoTotal } from './progresso';
+import { useAvisosDaApi } from './useAvisosDaApi';
 import { mensagemDeErro, useCatalogo } from './useCatalogo';
 
 // T4.14: o detalhe da trilha (com a janela modal da T4.15) vira um arquivo separado no
@@ -21,6 +22,7 @@ const ProporItem = lazy(() => import('./paginas/ProporItem').then((m) => ({ defa
 
 export function App() {
   const catalogo = useCatalogo();
+  useAvisosDaApi();
   const estado = useRef<HTMLDivElement>(null);
   const levarFoco = useRef(false);
   const [pedidoDeFoco, setPedidoDeFoco] = useState(0);
