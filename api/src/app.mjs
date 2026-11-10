@@ -11,8 +11,6 @@ import { conferirRepositorio } from './repositorios/contrato.mjs';
 import { esquemaDaConclusao, validar } from './validacao.mjs';
 import { OBSOLETAS, obsoleta } from './versao.mjs';
 
-const LOG_PADRAO = { info: () => {}, error: (dados) => console.error(JSON.stringify(dados)) };
-
 /**
  * @param {object} opcoes
  * @param {import('./repositorios/contrato.mjs').Repositorio} opcoes.repositorio
