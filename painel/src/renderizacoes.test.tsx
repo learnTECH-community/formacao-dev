@@ -6,9 +6,8 @@ import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
 import { Profiler, type ProfilerOnRenderCallback } from 'react';
 import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router';
 import { App } from './App';
-import { PreferenciasProvider } from './estado/PreferenciasProvider';
+import { Provedores } from './teste/Provedores';
 import { resposta } from './teste/dados';
 
 const contagem = vi.hoisted(() => ({ itens: 0 }));
@@ -43,11 +42,9 @@ async function abrirGrande() {
   vi.stubGlobal('fetch', vi.fn(async () => resposta(catalogoGrande())));
   render(
     <Profiler id="painel" onRender={aoRenderizar}>
-      <PreferenciasProvider>
-        <MemoryRouter>
-          <App />
-        </MemoryRouter>
-      </PreferenciasProvider>
+      <Provedores>
+        <App />
+      </Provedores>
     </Profiler>,
   );
   await screen.findByText('Mostrando todos os 1000 itens.', {}, { timeout: 10_000 });

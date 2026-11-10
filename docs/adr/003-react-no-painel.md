@@ -16,6 +16,7 @@ A ADR 002 previu o React na trilha T4, por cima do que a T2 e a T3 deixaram: HTM
 - **Lint com oxlint**, como no modelo do Vite, com os plugins `react`, `typescript` e `jsx-a11y`. A regra `jsx-a11y/prefer-tag-over-role` fica desligada: o painel usa `role="progressbar"` e `role="status"` de propósito, porque o elemento `progress` não aceita o texto equivalente nem o estilo dos tokens em todos os navegadores.
 - **Rotas com React Router (T4.2 e T4.3):** `BrowserRouter`, com o filtro na busca do endereço (`?trilha=T2&situacao=feitos`) e o detalhe em `/trilha/T2`. Rotas por `#` foram descartadas porque o painel usa âncoras (`#conteudo`, `#trilhas`) no link de pular e no menu. Por isso a base do Vite passou de `./` para `/` (ou `BASE_DO_PAINEL`), e o build copia o `index.html` para `404.html`.
 - **Estado compartilhado (T4.8):** tema e itens fixados num `useReducer` com ações tipadas, num provedor só (`PreferenciasProvider`) no topo, com dois contextos: estado e ações. Os fixados ficam no `localStorage` (`painel-fixados`); valor estranho é descartado e armazenamento bloqueado não quebra a página.
+- **Dados com TanStack Query (T4.11):** o `useCatalogo` usa `useQuery` com `staleTime` de 5 minutos, até duas novas tentativas só em falha de rede e atualização ao voltar à aba. Cada trilha tem chave própria (`["catalogo", "trilha", "T2", versão]`), lida do catálogo em cache. Testes com servidor simulado (msw).
 - **Nada de `dangerouslySetInnerHTML`:** o texto do catálogo continua texto (regra `react/no-danger`).
 
 ## Consequências

@@ -3,18 +3,15 @@
 import { afterEach, describe, it, expect, vi } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router';
 import { App } from './App';
-import { PreferenciasProvider } from './estado/PreferenciasProvider';
+import { Provedores } from './teste/Provedores';
 import { CATALOGO_MD, CATALOGO_VAZIO, resposta } from './teste/dados';
 
 function abrir(endereco = '/') {
   return render(
-    <PreferenciasProvider>
-      <MemoryRouter initialEntries={[endereco]}>
-        <App />
-      </MemoryRouter>
-    </PreferenciasProvider>,
+    <Provedores endereco={endereco}>
+      <App />
+    </Provedores>,
   );
 }
 
