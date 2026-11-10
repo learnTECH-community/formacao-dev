@@ -3,7 +3,7 @@
 import { useEffect, useReducer, type ReactNode } from 'react';
 import { guardar, lerGuardado } from '../armazenamento';
 import { aplicarTema, guardarTema, ouvirTemaDoSistema, temaDoSistema, temaGuardado } from '../tema';
-import { AcoesContexto, EstadoContexto } from './contextos';
+import { AcoesContexto, EstadoContexto, FixadosContexto } from './contextos';
 import { CHAVE_FIXADOS, lerFixados, preferenciasReducer, type Preferencias } from './preferencias';
 
 function inicial(): Preferencias {
@@ -34,7 +34,9 @@ export function PreferenciasProvider({ children }: { children: ReactNode }) {
 
   return (
     <EstadoContexto value={estado}>
-      <AcoesContexto value={despachar}>{children}</AcoesContexto>
+      <FixadosContexto value={estado.fixados}>
+        <AcoesContexto value={despachar}>{children}</AcoesContexto>
+      </FixadosContexto>
     </EstadoContexto>
   );
 }
