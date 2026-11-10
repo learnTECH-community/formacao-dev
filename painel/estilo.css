@@ -135,3 +135,26 @@ code {
 .rodape p {
   margin: 0.25rem 0;
 }
+
+/* T2.3: barra de progresso. O texto ao lado diz o mesmo que a barra. */
+.progresso {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+}
+
+.barra {
+  flex: 1 1 8rem;
+  height: 0.75rem;
+  overflow: hidden;
+  background: #e6eaee;
+  border: 1px solid #6e7781;
+  border-radius: 999px;
+}
+
+.preenchido {
+  display: block;
+  height: 100%;
+  background: #1f7a4d;
+}
