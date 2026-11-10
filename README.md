@@ -134,7 +134,7 @@ npm run docker:dev     # = docker compose -f compose.yaml -f compose.dev.yaml up
 
 - Painel (Vite) em http://127.0.0.1:4317/: salvar em `painel/` recarrega a página.
 - API em http://127.0.0.1:4320/v1/health: salvar em `api/src/` copia o arquivo para o contêiner e o `node --watch` reinicia a API. Mudou o `api/package.json`: a imagem é refeita.
-- Tempo de subida medido no CI (job `compose-dev`, 10/11/2026): ver o resumo do run; os números estão na seção "Tempo de subida", abaixo.
+- Tempo de subida, medido no CI (job `compose-dev`, runner do GitHub, 10/11/2026): **53 s** na primeira vez, com o build das imagens, e **17 s** com as imagens prontas. Depois de salvar um arquivo de `api/src`, a API reiniciou em 2 s.
 
 A imagem da API é feita em estágios (`api/Dockerfile`): a final leva só as dependências de produção e roda com o usuário `node`, sem root. O Nginx usa a imagem `nginx-unprivileged`, também sem root. O `.dockerignore` deixa de fora `node_modules`, `.env` e `.git`. No CI, o job `docker` constrói as imagens, confere o usuário e o conteúdo, mostra o tamanho, sobe o compose, faz a fumaça pelo Nginx, confere que o banco não tem porta nem é alcançado pelo Nginx e que os dados sobrevivem a `down` e `up` (e somem com `down -v`).
 
