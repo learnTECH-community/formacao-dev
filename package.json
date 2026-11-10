@@ -17,7 +17,8 @@
     "catalogo": "node scripts/catalogo.mjs",
     "catalogo:atualizar": "node scripts/catalogo.mjs --atualizar",
     "typecheck": "tsc --noEmit",
-    "lint": "oxlint --deny-warnings"
+    "lint": "oxlint --deny-warnings",
+    "docker:dev": "docker compose -f compose.yaml -f compose.dev.yaml up --build --watch"
   },
   "engines": {
     "node": ">=22.12"
