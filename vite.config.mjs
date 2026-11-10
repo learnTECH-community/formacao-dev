@@ -1,7 +1,7 @@
 // Vite: servidor de desenvolvimento e build do painel (ADR 002), com o React (T4.6).
 // O CATALOGO.md da raiz é a única fonte dos dados: o plugin abaixo o serve em
 // desenvolvimento e o copia para o build, sem guardar cópia em painel/.
-import { readFileSync } from 'node:fs';
+import { copyFileSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
@@ -21,12 +21,19 @@ function servirCatalogo() {
     generateBundle() {
       this.emitFile({ type: 'asset', fileName: 'CATALOGO.md', source: readFileSync(catalogo, 'utf8') });
     },
+    // T4.3: hospedagem estática sem rotas (como o Pages) devolve o 404.html para
+    // /trilha/T2; sendo uma cópia do index.html, o React abre a rota certa.
+    writeBundle({ dir }) {
+      copyFileSync(`${dir}/index.html`, `${dir}/404.html`);
+    },
   };
 }
 
 export default defineConfig({
   root: 'painel',
-  base: './',
+  // Rotas com caminho próprio (/trilha/T2) pedem base absoluta. Para publicar numa
+  // subpasta (como /formacao-dev/ no Pages), defina BASE_DO_PAINEL no build.
+  base: process.env.BASE_DO_PAINEL ?? '/',
   plugins: [react(), servirCatalogo()],
   build: { outDir: '../dist', emptyOutDir: true },
   test: { include: ['src/**/*.test.{js,ts,tsx}'], setupFiles: ['src/teste/preparar.ts'] },

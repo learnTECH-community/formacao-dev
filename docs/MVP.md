@@ -10,7 +10,7 @@
 |---|---|---|---|
 | 1 | Problema e público claros | Atende | Ver "Problema e público", abaixo |
 | 2 | Hipótese a validar | Atende | Ver "Hipótese", abaixo |
-| 3 | Fluxo principal completo | Atende | 10/11/2026, CI do PR #153 (run 42845843272, job `painel`, Playwright no Chromium): abrir o painel, ver as 12 trilhas com o progresso lido do `CATALOGO.md`, filtrar por trilha e situação (`e2e/catalogo.spec.mjs`, `e2e/filtros.spec.mjs`) → pass. A página de detalhe da trilha é a T4.3 |
+| 3 | Fluxo principal completo | Atende | 10/11/2026, CI do PR #153 (run 42845843272, job `painel`, Playwright no Chromium): abrir o painel, ver as 12 trilhas com o progresso lido do `CATALOGO.md`, filtrar por trilha e situação (`e2e/catalogo.spec.mjs`, `e2e/filtros.spec.mjs`) → pass. Detalhe da trilha em `/trilha/T2` e filtro no endereço: `e2e/rotas.spec.mjs` (T4.2, T4.3) |
 | 4 | Escopo enxuto | Atende | Ver "Fora do MVP", abaixo |
 | 5 | Medição de uso | Não se aplica (N1) | — |
 | 6 | Falhas tratadas | Atende | 10/11/2026, CI do PR #176 (run 42854916013): no navegador, `e2e/estados.spec.mjs` (espera com `aria-busy`, falha de rede com "Tentar de novo", HTTP 500 e catálogo vazio) → pass nos temas claro e escuro; na unidade, `useCatalogo.test.ts` e `App.test.tsx` com `fetch` simulado (ok, HTTP 500, falha de rede, vazio, demora, cancelamento e nova tentativa) → 70 passed, `# skipped 0` (T3.5, T4.7, T7.4) |

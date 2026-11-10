@@ -1,29 +1,20 @@
-// Cartão da trilha na seção "Trilhas": nome, progresso e links do roadmap.sh.
+// Cartão da trilha na seção "Trilhas": nome (link para o detalhe), progresso e links do roadmap.sh.
+import { Link } from 'react-router';
 import { progressoDe } from '../progresso';
-import type { Roadmap, Trilha } from '../tipos';
+import { enderecoDaTrilha } from '../rotas';
+import type { Trilha } from '../tipos';
 import { BarraProgresso } from './BarraProgresso';
-
-function Roadmaps({ roadmaps }: { roadmaps: Roadmap[] }) {
-  return (
-    <p className="roadmaps">
-      Estudo no roadmap.sh:{' '}
-      {roadmaps.map((r, i) => (
-        <span key={r.url}>
-          {i > 0 && ' · '}
-          <a href={r.url}>{r.nome}</a>
-        </span>
-      ))}
-    </p>
-  );
-}
+import { Roadmaps } from './Roadmaps';
 
 export function CartaoTrilha({ trilha }: { trilha: Trilha }) {
   const id = `nome-${trilha.codigo.toLowerCase()}`;
   return (
     <li className="trilha" id={`trilha-${trilha.codigo.toLowerCase()}`}>
       <h3 id={id}>
-        <span className="codigo">{trilha.codigo}</span>
-        {` ${trilha.nome}`}
+        <Link to={enderecoDaTrilha(trilha.codigo)}>
+          <span className="codigo">{trilha.codigo}</span>
+          {` ${trilha.nome}`}
+        </Link>
       </h3>
       <BarraProgresso idDoRotulo={id} progresso={progressoDe(trilha.itens)} />
       <Roadmaps roadmaps={trilha.roadmaps} />

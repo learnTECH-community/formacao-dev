@@ -410,3 +410,17 @@ h2:focus {
   margin: 1rem 0 0;
   color: var(--texto-suave);
 }
+
+/* T4.3: detalhe da trilha. */
+.trilha h3 a {
+  display: inline-block;
+  padding-block: 0.25rem; /* alvo de toque maior */
+}
+
+.detalhe .voltar {
+  margin: 0 0 1rem;
+}
+
+.detalhe .lista-itens {
+  margin-top: 0.5rem;
+}

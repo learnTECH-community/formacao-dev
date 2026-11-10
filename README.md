@@ -69,6 +69,8 @@ npx playwright install chromium         # baixa o navegador dos testes (uma vez)
 npm run test:e2e                        # testes do painel no navegador, temas claro e escuro
 ```
 
+O painel tem rotas: `/` (trilhas e itens, com o filtro no endereço, como `/?trilha=T2&situacao=feitos`) e `/trilha/T2` (detalhe da trilha). Para publicar numa subpasta, gere o build com a base dela: `BASE_DO_PAINEL=/formacao-dev/ npm run build`. O build traz um `404.html` igual ao `index.html`, para a hospedagem estática abrir as rotas.
+
 ## Documentos
 
 - [CATALOGO.md](CATALOGO.md): as trilhas e os itens.
