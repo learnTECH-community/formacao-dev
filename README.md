@@ -88,7 +88,14 @@ npm start                               # sobe em http://127.0.0.1:4320/v1/healt
 curl http://127.0.0.1:4320/v1/catalogo  # trilhas, itens e quem fez cada item
 ```
 
-As variáveis estão em `api/.env.example` (só os nomes e valores de exemplo). A API não está publicada: publicar é decisão do responsável.
+Para o painel usar a API (quem fez cada item e avisos em tempo real), suba a API e depois o painel com a URL dela:
+
+```bash
+cd api && npm start                                   # num terminal: API em 127.0.0.1:4320
+VITE_API_URL=http://127.0.0.1:4320 npm run painel     # noutro, na raiz: o painel lê a API e ouve /v1/eventos
+```
+
+Sem `VITE_API_URL`, o painel lê o `CATALOGO.md`, como antes. As variáveis estão em `api/.env.example` (só os nomes e valores de exemplo). A API não está publicada: publicar é decisão do responsável.
 
 ## Documentos
 
