@@ -10,6 +10,7 @@ import { comConclusoes, itemExiste, leitorDeArquivo, trilhasDoTexto } from './ca
 import { ErroDaApi, rotaNaoEncontrada, tratarErros } from './erros.mjs';
 import { criarCanalDeEventos } from './eventos.mjs';
 import { criarClienteDoGitHub, sincronizar } from './github.mjs';
+import { HSTS, redirecionarParaHttps, soHttpsDoAmbiente } from './https.mjs';
 import { limitarPedidos, limiteDoAmbiente } from './limite.mjs';
 import { criarLog, registrarPedidos } from './log.mjs';
 import { conferirRepositorio } from './repositorios/contrato.mjs';
@@ -33,6 +34,7 @@ import { OBSOLETAS, obsoleta } from './versao.mjs';
  * @param {typeof fetch} [opcoes.buscarNoGitHub] fetch do login (simulado nos testes).
  * @param {ReturnType<typeof criarCanalDeEventos>} [opcoes.eventos] Avisos em tempo real (T5.8).
  * @param {string[]} [opcoes.chavesDaSessao] Chaves HMAC do cookie da sessão (T10.9).
+ * @param {boolean} [opcoes.soHttps] Redireciona HTTP para HTTPS atrás do proxy (T10.10).
  */
 export function criarApp({
   repositorio,
@@ -47,14 +49,19 @@ export function criarApp({
   buscarNoGitHub = fetch,
   eventos = criarCanalDeEventos(),
   chavesDaSessao: chaves = chavesDaSessao(),
+  soHttps = soHttpsDoAmbiente(),
 }) {
   conferirRepositorio(repositorio);
   const app = express();
   app.disable('x-powered-by');
   // O ETag é nosso (cache.mjs), forte e só nas rotas de leitura.
   app.set('etag', false);
+  // T10.10: atrás do proxy da hospedagem, confia no primeiro salto para o IP e o protocolo.
+  if (soHttps) app.set('trust proxy', 1);
   app.use(registrarPedidos(log));
-  app.use(helmet());
+  // T10.10: HTTP vira HTTPS (com SO_HTTPS) e o HSTS vai em toda resposta.
+  app.use(redirecionarParaHttps(soHttps));
+  app.use(helmet({ strictTransportSecurity: HSTS }));
   app.use(cors(origens));
   // T10.8: rotas que mudam dados só aceitam pedido do painel (contra CSRF).
   app.use(conferirOrigem(origens));
