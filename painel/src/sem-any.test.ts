@@ -23,3 +23,18 @@ describe('sem any', () => {
     expect(texto).not.toMatch(/[:<,|(]\s*any\b|\bas\s+any\b|\bany\[\]/);
   });
 });
+
+// T4.4: os testes de componente consultam a tela como a pessoa: papel, rótulo e texto.
+const PROIBIDO_NO_TESTE = /querySelector|getElementsByClassName|className|container\./;
+
+describe('testes de componente', () => {
+  const testes = arquivos.filter((f) => f.endsWith('.test.tsx'));
+
+  it('existem', () => {
+    expect(testes.length).toBeGreaterThan(1);
+  });
+
+  it.each(testes)('%s não consulta por classe CSS nem pelo container', (arquivo) => {
+    expect(readFileSync(`${pasta}/${arquivo}`, 'utf8')).not.toMatch(PROIBIDO_NO_TESTE);
+  });
+});
