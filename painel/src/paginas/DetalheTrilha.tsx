@@ -1,10 +1,10 @@
 // T4.3: página de detalhe da trilha, em /trilha/<código>.
-import { useRef } from 'react';
+import { useCallback, useRef } from 'react';
 import { Link, useParams } from 'react-router';
 import { BarraProgresso } from '../componentes/BarraProgresso';
 import { ItemDoCatalogo } from '../componentes/ItemDoCatalogo';
 import { Roadmaps } from '../componentes/Roadmaps';
-import { useAcoesDePreferencias, usePreferencias } from '../estado/usePreferencias';
+import { useAcoesDePreferencias, useFixados } from '../estado/usePreferencias';
 import { progressoDe } from '../progresso';
 import type { PropsDePagina } from '../rotas';
 import { useFocoNoTitulo, useTituloDaAba } from '../useFocoNoTitulo';
@@ -12,8 +12,9 @@ import { useFocoNoTitulo, useTituloDaAba } from '../useFocoNoTitulo';
 export function DetalheTrilha({ catalogo, pedidoDeFoco }: PropsDePagina) {
   const { codigo = '' } = useParams();
   const titulo = useRef<HTMLHeadingElement>(null);
-  const { fixados } = usePreferencias();
+  const fixados = useFixados();
   const despachar = useAcoesDePreferencias();
+  const alternarFixado = useCallback((c: string) => despachar({ tipo: 'alternar-fixado', codigo: c }), [despachar]);
   const trilha = catalogo.situacao === 'pronto' ? catalogo.trilhas.find((t) => t.codigo === codigo) : undefined;
   const naoExiste = catalogo.situacao !== 'carregando' && catalogo.situacao !== 'erro' && !trilha;
 
@@ -40,7 +41,7 @@ export function DetalheTrilha({ catalogo, pedidoDeFoco }: PropsDePagina) {
                 key={item.codigo}
                 item={item}
                 fixado={fixados.includes(item.codigo)}
-                aoAlternarFixado={(c) => despachar({ tipo: 'alternar-fixado', codigo: c })}
+                aoAlternarFixado={alternarFixado}
               />
             ))}
           </ul>
