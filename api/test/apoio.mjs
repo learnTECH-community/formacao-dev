@@ -29,10 +29,17 @@ export const conclusao = (item, usuario, n = 1) => ({
 /** Log que não escreve nada, para a saída dos testes ficar limpa. */
 export const LOG_MUDO = { debug() {}, info() {}, warn() {}, error() {} };
 
+/** GitHub que não deve ser chamado: falha se algum teste esquecer de simular. */
+export const GITHUB_PARADO = {
+  prsMesclados: async () => {
+    throw new Error("GitHub não simulado neste teste");
+  },
+};
+
 /** Sobe o app com as opções dadas. Sem repositório, usa o de memória. */
 export async function subir(opcoes = {}) {
   const repositorio = opcoes.repositorio ?? criarRepositorioEmMemoria();
-  const app = criarApp({ lerCatalogo: async () => CATALOGO_DE_TESTE, log: LOG_MUDO, ...opcoes, repositorio });
+  const app = criarApp({ lerCatalogo: async () => CATALOGO_DE_TESTE, log: LOG_MUDO, limitePorMinuto: 10_000, github: GITHUB_PARADO, ...opcoes, repositorio });
   const servidor = await new Promise((pronto) => {
     const s = app.listen(0, '127.0.0.1', () => pronto(s));
   });

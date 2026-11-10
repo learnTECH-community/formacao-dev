@@ -7,6 +7,8 @@ import helmet from 'helmet';
 import { emCache, jsonComEtag, tempoDoCache } from './cache.mjs';
 import { comConclusoes, itemExiste, leitorDeArquivo, trilhasDoTexto } from './catalogo.mjs';
 import { ErroDaApi, rotaNaoEncontrada, tratarErros } from './erros.mjs';
+import { criarClienteDoGitHub, sincronizar } from './github.mjs';
+import { limitarPedidos, limiteDoAmbiente } from './limite.mjs';
 import { criarLog, registrarPedidos } from './log.mjs';
 import { conferirRepositorio } from './repositorios/contrato.mjs';
 import { rotasDeItens } from './rotas/itens.mjs';
@@ -21,6 +23,8 @@ import { OBSOLETAS, obsoleta } from './versao.mjs';
  * @param {() => Date} [opcoes.relogio]
  * @param {ReturnType<typeof criarLog>} [opcoes.log] Log estruturado (T5.10).
  * @param {number} [opcoes.segundosDoCache] Tempo de vida do cache do catálogo (T5.7).
+ * @param {ReturnType<typeof criarClienteDoGitHub>} [opcoes.github] Cliente da API do GitHub (T5.4).
+ * @param {number} [opcoes.limitePorMinuto] Pedidos por minuto por endereço (T5.5).
  */
 export function criarApp({
   repositorio,
@@ -29,6 +33,8 @@ export function criarApp({
   relogio = () => new Date(),
   log = criarLog(),
   segundosDoCache = tempoDoCache(),
+  github = criarClienteDoGitHub({ token: process.env.GITHUB_TOKEN || undefined }),
+  limitePorMinuto = limiteDoAmbiente(),
 }) {
   conferirRepositorio(repositorio);
   const app = express();
@@ -82,12 +88,18 @@ export function criarApp({
 
   rotasDeItens({ rota, trilhas, repositorio });
 
+  // T5.4: lê os PRs mesclados na main e grava quem fez cada item.
+  rota('post', '/sincronizar', async (_pedido, resposta) => {
+    const codigos = new Set((await trilhas()).flatMap((t) => t.itens.map((i) => i.codigo)));
+    resposta.json(await sincronizar({ github, repositorio, existe: (c) => codigos.has(c) }));
+  });
+
   // T5.15: rota antiga, mantida até a data de remoção, com os cabeçalhos de aviso.
   rota('get', '/catalogo.md', obsoleta(OBSOLETAS['/v1/catalogo.md']), async (_pedido, resposta) => {
     resposta.type('text/markdown; charset=utf-8').send(await textoDoCatalogo());
   });
 
-  app.use('/v1', v1);
+  app.use('/v1', limitarPedidos({ porMinuto: limitePorMinuto, agora: () => relogio().getTime() }), v1);
   app.use(rotaNaoEncontrada);
   app.use(tratarErros(log));
   return app;

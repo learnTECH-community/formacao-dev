@@ -31,6 +31,9 @@
               }
             }
           },
+          "429": {
+            "$ref": "#/components/responses/Problema"
+          },
           "503": {
             "$ref": "#/components/responses/Problema"
           }
@@ -73,6 +76,9 @@
                 }
               }
             }
+          },
+          "429": {
+            "$ref": "#/components/responses/Problema"
           },
           "500": {
             "$ref": "#/components/responses/Problema"
@@ -124,6 +130,9 @@
                 }
               }
             }
+          },
+          "429": {
+            "$ref": "#/components/responses/Problema"
           }
         }
       }
@@ -170,6 +179,9 @@
             "$ref": "#/components/responses/Problema"
           },
           "413": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "429": {
             "$ref": "#/components/responses/Problema"
           }
         }
@@ -278,6 +290,9 @@
           },
           "400": {
             "$ref": "#/components/responses/Problema"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problema"
           }
         }
       }
@@ -343,6 +358,36 @@
             "$ref": "#/components/responses/Problema"
           },
           "404": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problema"
+          }
+        }
+      }
+    },
+    "/v1/sincronizar": {
+      "post": {
+        "summary": "Ler os PRs mesclados na main e gravar quem fez cada item",
+        "operationId": "sincronizar",
+        "responses": {
+          "200": {
+            "description": "Quantas conclusões foram lidas, quantas eram novas e quantas já existiam",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sincronizacao"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "502": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "503": {
             "$ref": "#/components/responses/Problema"
           }
         }
@@ -673,6 +718,29 @@
               "string",
               "null"
             ]
+          }
+        }
+      },
+      "Sincronizacao": {
+        "type": "object",
+        "required": [
+          "lidas",
+          "novas",
+          "repetidas"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "lidas": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "novas": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "repetidas": {
+            "type": "integer",
+            "minimum": 0
           }
         }
       }
