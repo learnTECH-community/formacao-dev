@@ -20,6 +20,14 @@ O que protege o Painel de Formação e a API, onde está no código e qual teste
 
 Os tempos limite ficam em `api/src/tempos.mjs`. Eles valem para receber o pedido: a rota de eventos em tempo real (`/v1/eventos`) segue aberta depois que o pedido chegou.
 
+## Só HTTPS, com HSTS (T10.10)
+
+- Toda resposta da API leva `Strict-Transport-Security: max-age=31536000; includeSubDomains` (1 ano): depois da primeira visita, o navegador nem tenta o HTTP.
+- Na hospedagem, o TLS termina no proxy, que repassa em HTTP com `X-Forwarded-Proto`. Com `SO_HTTPS=sim`, a API redireciona com 308 (mantém método e corpo) o que chegou em HTTP para o mesmo endereço em HTTPS, e confia no primeiro proxy para o IP e o protocolo (`trust proxy`). Local, sem a variável, nada muda.
+- O GitHub Pages serve o painel só em HTTPS quando a opção "Enforce HTTPS" está ligada (configuração do responsável).
+- Código: `api/src/https.mjs`. Teste: `api/test/https.test.mjs`.
+- **Falta a prova no ar** (depende da publicação, #230): `curl -I http://<api>/v1/health` → 308 para `https://`; `curl -I https://<api>/v1/health` → `strict-transport-security`; console do painel publicado sem aviso de conteúdo misto (`Mixed Content`); registrar a data e o resultado aqui.
+
 ## Sessão contra roubo e CSRF (T10.8)
 
 - Cookie `sessao` com `HttpOnly` (o JavaScript da página não lê), `Secure` (só HTTPS ou localhost), `SameSite=Lax` (não vai em POST vindo de outro site), `Path=/v1` e `Max-Age` de 8 horas. A sessão também vence no servidor depois de 8 horas.
