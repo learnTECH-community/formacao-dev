@@ -1,28 +1,22 @@
 // Monta a página a partir dos dados do catálogo. Só usa a API do DOM
 // (sem innerHTML), para que nenhum texto do catálogo vire HTML.
-import { pedacosDoTexto } from './catalogo.js';
-import { progressoDe, progressoTotal, textoDoProgresso } from './progresso.js';
+import { pedacosDoTexto } from './catalogo';
+import { progressoDe, progressoTotal, textoDoProgresso } from './progresso';
+import type { Item, Progresso, Roadmap, Trilha } from './tipos';
 
-/**
- * @template {keyof HTMLElementTagNameMap} K
- * @param {K} tag
- * @param {Record<string, string>} [atributos]
- * @param {(Node | string)[]} [filhos]
- * @returns {HTMLElementTagNameMap[K]}
- */
-export function el(tag, atributos = {}, filhos = []) {
+export function el<K extends keyof HTMLElementTagNameMap>(
+  tag: K,
+  atributos: Record<string, string> = {},
+  filhos: (Node | string)[] = [],
+): HTMLElementTagNameMap[K] {
   const elemento = document.createElement(tag);
   for (const [nome, valor] of Object.entries(atributos)) elemento.setAttribute(nome, valor);
   elemento.append(...filhos);
   return elemento;
 }
 
-/**
- * Barra de progresso acessível (T2.3) com o texto equivalente ao lado.
- * @param {string} idDoRotulo id do elemento que dá nome à barra
- * @param {{ feitos: number, total: number, percentual: number }} progresso
- */
-export function criarBarra(idDoRotulo, progresso) {
+/** Barra de progresso acessível (T2.3) com o texto equivalente ao lado. */
+export function criarBarra(idDoRotulo: string, progresso: Progresso): HTMLDivElement {
   const texto = textoDoProgresso(progresso);
   const preenchido = el('span', { class: 'preenchido' });
   preenchido.style.width = `${progresso.percentual}%`;
@@ -45,13 +39,13 @@ export function criarBarra(idDoRotulo, progresso) {
 }
 
 /** Texto do item com os trechos entre crases em <code>. */
-function textoDoItem(texto) {
+function textoDoItem(texto: string): (Node | string)[] {
   return pedacosDoTexto(texto).map((p) => (p.codigo ? el('code', {}, [p.texto]) : p.texto));
 }
 
 /** Links do roadmap.sh de uma trilha. */
-function criarRoadmaps(roadmaps) {
-  const filhos = ['Estudo no roadmap.sh: '];
+function criarRoadmaps(roadmaps: Roadmap[]): HTMLParagraphElement {
+  const filhos: (Node | string)[] = ['Estudo no roadmap.sh: '];
   roadmaps.forEach((r, i) => {
     if (i > 0) filhos.push(' · ');
     filhos.push(el('a', { href: r.url }, [r.nome]));
@@ -60,7 +54,7 @@ function criarRoadmaps(roadmaps) {
 }
 
 /** Cartão da trilha na seção "Trilhas". */
-export function criarCartao(trilha) {
+export function criarCartao(trilha: Trilha): HTMLLIElement {
   const id = `nome-${trilha.codigo.toLowerCase()}`;
   return el('li', { class: 'trilha', id: `trilha-${trilha.codigo.toLowerCase()}` }, [
     el('h3', { id }, [el('span', { class: 'codigo' }, [trilha.codigo]), ` ${trilha.nome}`]),
@@ -70,7 +64,7 @@ export function criarCartao(trilha) {
 }
 
 /** Um item do catálogo, com a situação escrita (não só a cor). */
-export function criarItem(item) {
+export function criarItem(item: Item): HTMLLIElement {
   return el('li', { class: 'item', 'data-feito': String(item.feito) }, [
     el('span', { class: 'codigo-item' }, [item.codigo]),
     el('span', { class: 'texto-item' }, textoDoItem(item.texto)),
@@ -79,7 +73,7 @@ export function criarItem(item) {
 }
 
 /** Grupo de itens de uma trilha na seção "Itens". */
-export function criarGrupo(trilha, itens = trilha.itens) {
+export function criarGrupo(trilha: Trilha, itens: Item[] = trilha.itens): HTMLElement {
   const id = `itens-${trilha.codigo.toLowerCase()}`;
   return el('section', { class: 'grupo', 'aria-labelledby': id }, [
     el('h3', { id }, [el('span', { class: 'codigo' }, [trilha.codigo]), ` ${trilha.nome}`]),
@@ -87,12 +81,14 @@ export function criarGrupo(trilha, itens = trilha.itens) {
   ]);
 }
 
-/**
- * Mostra o catálogo inteiro: total no topo, cartões e itens.
- * @param {ReturnType<typeof import('./catalogo.js').lerCatalogo>} trilhas
- * @param {{ total: HTMLElement, cartoes: HTMLElement, itens: HTMLElement }} alvos
- */
-export function mostrarCatalogo(trilhas, alvos) {
+export interface Alvos {
+  total: HTMLElement;
+  cartoes: HTMLElement;
+  itens: HTMLElement;
+}
+
+/** Mostra o catálogo inteiro: total no topo, cartões e itens. */
+export function mostrarCatalogo(trilhas: Trilha[], alvos: Alvos): void {
   alvos.total.replaceChildren(
     el('p', { class: 'total-rotulo', id: 'rotulo-total' }, ['Progresso do catálogo']),
     criarBarra('rotulo-total', progressoTotal(trilhas)),

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { lerCatalogo, pedacosDoTexto } from './catalogo.js';
+import { lerCatalogo, pedacosDoTexto } from './catalogo';
 import { lerCatalogo as lerNoScript } from '../../scripts/catalogo.mjs';
 
 const exemplo = [

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { progressoDe, progressoPorTrilha, progressoTotal, textoDoProgresso } from './progresso.js';
+import { progressoDe, progressoPorTrilha, progressoTotal, textoDoProgresso } from './progresso';
 
-const itens = (feitos, aFazer) => [
+const itens = (feitos: number, aFazer: number): { feito: boolean }[] => [
   ...Array.from({ length: feitos }, () => ({ feito: true })),
   ...Array.from({ length: aFazer }, () => ({ feito: false })),
 ];

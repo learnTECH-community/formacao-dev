@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { filtrarItens, textoDaContagem } from './filtro.js';
+import { filtrarItens, textoDaContagem } from './filtro';
 
 const trilhas = [
   {
@@ -14,7 +14,7 @@ const trilhas = [
   { codigo: 'T3', nome: 'JS', itens: [] },
 ];
 
-const codigos = (r) => r.flatMap((t) => t.itens.map((i) => i.codigo));
+const codigos = (r: { itens: { codigo: string }[] }[]): string[] => r.flatMap((t) => t.itens.map((i) => i.codigo));
 
 describe('filtrarItens', () => {
   it('sem filtro, devolve todas as trilhas com itens', () => {
