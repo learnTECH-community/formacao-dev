@@ -3,7 +3,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-const render = readFileSync(new URL('../render.yaml', import.meta.url), 'utf8');
+// No Windows, com core.autocrlf, a cópia de trabalho vem com CRLF.
+const render = readFileSync(new URL('../render.yaml', import.meta.url), 'utf8').replaceAll('\r\n', '\n');
 const exemplo = readFileSync(new URL('../api/.env.example', import.meta.url), 'utf8');
 
 /** Pares { chave, linha seguinte } das envVars do Blueprint. */
