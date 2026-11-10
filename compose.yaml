@@ -33,6 +33,8 @@ services:
       ORIGENS_PERMITIDAS: http://127.0.0.1:8080,http://localhost:8080
       # T9.9: liga GET /metricas para o Prometheus (o Nginx não a repassa).
       METRICAS: sim
+      # Na varredura do ZAP (T10.12), o CI sobe o limite: LIMITE_POR_MINUTO=100000 docker compose up.
+      LIMITE_POR_MINUTO: ${LIMITE_POR_MINUTO:-60}
     depends_on:
       banco:
         condition: service_healthy
