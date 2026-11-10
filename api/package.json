@@ -10,7 +10,8 @@
     "start": "node src/servidor.mjs",
     "test": "node --test --test-reporter=spec \"test/**/*.test.mjs\"",
     "migrar": "node src/banco/migrar.mjs",
-    "semear": "node src/banco/semear.mjs"
+    "semear": "node src/banco/semear.mjs",
+    "carga": "node carga/carga.mjs"
   },
   "dependencies": {
     "express": "^5.3.0",
@@ -19,6 +20,10 @@
   },
   "devDependencies": {
     "ajv": "^8.20.0",
-    "ajv-formats": "^3.0.1"
+    "ajv-formats": "^3.0.1",
+    "autocannon": "^8.0.0"
+  },
+  "overrides": {
+    "uuid": "^11.1.1"
   }
 }
