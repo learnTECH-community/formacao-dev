@@ -1,7 +1,6 @@
 // T5.11: GET /v1/progresso.csv exporta o progresso por stream: as linhas saem uma
 // a uma, com pressão de volta (espera o "drain" quando o buffer enche), sem montar
 // o arquivo inteiro na memória. Se quem pediu fechar a conexão, a escrita para.
-import { once } from 'node:events';
 import { comConclusoes } from '../catalogo.mjs';
 
 export const COLUNAS = ['trilha', 'codigo', 'texto', 'feito', 'usuarios', 'prs'];
@@ -36,6 +35,27 @@ export function* linhasDoProgresso(trilhas) {
   }
 }
 
+/**
+ * Espera o buffer da resposta esvaziar: o evento "drain", ou, se ele não vier,
+ * a checagem de writableNeedDrain a cada 20 ms (no Node 24.22.2 do CI o "drain"
+ * não chegou com cliente e servidor no mesmo processo). Para se a conexão fechar.
+ */
+function esvaziar(resposta) {
+  return new Promise((pronto) => {
+    const fim = () => {
+      clearInterval(checagem);
+      resposta.off('drain', fim);
+      resposta.off('close', fim);
+      pronto();
+    };
+    const checagem = setInterval(() => {
+      if (!resposta.writableNeedDrain || resposta.destroyed) fim();
+    }, 20);
+    resposta.once('drain', fim);
+    resposta.once('close', fim);
+  });
+}
+
 export function rotaDoCsv({ rota, trilhas, repositorio }) {
   rota('get', '/progresso.csv', async (_pedido, resposta) => {
     const dados = comConclusoes(await trilhas(), await repositorio.listarConclusoes());
@@ -47,7 +67,7 @@ export function rotaDoCsv({ rota, trilhas, repositorio }) {
     for (const linha of linhasDoProgresso(dados)) {
       if (resposta.destroyed) return; // quem pediu foi embora
       // write devolve false quando o buffer está cheio: espera esvaziar.
-      if (!resposta.write(linha)) await Promise.race([once(resposta, 'drain'), once(resposta, 'close')]);
+      if (!resposta.write(linha)) await esvaziar(resposta);
     }
     resposta.end();
   });

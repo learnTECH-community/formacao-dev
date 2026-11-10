@@ -8,7 +8,7 @@
   },
   "scripts": {
     "start": "node src/servidor.mjs",
-    "test": "node --test --test-reporter=spec \"test/**/*.test.mjs\"",
+    "test": "node --test --test-timeout=60000 --test-reporter=spec \"test/**/*.test.mjs\"",
     "migrar": "node src/banco/migrar.mjs",
     "semear": "node src/banco/semear.mjs",
     "carga": "node carga/carga.mjs",
