@@ -111,3 +111,14 @@ describe('o validador pega uma quebra de contrato', () => {
     assert.match(r.join(), /tipo application\/json fora da especificação/);
   });
 });
+
+test('contrato: 304 com If-None-Match nas rotas de leitura', async (t) => {
+  const api = await subir();
+  t.after(api.fechar);
+  for (const caminho of ['/v1/catalogo', '/v1/itens', '/v1/itens/T1.1']) {
+    const etag = (await fetch(`${api.base}${caminho}`)).headers.get('etag');
+    const r = await pedirComContrato(api.base, caminho, { headers: { 'If-None-Match': etag } });
+    assert.equal(r.status, 304);
+    assert.deepEqual(r.problemas, []);
+  }
+});

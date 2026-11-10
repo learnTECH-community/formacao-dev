@@ -4,12 +4,13 @@
 // repositório em memória.
 import express from 'express';
 import helmet from 'helmet';
+import { emCache, jsonComEtag, tempoDoCache } from './cache.mjs';
 import { comConclusoes, itemExiste, leitorDeArquivo, trilhasDoTexto } from './catalogo.mjs';
 import { ErroDaApi, rotaNaoEncontrada, tratarErros } from './erros.mjs';
 import { criarLog, registrarPedidos } from './log.mjs';
 import { conferirRepositorio } from './repositorios/contrato.mjs';
-import { esquemaDaConclusao, validar } from './validacao.mjs';
 import { rotasDeItens } from './rotas/itens.mjs';
+import { esquemaDaConclusao, validar } from './validacao.mjs';
 import { OBSOLETAS, obsoleta } from './versao.mjs';
 
 /**
@@ -19,17 +20,31 @@ import { OBSOLETAS, obsoleta } from './versao.mjs';
  * @param {string[]} [opcoes.origens] Origens que o CORS aceita (o endereço do painel).
  * @param {() => Date} [opcoes.relogio]
  * @param {ReturnType<typeof criarLog>} [opcoes.log] Log estruturado (T5.10).
+ * @param {number} [opcoes.segundosDoCache] Tempo de vida do cache do catálogo (T5.7).
  */
-export function criarApp({ repositorio, lerCatalogo = leitorDeArquivo(), origens = [], relogio = () => new Date(), log = criarLog() }) {
+export function criarApp({
+  repositorio,
+  lerCatalogo = leitorDeArquivo(),
+  origens = [],
+  relogio = () => new Date(),
+  log = criarLog(),
+  segundosDoCache = tempoDoCache(),
+}) {
   conferirRepositorio(repositorio);
   const app = express();
   app.disable('x-powered-by');
+  // O ETag é nosso (cache.mjs), forte e só nas rotas de leitura.
+  app.set('etag', false);
   app.use(registrarPedidos(log));
   app.use(helmet());
   app.use(cors(origens));
   app.use(express.json({ limit: '10kb' }));
 
-  const trilhas = async () => trilhasDoTexto(await lerCatalogo());
+  // T5.7: o texto do catálogo fica em cache pelo tempo de vida.
+  const textoDoCatalogo = emCache(lerCatalogo, { segundos: segundosDoCache, agora: () => relogio().getTime() });
+  const trilhas = async () => trilhasDoTexto(await textoDoCatalogo());
+  app.locals.limparCache = textoDoCatalogo.limpar;
+
   const v1 = express.Router();
   // T5.3: toda rota passa por aqui e fica listada em app.locals.rotas; um teste
   // confere que cada uma está no api/openapi.json.
@@ -50,9 +65,9 @@ export function criarApp({ repositorio, lerCatalogo = leitorDeArquivo(), origens
     }
   });
 
-  rota('get', '/catalogo', async (_pedido, resposta) => {
+  rota('get', '/catalogo', async (pedido, resposta) => {
     const conclusoes = await repositorio.listarConclusoes();
-    resposta.json({ trilhas: comConclusoes(await trilhas(), conclusoes) });
+    jsonComEtag(pedido, resposta, { trilhas: comConclusoes(await trilhas(), conclusoes) });
   });
 
   // T5.2: registrar uma conclusão. 201 na primeira vez; 200 se já existia (T6.5).
@@ -69,7 +84,7 @@ export function criarApp({ repositorio, lerCatalogo = leitorDeArquivo(), origens
 
   // T5.15: rota antiga, mantida até a data de remoção, com os cabeçalhos de aviso.
   rota('get', '/catalogo.md', obsoleta(OBSOLETAS['/v1/catalogo.md']), async (_pedido, resposta) => {
-    resposta.type('text/markdown; charset=utf-8').send(await lerCatalogo());
+    resposta.type('text/markdown; charset=utf-8').send(await textoDoCatalogo());
   });
 
   app.use('/v1', v1);
@@ -88,7 +103,7 @@ function cors(origens) {
       resposta.set('Vary', 'Origin');
       resposta.set('Access-Control-Allow-Headers', 'Content-Type, If-None-Match');
       resposta.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-      resposta.set('Access-Control-Expose-Headers', 'X-Request-Id');
+      resposta.set('Access-Control-Expose-Headers', 'X-Request-Id, ETag');
     }
     if (pedido.method === 'OPTIONS') return resposta.sendStatus(204);
     seguir();

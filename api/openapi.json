@@ -50,12 +50,45 @@
                   "$ref": "#/components/schemas/Catalogo"
                 }
               }
+            },
+            "headers": {
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-cache"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Nada mudou desde o ETag enviado; sem corpo",
+            "headers": {
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                }
+              }
             }
           },
           "500": {
             "$ref": "#/components/responses/Problema"
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "If-None-Match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ETag de uma resposta anterior"
+          }
+        ]
       }
     },
     "/v1/catalogo.md": {
@@ -193,6 +226,15 @@
               "default": 1
             },
             "description": "Página, a partir de 1"
+          },
+          {
+            "name": "If-None-Match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ETag de uma resposta anterior"
           }
         ],
         "responses": {
@@ -204,12 +246,32 @@
                 "schema": {
                   "type": "string"
                 }
+              },
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-cache"
+                }
               }
             },
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PaginaDeItens"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Nada mudou desde o ETag enviado; sem corpo",
+            "headers": {
+              "ETag": {
+                "schema": {
+                  "type": "string"
                 }
               }
             }
@@ -233,6 +295,15 @@
               "type": "string",
               "pattern": "^T\\d+\\.\\d+$"
             }
+          },
+          {
+            "name": "If-None-Match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ETag de uma resposta anterior"
           }
         ],
         "responses": {
@@ -242,6 +313,28 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ItemDaLista"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-cache"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Nada mudou desde o ETag enviado; sem corpo",
+            "headers": {
+              "ETag": {
+                "schema": {
+                  "type": "string"
                 }
               }
             }

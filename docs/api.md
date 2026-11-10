@@ -145,6 +145,22 @@ Resposta `400`, com um campo inválido:
 }
 ```
 
+## Cache e ETag
+
+O texto do `CATALOGO.md` fica em memória pelo tempo de `TEMPO_DO_CACHE_EM_SEGUNDOS` (padrão 60): nesse tempo, a API não lê o arquivo de novo. Uma mudança no arquivo aparece depois que o tempo vence.
+
+`GET /v1/catalogo`, `GET /v1/itens` e `GET /v1/itens/{codigo}` respondem com:
+
+- `ETag`: um hash do corpo. Muda quando o catálogo ou as conclusões mudam.
+- `Cache-Control: no-cache`: o cliente pode guardar a resposta, mas pergunta sempre se ela mudou.
+
+Quem manda `If-None-Match` com o ETag que tem recebe `304 Not Modified`, sem corpo, se nada mudou.
+
+```bash
+ETAG=$(curl -si $API/v1/catalogo | grep -i '^etag:' | cut -d' ' -f2 | tr -d '\r')
+curl -si $API/v1/catalogo -H "If-None-Match: $ETAG" | head -n 1   # HTTP/1.1 304 Not Modified
+```
+
 ## Erros
 
 Todo erro sai no formato Problem Details ([RFC 9457](https://www.rfc-editor.org/rfc/rfc9457)), com o tipo `application/problem+json` e os campos:
