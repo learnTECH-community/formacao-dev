@@ -106,6 +106,7 @@ Sem `VITE_API_URL`, o painel lê o `CATALOGO.md`, como antes. As variáveis est�
 - [docs/api.md](docs/api.md): rotas da API, exemplos, erros e a política de versão.
 - [docs/banco.md](docs/banco.md): tabelas, migrações e dados de teste do banco.
 - [docs/consultas.md](docs/consultas.md): consultas do painel, plano de execução e quando usar view.
+- [docs/backup.md](docs/backup.md): acesso mínimo ao banco, backup e restauração.
 - [docs/carga.md](docs/carga.md): teste de carga da API, meta e resultado.
 - [docs/plano-de-testes.md](docs/plano-de-testes.md): o que se testa em cada nível e os riscos que cada teste cobre.
 - [docs/como-a-web-funciona.md](docs/como-a-web-funciona.md): do endereço digitado até o painel na tela.
