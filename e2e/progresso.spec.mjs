@@ -1,8 +1,9 @@
 // T2.3: barra de progresso que leitores de tela entendem.
 import { test, expect } from '@playwright/test';
+import { abrir } from './apoio.mjs';
 
 test('T2.3: cada trilha tem uma barra com nome, valores e texto visível equivalente', async ({ page }) => {
-  await page.goto('/');
+  await abrir(page);
   const trilhas = page.locator('#trilhas ol > li');
   await expect(trilhas).toHaveCount(12);
   for (const trilha of await trilhas.all()) {
@@ -21,7 +22,7 @@ test('T2.3: cada trilha tem uma barra com nome, valores e texto visível equival
 });
 
 test('T2.3: a árvore de acessibilidade lê a barra com nome e valor', async ({ page }) => {
-  await page.goto('/');
+  await abrir(page);
   const arvore = await page.locator('#trilha-t2').ariaSnapshot();
   expect(arvore).toMatch(/progressbar "T2 Frontend base"/);
 });

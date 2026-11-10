@@ -1,5 +1,6 @@
 // T2.4 e T2.6: contraste, foco visível e navegação só pelo teclado.
 import { test, expect } from '@playwright/test';
+import { abrir } from './apoio.mjs';
 import AxeBuilder from '@axe-core/playwright';
 
 const semTransicao = '*, *::before, *::after { transition: none !important; }';
@@ -28,14 +29,14 @@ async function atual(page) {
 for (const largura of [1440, 320]) {
   test(`T2.4: o axe não acusa violação (WCAG A e AA) em ${largura} px`, async ({ page }) => {
     await page.setViewportSize({ width: largura, height: 900 });
-    await page.goto('/');
+    await abrir(page);
     const resultado = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
     expect(resultado.violations.map((v) => `${v.id}: ${v.nodes.length}`)).toEqual([]);
   });
 }
 
 test('T2.4: todo link e botão mostra o foco ao navegar com Tab', async ({ page }) => {
-  await page.goto('/');
+  await abrir(page);
   await page.addStyleTag({ content: semTransicao });
   const total = (await focaveis(page)).length;
   expect(total).toBeGreaterThan(10);
@@ -51,7 +52,7 @@ test('T2.4: todo link e botão mostra o foco ao navegar com Tab', async ({ page 
 });
 
 test('T2.6: o primeiro Tab vai para "Pular para o conteúdo", que leva ao conteúdo principal', async ({ page }) => {
-  await page.goto('/');
+  await abrir(page);
   await page.keyboard.press('Tab');
   const pular = page.getByRole('link', { name: 'Pular para o conteúdo' });
   await expect(pular).toBeFocused();
@@ -63,7 +64,7 @@ test('T2.6: o primeiro Tab vai para "Pular para o conteúdo", que leva ao conte�
 });
 
 test('T2.6: a ordem do Tab segue a ordem do documento e a ordem visual', async ({ page }) => {
-  await page.goto('/');
+  await abrir(page);
   const esperado = await focaveis(page);
   const visitados = [];
   for (let i = 0; i < esperado.length; i++) {
@@ -87,7 +88,7 @@ test('T2.6: a ordem do Tab segue a ordem do documento e a ordem visual', async (
 });
 
 test('T2.6: nenhum controle prende o foco; o Tab percorre tudo e sai da página', async ({ page }) => {
-  await page.goto('/');
+  await abrir(page);
   const total = (await focaveis(page)).length;
   const vistos = new Set();
   for (let i = 0; i < total; i++) {

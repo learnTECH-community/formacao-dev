@@ -17,9 +17,9 @@ export default defineConfig({
     { name: 'escuro', use: { ...devices['Desktop Chrome'], colorScheme: 'dark' } },
   ],
   webServer: {
-    command: 'node scripts/servir-painel.mjs',
+    command: `npm run build && npx vite preview --host 127.0.0.1 --port ${porta} --strictPort`,
     url: `http://127.0.0.1:${porta}/`,
-    env: { PORT: String(porta) },
+    timeout: 120_000,
     reuseExistingServer: !process.env.CI,
   },
 });
