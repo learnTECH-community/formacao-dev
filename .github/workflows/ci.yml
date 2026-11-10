@@ -20,6 +20,8 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: node scripts/catalogo.mjs
+      # T10.1: nenhum segredo nos arquivos versionados.
+      - run: node scripts/segredos.mjs
   app:
     runs-on: ubuntu-latest
     steps:
@@ -32,6 +34,8 @@ jobs:
       - run: npm run lint
       - run: npm run build
       - run: npm run orcamento
+      # T10.2: dependências de produção do painel sem vulnerabilidade alta ou crítica.
+      - run: npm audit --omit=dev --audit-level=high
   cobertura:
     runs-on: ubuntu-latest
     steps:
@@ -103,6 +107,7 @@ jobs:
       # Os únicos pulados aceitos no Node 22 são os da trava de acesso (rodam no passo do Node 24).
       - name: Nenhum teste do MongoDB pulado
         run: '! grep -q "sem MONGO_URL" teste.log'
+      # T10.2: dependências de produção da API sem vulnerabilidade alta ou crítica.
       - run: npm audit --omit=dev --audit-level=high
       # T6.11: o autorizador do node:sqlite chegou no Node 24.10; no 22, esses testes ficam
       # pulados com o motivo. Aqui eles rodam no 24 e não podem ser pulados.
