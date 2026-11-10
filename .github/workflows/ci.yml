@@ -192,6 +192,21 @@ jobs:
           ! docker compose exec -T web wget -q -T 3 -O /dev/null http://banco:27017/
           # A API (nas duas redes) alcança.
           docker compose exec -T api node -e "require('node:net').connect(27017, 'banco').on('connect', () => process.exit(0)).on('error', () => process.exit(1))"
+      # T9.9: o Prometheus do compose lê as métricas da API.
+      - name: Métricas da API no Prometheus
+        run: |
+          for i in $(seq 1 5); do curl -fsS -o /dev/null http://127.0.0.1:8080/api/v1/health; done
+          curl -fsS -o /dev/null http://127.0.0.1:8080/api/v1/catalogo
+          consulta='sum by (rota, status) (api_pedidos_total)'
+          for i in $(seq 1 30); do
+            curl -fsS -G http://127.0.0.1:9090/api/v1/query --data-urlencode "query=$consulta" > resultado.json
+            grep -q '/v1/health' resultado.json && break
+            sleep 2
+          done
+          cat resultado.json; echo
+          grep -q '"rota":"/v1/health"' resultado.json
+          curl -fsS -G http://127.0.0.1:9090/api/v1/query --data-urlencode 'query=histogram_quantile(0.95, sum by (le) (rate(api_duracao_segundos_bucket[1m])))' ; echo
+          curl -fsS -G http://127.0.0.1:9090/api/v1/targets | grep -q '"health":"up"'
       # T9.11: os dados sobrevivem a recriar os contêineres; só o down -v apaga.
       - name: Volume nomeado mantém os dados entre down e up
         run: |

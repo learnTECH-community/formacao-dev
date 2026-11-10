@@ -31,6 +31,8 @@ services:
       MONGO_BANCO: painel
       # O painel chega pela porta do Nginx (mesma origem); a lista serve à checagem de origem (T10.8).
       ORIGENS_PERMITIDAS: http://127.0.0.1:8080,http://localhost:8080
+      # T9.9: liga GET /metricas para o Prometheus (o Nginx não a repassa).
+      METRICAS: sim
     depends_on:
       banco:
         condition: service_healthy
@@ -47,6 +49,23 @@ services:
     ports:
       - "127.0.0.1:8080:8080"
     networks: [borda]
+
+  # T9.9: coletor das métricas da API, em http://127.0.0.1:9090 (consulta de exemplo no README).
+  metricas:
+    image: prom/prometheus:v2.55.1
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:9090:9090"
+    networks: [borda]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:9090/-/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
 
 volumes:
   dados-do-banco:
