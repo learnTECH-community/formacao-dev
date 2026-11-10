@@ -5,6 +5,7 @@
 // simultâneos: quem garante é a restrição UNIQUE (item, usuario) do banco,
 // com INSERT ... ON CONFLICT DO NOTHING.
 import { gravarCatalogo } from '../banco/catalogo.mjs';
+import { consulta } from '../banco/consultas.mjs';
 
 const daLinha = (l) => (l ? { id: l.id, item: l.item, usuario: l.usuario, pr: l.pr, concluidaEm: l.concluida_em } : null);
 
@@ -26,6 +27,9 @@ export function criarRepositorioSqlite(banco) {
     obter: banco.prepare('SELECT id, item, usuario, pr, concluida_em FROM conclusoes WHERE id = ?'),
     atualizar: banco.prepare('UPDATE conclusoes SET pr = ? WHERE id = ? RETURNING id, item, usuario, pr, concluida_em'),
     apagar: banco.prepare('DELETE FROM conclusoes WHERE id = ?'),
+    // T6.2: consultas do painel, em arquivos .sql versionados.
+    porTrilha: banco.prepare(consulta('progresso_por_trilha')),
+    porPessoa: banco.prepare(consulta('progresso_por_pessoa')),
   };
 
   return {
@@ -51,6 +55,12 @@ export function criarRepositorioSqlite(banco) {
     },
     async apagarConclusao(id) {
       return sql.apagar.run(id).changes > 0;
+    },
+    async progressoPorTrilha() {
+      return sql.porTrilha.all().map((l) => ({ ...l }));
+    },
+    async progressoPorPessoa() {
+      return sql.porPessoa.all().map((l) => ({ ...l }));
     },
   };
 }

@@ -13,6 +13,7 @@ import { criarLog, registrarPedidos } from './log.mjs';
 import { conferirRepositorio } from './repositorios/contrato.mjs';
 import { rotaDoCsv } from './rotas/csv.mjs';
 import { rotasDeItens } from './rotas/itens.mjs';
+import { rotasDeProgresso } from './rotas/progresso.mjs';
 import { esquemaDaConclusao, validar } from './validacao.mjs';
 import { OBSOLETAS, obsoleta } from './versao.mjs';
 
@@ -98,6 +99,7 @@ export function criarApp({
 
   rotasDeItens({ rota, trilhas, repositorio });
   rotaDoCsv({ rota, trilhas, repositorio });
+  rotasDeProgresso({ rota, trilhas, repositorio });
 
   // T5.4: lê os PRs mesclados na main e grava quem fez cada item.
   rota('post', '/sincronizar', async (_pedido, resposta) => {

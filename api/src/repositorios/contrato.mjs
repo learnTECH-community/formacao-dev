@@ -28,6 +28,10 @@
  *   Troca o link do PR. Devolve null se o id não existe.
  * @property {(id: number) => Promise<boolean>} apagarConclusao
  *   Apaga de verdade (decisão em docs/banco.md). Devolve false se o id não existe.
+ * @property {() => Promise<{ trilha: string, nome: string, feitos: number, total: number, percentual: number }[]>} progressoPorTrilha
+ *   Na ordem do catálogo. Feito = marcado no catálogo ou com conclusão (T6.2, T6.10).
+ * @property {() => Promise<{ usuario: string, concluidos: number, trilhas: number, percentual: number, primeira: string, ultima: string }[]>} progressoPorPessoa
+ *   Quem concluiu mais vem antes; no empate, ordem alfabética (T6.2).
  */
 
 /** Funções que toda implementação precisa ter. */
@@ -39,6 +43,8 @@ export const FUNCOES_DO_REPOSITORIO = [
   'obterConclusao',
   'atualizarConclusao',
   'apagarConclusao',
+  'progressoPorTrilha',
+  'progressoPorPessoa',
 ];
 
 /** Falha cedo, na criação do app, se o repositório não segue a interface. */
