@@ -19,4 +19,5 @@ Tipos de mudança: **Novo**, **Mudou**, **Antiga** (vai sair, com data), **Remov
 - **Novo:** `GET /v1/trilhas/{codigo}/concluintes`, quem concluiu a trilha inteira (T6.8).
 - **Novo:** login com a conta do GitHub (`/v1/auth/entrar`, `retorno`, `sair`, `eu`), sessão em cookie (T5.13).
 - **Mudou:** `POST /v1/conclusoes` passa a exigir sessão com o papel `mantenedor`: 401 sem sessão, 403 sem o papel (T5.14).
+- **Novo:** `GET /v1/eventos`, avisos em tempo real com SSE (T5.8); `GET /v1/catalogo` passa a trazer os `roadmaps` de cada trilha.
 - **Antiga:** `GET /v1/catalogo.md` devolve o texto do `CATALOGO.md` para o painel atual. Antiga desde 10/11/2026; sai do ar em 08/02/2027. Use `GET /v1/catalogo` (T5.15).

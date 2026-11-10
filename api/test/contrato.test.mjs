@@ -118,6 +118,17 @@ describe('contrato da API contra o openapi.json', () => {
     assert.deepEqual(limite.problemas, []);
   });
 
+  test('eventos (SSE): status e tipo de conteúdo seguem o contrato', async () => {
+    // A conexão não termina: lê só o cabeçalho e fecha.
+    const controle = new AbortController();
+    const r = await fetch(`${api.base}/v1/eventos`, { signal: controle.signal });
+    const problemas = problemasDoContrato({ metodo: 'GET', caminho: '/v1/eventos', status: r.status, tipo: r.headers.get('content-type'), corpo: '' });
+    controle.abort();
+    assert.equal(r.status, 200);
+    assert.deepEqual(problemas, []);
+    cobertas.add('get /v1/eventos');
+  });
+
   test('toda rota do app foi chamada por algum caso acima', () => {
     const rotas = criarApp({ repositorio: criarRepositorioEmMemoria() }).locals.rotas.map(
       (r) => `${r.metodo} ${r.caminho.replace(/:(\w+)/g, '{$1}')}`,
@@ -127,7 +138,7 @@ describe('contrato da API contra o openapi.json', () => {
 });
 
 describe('o validador pega uma quebra de contrato', () => {
-  const certa = { trilhas: [{ codigo: 'T1', nome: 'Um', itens: [{ codigo: 'T1.1', texto: 'x', feito: true, conclusoes: [] }] }] };
+  const certa = { trilhas: [{ codigo: 'T1', nome: 'Um', roadmaps: [{ nome: 'Git', url: 'https://roadmap.sh/git-github' }], itens: [{ codigo: 'T1.1', texto: 'x', feito: true, conclusoes: [] }] }] };
   const catalogo = (corpo) => problemasDoContrato({ metodo: 'GET', caminho: '/v1/catalogo', status: 200, tipo: 'application/json', corpo });
 
   test('a resposta certa passa', () => {

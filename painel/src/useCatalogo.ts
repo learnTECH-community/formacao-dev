@@ -3,6 +3,7 @@
 // T4.11: a busca passa pelo TanStack Query (cache, novas tentativas e atualização em
 // segundo plano); a tela continua recebendo os mesmos quatro estados.
 import { useQuery } from '@tanstack/react-query';
+import { trilhasDaApi, urlDaApi, type CatalogoDaApi } from './api';
 import { lerCatalogo } from './catalogo';
 import { chaves } from './consultas';
 import type { Trilha } from './tipos';
@@ -18,6 +19,11 @@ export type Catalogo = EstadoDoCatalogo & { tentarDeNovo: () => void };
 /** Endereço do catálogo, ao lado do index.html no build (vale em qualquer rota). */
 export const ENDERECO_DO_CATALOGO = `${import.meta.env.BASE_URL}CATALOGO.md`;
 
+/** T5.8: com a API configurada (VITE_API_URL), o catálogo vem dela, com as conclusões. */
+export function enderecoPadrao(api = urlDaApi()): string {
+  return api ? `${api}/v1/catalogo` : ENDERECO_DO_CATALOGO;
+}
+
 type Lido = Extract<EstadoDoCatalogo, { situacao: 'vazio' | 'pronto' }>;
 
 /** Busca e lê o catálogo. Sem item nenhum, devolve "vazio". */
@@ -26,7 +32,9 @@ export async function buscarCatalogo(endereco: string, sinal?: AbortSignal): Pro
   const url = typeof location === 'undefined' ? endereco : new URL(endereco, location.href).href;
   const resposta = await fetch(url, { cache: 'no-cache', signal: sinal });
   if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
-  const trilhas = lerCatalogo(await resposta.text());
+  // A API responde JSON; o arquivo estático, o texto do CATALOGO.md.
+  const json = resposta.headers.get('content-type')?.includes('application/json');
+  const trilhas = json ? trilhasDaApi((await resposta.json()) as CatalogoDaApi) : lerCatalogo(await resposta.text());
   if (trilhas.flatMap((t) => t.itens).length === 0) return { situacao: 'vazio' };
   return { situacao: 'pronto', trilhas };
 }
@@ -45,7 +53,7 @@ function opcoesDoCatalogo(endereco: string) {
   };
 }
 
-export function useCatalogo(endereco: string = ENDERECO_DO_CATALOGO): Catalogo {
+export function useCatalogo(endereco: string = enderecoPadrao()): Catalogo {
   const consulta = useQuery(opcoesDoCatalogo(endereco));
   const tentarDeNovo = () => void consulta.refetch();
   // Depois de um erro, a nova tentativa volta a mostrar "carregando".
@@ -60,7 +68,7 @@ export function useCatalogo(endereco: string = ENDERECO_DO_CATALOGO): Catalogo {
  * chegou) entra na chave, para a trilha acompanhar a atualização em segundo plano.
  * Devolve undefined enquanto carrega e null se a trilha não existe.
  */
-export function useTrilha(codigo: string, endereco: string = ENDERECO_DO_CATALOGO): Trilha | null | undefined {
+export function useTrilha(codigo: string, endereco: string = enderecoPadrao()): Trilha | null | undefined {
   const catalogo = useQuery(opcoesDoCatalogo(endereco));
   const daTrilha = (): Trilha | null =>
     catalogo.data?.situacao === 'pronto' ? (catalogo.data.trilhas.find((t) => t.codigo === codigo) ?? null) : null;

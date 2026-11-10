@@ -26,7 +26,7 @@ curl -s $API/v1/health
 
 ### GET /v1/catalogo
 
-Trilhas e itens do `CATALOGO.md`, com quem fez cada item. Um item conta como feito se está marcado no catálogo ou se tem uma conclusão registrada. O número da issue do item, quando há, vem em `issue`.
+Trilhas e itens do `CATALOGO.md`, com os links do roadmap.sh de cada trilha e quem fez cada item. Um item conta como feito se está marcado no catálogo ou se tem uma conclusão registrada. O número da issue do item, quando há, vem em `issue`.
 
 ```bash
 curl -s $API/v1/catalogo
@@ -38,6 +38,7 @@ curl -s $API/v1/catalogo
     {
       "codigo": "T5",
       "nome": "Backend com Node e APIs",
+      "roadmaps": [{ "nome": "Backend", "url": "https://roadmap.sh/backend" }],
       "itens": [
         {
           "codigo": "T5.7",
@@ -201,6 +202,25 @@ curl -s $API/v1/auth/eu -H "Cookie: sessao=$SESSAO"
 ```json
 { "usuario": "pessoa-ficticia", "papel": "mantenedor" }
 ```
+
+### GET /v1/eventos
+
+Avisos em tempo real, com [Server-Sent Events](https://html.spec.whatwg.org/multipage/server-sent-events.html). A conexão fica aberta (`text/event-stream`). Quando uma conclusão nova é gravada (por `POST /v1/conclusoes` ou por `POST /v1/sincronizar`), todo painel aberto recebe um `event: conclusao`; a conclusão repetida não avisa. A primeira linha, `retry: 3000`, diz ao navegador para reconectar 3 s depois de uma queda. Um comentário a cada 25 s mantém a conexão viva.
+
+```bash
+curl -sN $API/v1/eventos
+```
+
+```text
+retry: 3000
+: conectado
+
+id: 1
+event: conclusao
+data: {"motivo":"conclusao","itens":["T5.7"]}
+```
+
+No painel, com `VITE_API_URL` definido, o `EventSource` ouve esta rota e, a cada aviso, busca o catálogo de novo: a barra de progresso muda sem recarregar a página.
 
 ### GET /v1/catalogo.md
 
