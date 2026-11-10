@@ -546,3 +546,14 @@ h2:focus {
   font-weight: 600;
   color: var(--erro);
 }
+
+/* T7.14: sem deslocamento de layout quando o catálogo chega (CLS).
+   O total do topo tem a altura do rótulo e da barra já reservada, e a seção das
+   trilhas ocupa a tela enquanto carrega, para nada visível ser empurrado. */
+.total {
+  min-height: 5.25rem;
+}
+
+#trilhas[aria-busy="true"] {
+  min-height: 100vh;
+}
