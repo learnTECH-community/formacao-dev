@@ -3,9 +3,8 @@
 import { afterEach, describe, it, expect, vi } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router';
 import { App } from '../App';
-import { PreferenciasProvider } from '../estado/PreferenciasProvider';
+import { Provedores } from '../teste/Provedores';
 import { CATALOGO_MD, resposta } from '../teste/dados';
 
 // A barra da trilha T1 quebra enquanto `quebrar.sim` for verdadeiro.
@@ -29,11 +28,9 @@ afterEach(() => {
 async function abrir() {
   vi.stubGlobal('fetch', vi.fn(async () => resposta(CATALOGO_MD)));
   render(
-    <PreferenciasProvider>
-      <MemoryRouter>
-        <App />
-      </MemoryRouter>
-    </PreferenciasProvider>,
+    <Provedores>
+      <App />
+    </Provedores>,
   );
   return within(await screen.findByRole('region', { name: 'Trilhas' }));
 }
