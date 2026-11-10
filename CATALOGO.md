@@ -4,7 +4,7 @@ Cada item tem um código (ex.: `T2.3`). O PR que pratica o item no **Painel de F
 
 O roadmap.sh é o nosso referencial: cada trilha cresce, na ordem dos tópicos do roadmap dela, até todo tópico ter um item prático aqui (issue de `cobertura` de cada trilha). Os itens foram escritos pela comunidade, com palavras próprias. O link de cada trilha leva ao roadmap correspondente no [roadmap.sh](https://roadmap.sh), onde está o conteúdo de estudo. Este repositório não copia o conteúdo do roadmap.sh: a licença dele só permite compartilhar os links (ver [ADR 001](docs/adr/001-roadmap-sh-so-por-link.md)).
 
-**Progresso:** 58 de 161 itens
+**Progresso:** 60 de 161 itens
 
 ## T0 · Fundamentos
 Roadmaps de referência: [Full Stack](https://roadmap.sh/full-stack) · [Computer Science](https://roadmap.sh/computer-science) · [Linux](https://roadmap.sh/linux)
@@ -109,8 +109,8 @@ Roadmaps de referência: [Backend](https://roadmap.sh/backend) · [Node.js](http
 - [x] **T5.10** Logs estruturados com id do pedido. (#93)
 - [x] **T5.11** Exportar o progresso em CSV por stream. (#94)
 - [x] **T5.12** Rota /itens com filtros e paginação. (#95)
-- [ ] **T5.13** Entrar com a conta do GitHub. (#96)
-- [ ] **T5.14** Papéis checados no servidor. (#97)
+- [x] **T5.13** Entrar com a conta do GitHub. (#96)
+- [x] **T5.14** Papéis checados no servidor. (#97)
 - [x] **T5.15** Versão da API e política de desativação. (#98)
 
 ## T6 · Bancos de dados
