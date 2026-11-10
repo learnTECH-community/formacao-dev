@@ -4,7 +4,7 @@ Cada item tem um código (ex.: `T2.3`). O PR que pratica o item no **Painel de F
 
 O roadmap.sh é o nosso referencial: cada trilha cresce, na ordem dos tópicos do roadmap dela, até todo tópico ter um item prático aqui (issue de `cobertura` de cada trilha). Os itens foram escritos pela comunidade, com palavras próprias. O link de cada trilha leva ao roadmap correspondente no [roadmap.sh](https://roadmap.sh), onde está o conteúdo de estudo. Este repositório não copia o conteúdo do roadmap.sh: a licença dele só permite compartilhar os links (ver [ADR 001](docs/adr/001-roadmap-sh-so-por-link.md)).
 
-**Progresso:** 71 de 161 itens
+**Progresso:** 73 de 161 itens
 
 ## T0 · Fundamentos
 Roadmaps de referência: [Full Stack](https://roadmap.sh/full-stack) · [Computer Science](https://roadmap.sh/computer-science) · [Linux](https://roadmap.sh/linux)
@@ -189,7 +189,7 @@ Roadmap de referência: [Cyber Security](https://roadmap.sh/cyber-security)
 - [x] **T10.1** Nenhum segredo no código: só `.env.example` com os nomes das variáveis.
 - [x] **T10.2** Auditar dependências (`npm audit --omit=dev`) no CI.
 - [x] **T10.3** Cabeçalhos de segurança na API (`helmet`) e CORS só para o site do painel.
-- [ ] **T10.4** Escrever a política de segurança (`SECURITY.md`): como avisar uma falha.
+- [x] **T10.4** Escrever a política de segurança (`SECURITY.md`): como avisar uma falha.
 - [ ] **T10.5** Decidir, por escrito, que dados pessoais o painel guarda e por quê (LGPD).
 - [ ] **T10.6** Modelagem de ameaças do painel. (#133)
 - [ ] **T10.7** Testes contra XSS e injeção de SQL. (#134)
@@ -198,7 +198,7 @@ Roadmap de referência: [Cyber Security](https://roadmap.sh/cyber-security)
 - [ ] **T10.10** Só HTTPS, com HSTS. (#137)
 - [ ] **T10.11** Análise estática de segurança. (#138)
 - [ ] **T10.12** Varredura do OWASP ZAP no CI. (#139)
-- [ ] **T10.13** Roteiro de resposta a incidente. (#140)
+- [x] **T10.13** Roteiro de resposta a incidente. (#140)
 - [x] **T10.14** Endurecer a API. (#141)
 
 ## T11 · Comunidade e open source
