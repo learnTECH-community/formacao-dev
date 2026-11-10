@@ -26,6 +26,7 @@ test('/v1/health responde 503 quando o repositório falha', async (t) => {
   t.after(api.fechar);
   const resposta = await fetch(`${api.base}/v1/health`);
   assert.equal(resposta.status, 503);
+  assert.match(resposta.headers.get('content-type'), /application\/problem\+json/);
   assert.equal((await resposta.json()).repositorio.situacao, 'falha');
 });
 
