@@ -368,3 +368,37 @@ main:focus {
   border-radius: 0.25rem;
   cursor: pointer;
 }
+
+/* T3.3: filtros da lista de itens. */
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1 1 12rem;
+  max-width: 20rem;
+}
+
+.campo label {
+  font-weight: 600;
+}
+
+.campo select {
+  min-height: 2.75rem;
+  padding: 0.25rem 0.5rem;
+  font: inherit;
+  color: var(--texto);
+  background: var(--fundo);
+  border: 1px solid var(--borda-forte);
+  border-radius: 0.25rem;
+}
+
+.contagem {
+  margin: 1rem 0 0;
+  color: var(--texto-suave);
+}

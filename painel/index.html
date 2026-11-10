@@ -38,6 +38,23 @@
       </section>
       <section class="faixa" id="itens" aria-labelledby="titulo-itens">
         <h2 id="titulo-itens">Itens</h2>
+        <form class="filtros" id="filtros" aria-label="Filtrar itens">
+          <div class="campo">
+            <label for="filtro-trilha">Trilha</label>
+            <select id="filtro-trilha" name="trilha">
+              <option value="">Todas as trilhas</option>
+            </select>
+          </div>
+          <div class="campo">
+            <label for="filtro-situacao">Situação</label>
+            <select id="filtro-situacao" name="situacao">
+              <option value="todos">Todos</option>
+              <option value="feitos">Feitos</option>
+              <option value="a-fazer">A fazer</option>
+            </select>
+          </div>
+        </form>
+        <p class="contagem" id="contagem" aria-live="polite"></p>
         <div id="lista-itens"></div>
       </section>
       <section class="faixa" id="como-participar" aria-labelledby="titulo-participar">

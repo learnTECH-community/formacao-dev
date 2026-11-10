@@ -1,7 +1,8 @@
 // Ponto de entrada do painel: busca o CATALOGO.md e mostra o progresso.
 // T3.5: diz quando está carregando, quando falhou (com nova tentativa) e quando veio vazio.
 import { lerCatalogo } from './catalogo.js';
-import { el, mostrarCatalogo } from './tela.js';
+import { filtrarItens, textoDaContagem } from './filtro.js';
+import { el, criarGrupo, mostrarCatalogo } from './tela.js';
 
 const estado = document.getElementById('estado');
 const alvos = {
@@ -9,6 +10,15 @@ const alvos = {
   cartoes: document.getElementById('lista-trilhas'),
   itens: document.getElementById('lista-itens'),
 };
+const filtros = {
+  form: document.getElementById('filtros'),
+  trilha: document.getElementById('filtro-trilha'),
+  situacao: document.getElementById('filtro-situacao'),
+  contagem: document.getElementById('contagem'),
+};
+/** Catálogo carregado; o filtro trabalha sobre ele, sem buscar de novo. */
+let catalogo = [];
+
 const ocupaveis = [document.getElementById('trilhas'), document.getElementById('itens'), alvos.total];
 
 function ocupado(sim) {
@@ -17,7 +27,29 @@ function ocupado(sim) {
 
 function limparCatalogo() {
   for (const alvo of Object.values(alvos)) alvo.replaceChildren();
+  filtros.contagem.textContent = '';
 }
+
+/** T3.3: mostra só os itens que passam no filtro e diz quantos aparecem. */
+function aplicarFiltro() {
+  const visiveis = filtrarItens(catalogo, { trilha: filtros.trilha.value, situacao: filtros.situacao.value });
+  alvos.itens.replaceChildren(...visiveis.map((t) => criarGrupo(t)));
+  const total = catalogo.flatMap((t) => t.itens).length;
+  filtros.contagem.textContent = textoDaContagem(visiveis.flatMap((t) => t.itens).length, total);
+}
+
+function prepararFiltro() {
+  const escolhida = filtros.trilha.value;
+  filtros.trilha.replaceChildren(
+    el('option', { value: '' }, ['Todas as trilhas']),
+    ...catalogo.map((t) => el('option', { value: t.codigo }, [t.codigo + ' · ' + t.nome])),
+  );
+  if (catalogo.some((t) => t.codigo === escolhida)) filtros.trilha.value = escolhida;
+  aplicarFiltro();
+}
+
+filtros.form.addEventListener('change', aplicarFiltro);
+filtros.form.addEventListener('submit', (evento) => evento.preventDefault());
 
 /** Mensagem curta para a pessoa, sem detalhe técnico demais. */
 function mensagemDeErro(erro) {
@@ -63,7 +95,9 @@ async function carregar() {
       mostrarVazio();
       return;
     }
+    catalogo = trilhas;
     mostrarCatalogo(trilhas, alvos);
+    prepararFiltro();
     estado.replaceChildren();
   } catch (erro) {
     mostrarErro(erro);
