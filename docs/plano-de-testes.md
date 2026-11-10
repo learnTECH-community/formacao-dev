@@ -10,7 +10,7 @@ O painel lê o `CATALOGO.md` e mostra o progresso. O que mais pode dar errado, e
 |---|---|---|---|
 | Unidade | Vitest (ambiente node) | `painel/src/*.test.ts`, `scripts/catalogo.test.mjs` | `npm test`, job `catalogo`; cobertura no job `cobertura` |
 | Integração (componente e app) | Vitest + jsdom + Testing Library | `painel/src/**/*.test.tsx`, `useCatalogo.test.ts` | `npm test`, job `catalogo` |
-| Ponta a ponta | Playwright + `@axe-core/playwright`, Chromium, temas claro e escuro | `e2e/*.spec.mjs` | `npm run test:e2e`, job `painel` |
+| Ponta a ponta | Playwright + `@axe-core/playwright`: Chromium nos temas claro e escuro (tudo); WebKit e celular emulado (Pixel 7) no fluxo principal | `e2e/*.spec.mjs` | `npm run test:e2e`, job `painel` |
 | Manual | Pessoa com teclado e leitor de tela | roteiro nas issues (T2.3, T7.7) | antes de marcar itens que pedem pessoa real |
 
 ## Fluxos por nível
@@ -43,7 +43,7 @@ O painel lê o `CATALOGO.md` e mostra o progresso. O que mais pode dar errado, e
 
 ## O que não se testa, e por quê
 
-- **Outros navegadores e celular emulado:** os testes rodam só no Chromium. WebKit e um aparelho móvel entram na T7.9 (#110).
+- **Firefox e aparelho real:** o fluxo principal (`fluxo`, `rotas` e `estados`) roda no Chromium, no WebKit e num celular emulado (T7.9); o resto, só no Chromium. Firefox e aparelho físico ficam de fora por tempo de CI.
 - **Desempenho no ar (LCP):** o painel ainda não está publicado (T9). A medição local está na T7.3 (#172).
 - **API e banco:** ainda não existem (T5 e T6); contrato e carga ficam na T7.8 (#109) e na T7.10 (#111).
 - **Conteúdo do roadmap.sh:** só há links (ADR 001). Os links não são abertos nos testes, para o CI não depender de outro site.
