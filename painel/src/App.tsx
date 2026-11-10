@@ -2,7 +2,7 @@
 // filtro) são as mesmas da T3; aqui só se decide o que aparece na tela.
 // T4.3: as páginas (início e detalhe da trilha) têm rota própria; o catálogo é
 // buscado uma vez aqui e passa para a página da vez.
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { Route, Routes } from 'react-router';
 import { Avisos } from './componentes/Avisos';
 import { BarraProgresso } from './componentes/BarraProgresso';
@@ -12,6 +12,9 @@ import { Inicio } from './paginas/Inicio';
 import { NaoEncontrada } from './paginas/NaoEncontrada';
 import { progressoTotal } from './progresso';
 import { mensagemDeErro, useCatalogo } from './useCatalogo';
+
+// T4.12: o formulário (com o Zod) só é baixado ao abrir /propor.
+const ProporItem = lazy(() => import('./paginas/ProporItem').then((m) => ({ default: m.ProporItem })));
 
 export function App() {
   const catalogo = useCatalogo();
@@ -77,6 +80,14 @@ export function App() {
         <Routes>
           <Route path="/" element={<Inicio {...pagina} />} />
           <Route path="/trilha/:codigo" element={<DetalheTrilha {...pagina} />} />
+          <Route
+            path="/propor"
+            element={
+              <Suspense fallback={<p className="faixa" role="status">Carregando o formulário…</p>}>
+                <ProporItem {...pagina} />
+              </Suspense>
+            }
+          />
           <Route path="*" element={<NaoEncontrada pedidoDeFoco={pedidoDeFoco} />} />
         </Routes>
       </main>

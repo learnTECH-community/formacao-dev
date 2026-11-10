@@ -507,3 +507,42 @@ h2:focus {
     grid-template-columns: 1fr auto auto auto;
   }
 }
+
+/* T4.12: formulário "Propor item". */
+.proposta form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 40rem;
+}
+
+.campo-largo {
+  max-width: none;
+}
+
+.campo input,
+.campo textarea {
+  min-height: 2.75rem;
+  padding: 0.5rem;
+  font: inherit;
+  color: var(--texto);
+  background: var(--fundo);
+  border: 1px solid var(--borda-forte);
+  border-radius: 0.25rem;
+}
+
+.campo [aria-invalid="true"] {
+  border-color: var(--erro);
+  border-width: 2px;
+}
+
+.dica {
+  margin: 0;
+  color: var(--texto-suave);
+}
+
+.erro-do-campo {
+  margin: 0;
+  font-weight: 600;
+  color: var(--erro);
+}
