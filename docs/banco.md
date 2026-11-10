@@ -87,3 +87,24 @@ Se um dia precisarmos de auditoria (quem apagou e quando), o caminho é uma tabe
 A restrição `UNIQUE (item, usuario)` é a garantia. O código não faz "existe? se não, grava": entre a pergunta e a gravação, outro pedido pode gravar primeiro. A gravação usa `INSERT ... ON CONFLICT DO NOTHING RETURNING`: se a linha nasceu, a rota responde 201; se já existia, lê a que existia e responde 200.
 
 O teste `api/test/concorrencia.test.mjs` sobe dois apps (como dois servidores), cada um com a sua conexão no mesmo arquivo, e dispara 20 pedidos iguais ao mesmo tempo: um 201, dezenove 200 e uma linha só no banco.
+
+## Restrições (T6.7)
+
+A migração `002_restricoes.sql` põe no banco as regras que a API já valida, para que nenhum caminho (um script, outro serviço, um `INSERT` à mão) grave dado ruim. O SQLite não acrescenta `CHECK` numa tabela que existe: cada tabela é recriada com as regras, os dados são copiados e a antiga sai. A 001 continua como estava.
+
+| Tabela | Restrição | O que recusa |
+|---|---|---|
+| `trilhas` | `CHECK` no `codigo` | Código fora de `Tn` |
+| `itens` | `CHECK` no `codigo` | Código fora de `Tn.m`, ou que não começa pelo código da trilha |
+| `itens` | `CHECK` em `marcado`, `posicao` e `texto` | `marcado` fora de 0 e 1, posição zero ou negativa, texto vazio |
+| `itens` | Chave estrangeira `trilha` | Item de trilha que não existe |
+| `conclusoes` | Chave estrangeira `item` | Conclusão de item que não existe; apagar item que tem conclusão |
+| `conclusoes` | `NOT NULL` | Conclusão sem item, usuário, PR ou data |
+| `conclusoes` | `UNIQUE (item, usuario)` | A mesma pessoa no mesmo item duas vezes |
+| `conclusoes` | `CHECK` em `usuario`, `pr` e `concluida_em` | Usuário fora das regras do GitHub, link que não é de PR, data fora do ISO 8601 em UTC |
+
+O `CHECK` da data usa `IS` e não `=`: com uma data inválida, `strftime` devolve `NULL`, e `x = NULL` não é falso, é `NULL`, que o `CHECK` deixa passar.
+
+O migrador guarda a soma (sha256) de cada migração aplicada. Se um arquivo já aplicado mudar, ele para com "foi editada depois de aplicada: crie uma migração nova".
+
+Os testes estão em `api/test/restricoes.test.mjs`: um por restrição, mais um que confere que os dados de antes sobrevivem à 002.

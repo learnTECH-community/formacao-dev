@@ -1,7 +1,9 @@
 // T6.3: migrações versionadas. Cada arquivo api/migracoes/NNN_nome.sql roda uma
 // vez só, em ordem, dentro de uma transação, e fica registrado na tabela
-// schema_migracoes. Migração já aplicada nunca é editada: mudança vira arquivo novo.
+// schema_migracoes, com a soma do arquivo. Migração já aplicada nunca é editada:
+// mudança vira arquivo novo (T6.7), e o migrador recusa um arquivo aplicado que mudou.
 // Uso: node src/banco/migrar.mjs [caminho do banco]   (padrão: CAMINHO_DO_BANCO ou dados/painel.db)
+import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { abrirBanco, caminhoDoBanco } from './conexao.mjs';
@@ -15,7 +17,11 @@ export function listarMigracoes(pasta = PASTA_DAS_MIGRACOES) {
   const fora = arquivos.filter((a) => !NOME.test(a));
   if (fora.length) throw new Error(`migração fora do padrão NNN_nome.sql: ${fora.join(', ')}`);
   const migracoes = arquivos
-    .map((arquivo) => ({ versao: Number(arquivo.slice(0, 3)), arquivo, sql: readFileSync(new URL(arquivo, pasta), 'utf8') }))
+    .map((arquivo) => {
+      // CRLF vira LF antes da soma: o mesmo arquivo dá a mesma soma no Windows e no Linux.
+      const sql = readFileSync(new URL(arquivo, pasta), 'utf8').replaceAll('\r\n', '\n');
+      return { versao: Number(arquivo.slice(0, 3)), arquivo, sql, soma: createHash('sha256').update(sql).digest('hex') };
+    })
     .sort((a, b) => a.versao - b.versao);
   migracoes.forEach((m, i) => {
     if (m.versao !== i + 1) throw new Error(`versão ${String(i + 1).padStart(3, '0')} faltando ou repetida (achei ${m.arquivo})`);
@@ -31,12 +37,20 @@ export function migrar(banco, { pasta = PASTA_DAS_MIGRACOES, relogio = () => new
   banco.exec(`CREATE TABLE IF NOT EXISTS schema_migracoes (
     versao INTEGER PRIMARY KEY,
     arquivo TEXT NOT NULL,
+    soma TEXT NOT NULL,
     aplicada_em TEXT NOT NULL
   )`);
-  const aplicadas = new Set(banco.prepare('SELECT versao FROM schema_migracoes').all().map((l) => l.versao));
-  const registrar = banco.prepare('INSERT INTO schema_migracoes (versao, arquivo, aplicada_em) VALUES (?, ?, ?)');
+  // A soma (sha256) de cada migração aplicada fica guardada: se o arquivo mudar depois, o migrador para.
+  const aplicadas = new Map(banco.prepare('SELECT versao, soma FROM schema_migracoes').all().map((l) => [l.versao, l.soma]));
+  const registrar = banco.prepare('INSERT INTO schema_migracoes (versao, arquivo, soma, aplicada_em) VALUES (?, ?, ?, ?)');
+  const migracoes = listarMigracoes(pasta);
+  for (const m of migracoes) {
+    if (aplicadas.has(m.versao) && aplicadas.get(m.versao) !== m.soma) {
+      throw new Error(`a migração ${m.arquivo} foi editada depois de aplicada: crie uma migração nova`);
+    }
+  }
   const agora = [];
-  for (const m of listarMigracoes(pasta)) {
+  for (const m of migracoes) {
     if (aplicadas.has(m.versao)) continue;
     // Uma migração que recria tabela precisa das chaves estrangeiras desligadas;
     // a checagem volta e é conferida no fim (PRAGMA foreign_key_check).
@@ -46,7 +60,7 @@ export function migrar(banco, { pasta = PASTA_DAS_MIGRACOES, relogio = () => new
       banco.exec(m.sql);
       const quebradas = banco.prepare('PRAGMA foreign_key_check').all();
       if (quebradas.length) throw new Error(`${quebradas.length} linha(s) com chave estrangeira quebrada`);
-      registrar.run(m.versao, m.arquivo, relogio().toISOString());
+      registrar.run(m.versao, m.arquivo, m.soma, relogio().toISOString());
       banco.exec('COMMIT');
     } catch (erro) {
       banco.exec('ROLLBACK');

@@ -121,7 +121,7 @@ test('T6.3: os dados de teste são sempre os mesmos e semear de novo não duplic
 test('as chaves estrangeiras estão ligadas: conclusão de item que não existe é recusada', () => {
   const banco = novo();
   assert.throws(
-    () => banco.prepare("INSERT INTO conclusoes (item, usuario, pr, concluida_em) VALUES ('T9.9', 'a', 'b', 'c')").run(),
+    () => banco.prepare("INSERT INTO conclusoes (item, usuario, pr, concluida_em) VALUES ('T9.9', 'pessoa-a', 'https://github.com/exemplo/repo/pull/1', '2026-11-10T12:00:00.000Z')").run(),
     /FOREIGN KEY constraint failed/,
   );
 });

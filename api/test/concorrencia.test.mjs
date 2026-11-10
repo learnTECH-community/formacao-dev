@@ -44,7 +44,7 @@ test('a restrição UNIQUE do banco recusa a repetição até num INSERT sem ON 
   const banco = abrirBanco(':memory:');
   migrar(banco);
   banco.exec("INSERT INTO trilhas VALUES ('T1', 'Um', 1); INSERT INTO itens VALUES ('T1.1', 'T1', 'x', 0, 1)");
-  const inserir = "INSERT INTO conclusoes (item, usuario, pr, concluida_em) VALUES ('T1.1', 'pessoa-a', 'p', 'd')";
+  const inserir = "INSERT INTO conclusoes (item, usuario, pr, concluida_em) VALUES ('T1.1', 'pessoa-a', 'https://github.com/exemplo/repo/pull/1', '2026-11-10T12:00:00.000Z')";
   banco.exec(inserir);
   assert.throws(() => banco.exec(inserir), /UNIQUE constraint failed: conclusoes.item, conclusoes.usuario/);
 });
