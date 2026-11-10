@@ -4,7 +4,7 @@ Cada item tem um código (ex.: `T2.3`). O PR que pratica o item no **Painel de F
 
 O roadmap.sh é o nosso referencial: cada trilha cresce, na ordem dos tópicos do roadmap dela, até todo tópico ter um item prático aqui (issue de `cobertura` de cada trilha). Os itens foram escritos pela comunidade, com palavras próprias. O link de cada trilha leva ao roadmap correspondente no [roadmap.sh](https://roadmap.sh), onde está o conteúdo de estudo. Este repositório não copia o conteúdo do roadmap.sh: a licença dele só permite compartilhar os links (ver [ADR 001](docs/adr/001-roadmap-sh-so-por-link.md)).
 
-**Progresso:** 26 de 161 itens
+**Progresso:** 27 de 161 itens
 
 ## T0 · Fundamentos
 Roadmaps de referência: [Full Stack](https://roadmap.sh/full-stack) · [Computer Science](https://roadmap.sh/computer-science) · [Linux](https://roadmap.sh/linux)
@@ -82,7 +82,7 @@ Roadmap de referência: [React](https://roadmap.sh/react)
 - [x] **T4.2** Guardar o filtro escolhido no endereço da página, para poder compartilhar.
 - [x] **T4.3** Criar uma página de detalhe da trilha, com rota própria.
 - [x] **T4.4** Testar os componentes com Testing Library, pelo que a pessoa vê e faz.
-- [ ] **T4.5** Medir e reduzir renderizações desnecessárias numa lista grande.
+- [x] **T4.5** Medir e reduzir renderizações desnecessárias numa lista grande.
 - [x] **T4.6** App React com Vite e TypeScript. (#79)
 - [x] **T4.7** Hook useCatalogo. (#80)
 - [x] **T4.8** Estado compartilhado de tema e fixados. (#81)
