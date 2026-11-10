@@ -52,6 +52,17 @@ node scripts/catalogo.mjs --atualizar  # reescreve a linha "Progresso"
 npm test                               # testes do catálogo
 ```
 
+## Rodar o painel
+
+O painel fica em `painel/`. Requisito: Node 20 ou mais novo.
+
+```bash
+npm ci                                  # instala as dependências de desenvolvimento
+npm run painel                          # abre o painel em http://127.0.0.1:4317/
+npx playwright install chromium         # baixa o navegador dos testes (uma vez)
+npm run test:e2e                        # testes do painel no navegador, temas claro e escuro
+```
+
 ## Documentos
 
 - [CATALOGO.md](CATALOGO.md): as trilhas e os itens.
