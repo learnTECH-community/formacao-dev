@@ -110,6 +110,8 @@ Sem `VITE_API_URL`, o painel lê o `CATALOGO.md`, como antes. As variáveis est�
 - [docs/carga.md](docs/carga.md): teste de carga da API, meta e resultado.
 - [SECURITY.md](SECURITY.md): como avisar uma falha de segurança.
 - [docs/incidente.md](docs/incidente.md): roteiro de resposta a incidente, com o ensaio.
+- [docs/ameacas.md](docs/ameacas.md): modelagem de ameaças (STRIDE), com os riscos aceitos.
+- [docs/dados-pessoais.md](docs/dados-pessoais.md): que dados pessoais o painel guarda e por quê (proposta para o responsável aprovar).
 - [docs/seguranca.md](docs/seguranca.md): cabeçalhos, CORS, segredos e o endurecimento da API (T10).
 - [docs/plano-de-testes.md](docs/plano-de-testes.md): o que se testa em cada nível e os riscos que cada teste cobre.
 - [docs/como-a-web-funciona.md](docs/como-a-web-funciona.md): do endereço digitado até o painel na tela.
