@@ -52,6 +52,48 @@ curl -s $API/v1/catalogo
 }
 ```
 
+### GET /v1/itens
+
+Itens de todas as trilhas, numa lista só, com filtros e paginação. Cada item traz o código da trilha.
+
+| Parâmetro | Regra | Padrão |
+|---|---|---|
+| `trilha` | Código de uma trilha que existe, como `T2` | todas |
+| `situacao` | `todos`, `feitos` ou `a-fazer` | `todos` |
+| `limite` | Itens por página, de 1 a 50 | 20 |
+| `pagina` | Página, a partir de 1 | 1 |
+
+A resposta traz o `total` (depois do filtro, antes da paginação) e o endereço da `proxima` página, que também vai no cabeçalho `Link` com `rel="next"`. Na última página, `proxima` é `null`. Filtro fora da regra, repetido ou desconhecido recebe 400.
+
+```bash
+curl -s "$API/v1/itens?trilha=T5&situacao=a-fazer&limite=2"
+```
+
+```json
+{
+  "itens": [
+    { "codigo": "T5.4", "texto": "Registrar quem fez cada item ...", "feito": false, "issue": 210, "conclusoes": [], "trilha": "T5" },
+    { "codigo": "T5.5", "texto": "Limitar pedidos por minuto ...", "feito": false, "issue": 211, "conclusoes": [], "trilha": "T5" }
+  ],
+  "total": 9,
+  "pagina": 1,
+  "limite": 2,
+  "proxima": "/v1/itens?trilha=T5&situacao=a-fazer&limite=2&pagina=2"
+}
+```
+
+### GET /v1/itens/{codigo}
+
+Um item pelo código. Código fora do formato `Tn.m` recebe 400; item que não existe, 404.
+
+```bash
+curl -s $API/v1/itens/T5.1
+```
+
+```json
+{ "codigo": "T5.1", "texto": "Criar uma API com `/health` e uma rota que devolve o catálogo.", "feito": true, "issue": 207, "conclusoes": [], "trilha": "T5" }
+```
+
 ### GET /v1/catalogo.md
 
 **Rota antiga.** Devolve o texto do `CATALOGO.md`, para o painel que ainda lê o arquivo. Antiga desde 10/11/2026; sai do ar em 08/02/2027. Use `GET /v1/catalogo`. A resposta traz os cabeçalhos `Deprecation`, `Sunset` e `Link` (ver [Versões e desativação](#versões-e-desativação)).
