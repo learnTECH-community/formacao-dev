@@ -4,7 +4,7 @@ Cada item tem um código (ex.: `T2.3`). O PR que pratica o item no **Painel de F
 
 O roadmap.sh é o nosso referencial: cada trilha cresce, na ordem dos tópicos do roadmap dela, até todo tópico ter um item prático aqui (issue de `cobertura` de cada trilha). Os itens foram escritos pela comunidade, com palavras próprias. O link de cada trilha leva ao roadmap correspondente no [roadmap.sh](https://roadmap.sh), onde está o conteúdo de estudo. Este repositório não copia o conteúdo do roadmap.sh: a licença dele só permite compartilhar os links (ver [ADR 001](docs/adr/001-roadmap-sh-so-por-link.md)).
 
-**Progresso:** 40 de 161 itens
+**Progresso:** 42 de 161 itens
 
 ## T0 · Fundamentos
 Roadmaps de referência: [Full Stack](https://roadmap.sh/full-stack) · [Computer Science](https://roadmap.sh/computer-science) · [Linux](https://roadmap.sh/linux)
@@ -99,7 +99,7 @@ Roadmaps de referência: [Backend](https://roadmap.sh/backend) · [Node.js](http
 
 - [x] **T5.1** Criar uma API com `/health` e uma rota que devolve o catálogo. (#207)
 - [x] **T5.2** Validar a entrada no servidor, com mensagens de erro claras. (#208)
-- [ ] **T5.3** Documentar a API: rotas, exemplos de pedido e resposta, códigos de erro. (#209)
+- [x] **T5.3** Documentar a API: rotas, exemplos de pedido e resposta, códigos de erro. (#209)
 - [ ] **T5.4** Registrar quem fez cada item (nome de usuário do GitHub e link do PR), lido da API do GitHub. (#210)
 - [ ] **T5.5** Limitar pedidos por minuto e tratar a falha da API do GitHub. (#211)
 - [x] **T5.6** Testar a API sem banco, com repositório injetado. (#212)
@@ -111,7 +111,7 @@ Roadmaps de referência: [Backend](https://roadmap.sh/backend) · [Node.js](http
 - [ ] **T5.12** Rota /itens com filtros e paginação. (#95)
 - [ ] **T5.13** Entrar com a conta do GitHub. (#96)
 - [ ] **T5.14** Papéis checados no servidor. (#97)
-- [ ] **T5.15** Versão da API e política de desativação. (#98)
+- [x] **T5.15** Versão da API e política de desativação. (#98)
 
 ## T6 · Bancos de dados
 Roadmaps de referência: [SQL](https://roadmap.sh/sql) · [MongoDB](https://roadmap.sh/mongodb)
