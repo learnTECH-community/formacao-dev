@@ -108,3 +108,30 @@ O `CHECK` da data usa `IS` e não `=`: com uma data inválida, `strftime` devolv
 O migrador guarda a soma (sha256) de cada migração aplicada. Se um arquivo já aplicado mudar, ele para com "foi editada depois de aplicada: crie uma migração nova".
 
 Os testes estão em `api/test/restricoes.test.mjs`: um por restrição, mais um que confere que os dados de antes sobrevivem à 002.
+
+## Repositório MongoDB (T6.12 e T6.13)
+
+Para comparar na prática com o relacional (ADR 004), `api/src/repositorios/mongo.mjs` segue a mesma interface. `REPOSITORIO=mongo` com `MONGO_URL` (e `MONGO_BANCO`, padrão `painel`) faz a API usá-lo.
+
+| Coleção | Documento | Índices |
+|---|---|---|
+| `trilhas` | `{ _id: "T2", nome, posicao }` | `_id` |
+| `itens` | `{ _id: "T2.3", trilha, texto, marcado, posicao }` | `_id`, `{ trilha, posicao }` |
+| `conclusoes` | `{ _id: 12, item, usuario, pr, concluidaEm }` | `_id`, único `{ item, usuario }`, `{ usuario }` |
+| `contadores` | `{ _id: "conclusoes", valor }` (o próximo id) | `_id` |
+
+- O índice único `{ item, usuario }` faz o papel da `UNIQUE` (T6.5): a gravação repetida recebe o erro 11000 e devolve a conclusão que existia. Um teste dispara 10 gravações iguais ao mesmo tempo e confere uma só.
+- Não há chave estrangeira: quem garante que o item existe é a API (T5.2). É a diferença que a ADR 004 aponta.
+- As baterias de testes do repositório, do progresso, do ranking e dos concluintes rodam contra memória, SQLite e MongoDB. No CI, o job `api` sobe o serviço `mongo:7` e falha se algum teste for pulado; no Windows sem Docker, os testes do MongoDB aparecem como pulados, com o motivo.
+
+### Progresso por trilha com agregação (T6.13)
+
+O pipeline `PIPELINE_DO_PROGRESSO` parte de `trilhas`:
+
+1. `$sort` pela posição e `$lookup` dos itens da trilha (pelo índice `{ trilha, posicao }`);
+2. `$unwind` com `preserveNullAndEmptyArrays` (trilha sem itens continua, como o `LEFT JOIN` da view);
+3. `$lookup` de uma conclusão do item, com `$match` em `$expr` sobre `item` (pelo índice `{ item, usuario }`) e `$limit: 1`;
+4. `$group` por trilha: total de itens e feitos (marcado no catálogo ou com conclusão);
+5. `$project` do percentual, arredondado para baixo.
+
+Um teste semeia os mesmos dados fictícios no SQLite e no MongoDB e confere que o resultado do pipeline é igual ao da view `v_progresso_trilha` nas 12 trilhas; as outras consultas (pessoas, concluintes, ranking com `$setWindowFields` e `$rank`, semanas com `$dateTrunc`) também batem. O `explain('executionStats')` do pipeline mostra os índices `item_1_usuario_1` e `trilha_1_posicao_1` em uso.
