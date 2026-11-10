@@ -64,6 +64,13 @@ Os dois casos estão na categoria **Injection** do [OWASP Top 10](https://owasp.
 
 Regra: **nenhuma consulta é montada com texto do usuário**. O teste `injecao.test.mjs` lê o código da API e falha se um `prepare` ou `exec` tiver `${...}`; as únicas exceções contam as linhas de tabelas com nome fixo no código (backup e semente). No MongoDB, a mesma validação com `zod` só aceita texto nos campos, e um objeto como `{"$gt": ""}` é recusado com 400.
 
+## Análise estática (T10.11)
+
+- O CodeQL (`.github/workflows/codeql.yml`, consultas `security-and-quality`) analisa o JavaScript e o TypeScript do painel, da API e dos scripts, e os workflows do Actions. Roda em todo PR, em push nas branches de trabalho e toda segunda.
+- Os resultados vão para a aba **Security → Code scanning** (`security-events: write` só nesse job).
+- Primeira análise, 10/11/2026, PR #254: `gh api repos/learnTECH-community/formacao-dev/code-scanning/analyses` → `javascript-typescript` com 201 regras e **0 alertas**; `actions` com 27 regras e **0 alertas**. Nenhum alerta para corrigir nem dispensar.
+- Regra para os próximos: alerta alto se corrige ou ganha issue com prazo; dispensa só com motivo escrito (`CONTRIBUTING.md`).
+
 ## Segredos e dependências (T10.1, T10.2)
 
 - Nenhum segredo no Git: só variáveis de ambiente, com os nomes em `api/.env.example`. O `node scripts/segredos.mjs` roda no CI e falha se achar `.env` versionado ou texto com cara de credencial.

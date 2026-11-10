@@ -1,0 +1,43 @@
+# T10.11: análise estática de segurança (CodeQL) do painel, da API, dos scripts e dos
+# workflows. Roda em todo PR, em todo push nas branches de trabalho e uma vez por semana
+# (as regras do CodeQL mudam mesmo sem mudar o código). Os alertas aparecem na aba
+# Security → Code scanning. Regra: alerta não se dispensa sem motivo escrito (CONTRIBUTING.md).
+name: CodeQL
+on:
+  pull_request:
+    branches: [main, "developer/**"]
+  push:
+    branches: [main, "developer/**"]
+  schedule:
+    - cron: "17 9 * * 1"
+permissions:
+  contents: read
+jobs:
+  analise:
+    name: codeql (${{ matrix.linguagem }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Para enviar o resultado para a aba Security.
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        linguagem: [javascript-typescript, actions]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.linguagem }}
+          # security-and-quality: as regras de segurança e as de qualidade com risco.
+          queries: security-and-quality
+          config: |
+            paths-ignore:
+              - node_modules
+              - api/node_modules
+              - dist
+              - cobertura
+              - playwright-report
+      - uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.linguagem }}"
