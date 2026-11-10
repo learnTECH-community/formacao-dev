@@ -1,6 +1,6 @@
 // Página inicial: trilhas com o progresso, itens com filtro e como participar.
 // T4.2: o filtro vive no endereço (?trilha=T2&situacao=feitos).
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { CartaoTrilha } from '../componentes/CartaoTrilha';
 import { Filtros } from '../componentes/Filtros';
@@ -24,13 +24,26 @@ export function Inicio({ catalogo, pedidoDeFoco }: PropsDePagina) {
   const pronto = catalogo.situacao === 'pronto';
   const trilhas = pronto ? catalogo.trilhas : SEM_TRILHAS;
 
-  // Só se lê o endereço; ele só muda quando a pessoa mexe no filtro (cada mudança vira
-  // uma entrada no histórico, para Voltar e Avançar restaurarem o filtro).
-  const filtro = lerFiltro(
-    parametros,
-    trilhas.map((t) => t.codigo),
-  );
-  const aoMudar = (novo: FiltroEscolhido) => setParametros(escreverFiltro(novo));
+  // O endereço é a fonte do filtro. A cópia local existe porque o React Router troca o
+  // endereço numa transição: sem ela, o <select> controlado volta ao valor antigo até a
+  // transição terminar, e uma segunda seta do teclado se perde.
+  const codigos = trilhas.map((t) => t.codigo).join(' ');
+  const lido = () => lerFiltro(parametros, codigos.split(' '));
+  const [filtro, setFiltro] = useState<FiltroEscolhido>(lido);
+  // Voltar, Avançar, link com filtro ou catálogo recém-chegado: o endereço manda.
+  // Ajuste durante a renderização, sem efeito (padrão da documentação do React).
+  const fonte = `${parametros.toString()}|${codigos}`;
+  const [fonteVista, setFonteVista] = useState(fonte);
+  if (fonteVista !== fonte) {
+    setFonteVista(fonte);
+    setFiltro(lido());
+  }
+
+  // Cada mudança vira uma entrada no histórico, para Voltar e Avançar restaurarem o filtro.
+  const aoMudar = (novo: FiltroEscolhido) => {
+    setFiltro(novo);
+    setParametros(escreverFiltro(novo));
+  };
 
   const visiveis = filtrarItens(trilhas, filtro);
   const total = trilhas.flatMap((t) => t.itens).length;
