@@ -35,9 +35,9 @@ COPY CATALOGO.md /app/CATALOGO.md
 # A API lê o catálogo com o mesmo leitor do script da raiz (api/src/catalogo.mjs).
 COPY scripts/catalogo.mjs /app/scripts/catalogo.mjs
 # A pasta do SQLite pertence ao usuário "node" (uid 1000), que já existe na imagem oficial.
-# T9.13: a API roda com "node" e não usa o npm, o npx, o yarn nem o corepack da imagem base;
+# T9.13: os pacotes do Alpine com as correções publicadas depois da imagem base. A API roda com "node" e não usa o npm, o npx, o yarn nem o corepack da imagem base;
 # tirá-los diminui a imagem e o que a varredura acha (as dependências do próprio npm).
-RUN mkdir -p /dados && chown node:node /dados  && rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /opt/yarn*            /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/yarn /usr/local/bin/yarnpkg /usr/local/bin/corepack
+RUN apk upgrade --no-cache  && mkdir -p /dados && chown node:node /dados  && rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /opt/yarn*            /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/yarn /usr/local/bin/yarnpkg /usr/local/bin/corepack
 # O processo não roda como root.
 USER node
 EXPOSE 4320
