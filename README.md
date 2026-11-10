@@ -152,6 +152,7 @@ A imagem da API é feita em estágios (`api/Dockerfile`): a final leva só as de
 - [docs/incidente.md](docs/incidente.md): roteiro de resposta a incidente, com o ensaio.
 - [docs/ameacas.md](docs/ameacas.md): modelagem de ameaças (STRIDE), com os riscos aceitos.
 - [docs/dados-pessoais.md](docs/dados-pessoais.md): que dados pessoais o painel guarda e por quê (proposta para o responsável aprovar).
+- [docs/publicar.md](docs/publicar.md): publicar o painel (Pages), a API (Render) e a imagem (GHCR), e a checagem de disponibilidade.
 - [docs/seguranca.md](docs/seguranca.md): cabeçalhos, CORS, segredos e o endurecimento da API (T10).
 - [docs/plano-de-testes.md](docs/plano-de-testes.md): o que se testa em cada nível e os riscos que cada teste cobre.
 - [docs/como-a-web-funciona.md](docs/como-a-web-funciona.md): do endereço digitado até o painel na tela.

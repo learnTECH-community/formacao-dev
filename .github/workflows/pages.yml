@@ -1,0 +1,82 @@
+# T9.3: publica o painel no GitHub Pages depois do CI verde na main.
+# Ligar o Pages (Settings → Pages → Source: GitHub Actions) e a variável PAGES_ATIVO=sim
+# são do responsável. Sem a variável, o job de publicação fica pulado e a main segue verde.
+# Em PR, o job "previa" gera o build com a base do Pages e confere os caminhos.
+name: Pages
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+  pull_request:
+    branches: [main, "developer/**"]
+    paths:
+      - "painel/**"
+      - "vite.config.mjs"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/pages.yml"
+permissions:
+  contents: read
+concurrency:
+  group: pages
+  cancel-in-progress: false
+env:
+  BASE_DO_PAINEL: /formacao-dev/
+jobs:
+  previa:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Build com a base do Pages
+        run: |
+          test -f dist/404.html && test -f dist/CATALOGO.md
+          grep -q 'src="/formacao-dev/assets/' dist/index.html
+          cmp dist/index.html dist/404.html
+          echo "build com a base $BASE_DO_PAINEL: ok" >> "$GITHUB_STEP_SUMMARY"
+
+  build:
+    # Só depois do CI verde na main (ou à mão), e só com o Pages ligado pelo responsável.
+    if: >-
+      vars.PAGES_ATIVO == 'sim' &&
+      (github.event_name == 'workflow_dispatch' ||
+       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # Com a API publicada (#230), o responsável define a variável URL_DA_API.
+      - run: npm run build
+        env:
+          VITE_API_URL: ${{ vars.URL_DA_API }}
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  publicar:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.publicacao.outputs.page_url }}
+    steps:
+      - id: publicacao
+        uses: actions/deploy-pages@v4
