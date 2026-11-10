@@ -1,0 +1,34 @@
+name: Contribuição externa
+description: Registrar um PR, uma issue, uma revisão ou uma resposta em outro projeto do GitHub
+labels: [contribuicao-externa]
+body:
+  - type: input
+    id: link
+    attributes: { label: Link da contribuição, placeholder: "https://github.com/dono/projeto/pull/123" }
+    validations: { required: true }
+  - type: dropdown
+    id: tipo
+    attributes:
+      label: Tipo
+      options: [PR, Issue, Revisão de PR, Resposta em Discussion]
+    validations: { required: true }
+  - type: input
+    id: item
+    attributes: { label: Item do catálogo praticado, placeholder: "T8.4" }
+    validations: { required: true }
+  - type: input
+    id: trilha
+    attributes: { label: Trilha do roadmap.sh, placeholder: "https://roadmap.sh/react" }
+  - type: textarea
+    id: resumo
+    attributes: { label: O que você fez e o que aprendeu }
+    validations: { required: true }
+  - type: checkboxes
+    id: regras
+    attributes:
+      label: Conferência
+      options:
+        - label: Li e segui o CONTRIBUTING.md do outro projeto.
+          required: true
+        - label: É uma contribuição real, não feita só para subir número.
+          required: true

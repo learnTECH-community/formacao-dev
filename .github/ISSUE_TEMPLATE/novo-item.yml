@@ -1,0 +1,24 @@
+name: Novo item do catálogo
+description: Propor um item prático para um tópico do roadmap.sh que ainda não tem item
+labels: [novo-item]
+body:
+  - type: input
+    id: trilha
+    attributes: { label: Trilha do catálogo, placeholder: "T4" }
+    validations: { required: true }
+  - type: input
+    id: roadmap
+    attributes: { label: Trilha do roadmap.sh (link), placeholder: "https://roadmap.sh/react" }
+    validations: { required: true }
+  - type: input
+    id: topico
+    attributes: { label: Nome do tópico no roadmap.sh, description: Só o nome, sem copiar o texto do site }
+    validations: { required: true }
+  - type: textarea
+    id: item
+    attributes: { label: Item proposto, description: Uma tarefa prática no Painel de Formação, com palavras próprias }
+    validations: { required: true }
+  - type: textarea
+    id: criterios
+    attributes: { label: Critérios de entrega, description: De 3 a 5, verificáveis, value: "- [ ] \n- [ ] \n- [ ] " }
+    validations: { required: true }

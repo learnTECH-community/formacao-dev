@@ -1,0 +1,12 @@
+{
+  "name": "formacao-dev",
+  "private": true,
+  "type": "module",
+  "description": "Catálogo de formação e Painel de Formação da learnTECH Community",
+  "scripts": {
+    "test": "node --test scripts/catalogo.test.mjs",
+    "catalogo": "node scripts/catalogo.mjs",
+    "catalogo:atualizar": "node scripts/catalogo.mjs --atualizar"
+  },
+  "engines": { "node": ">=20" }
+}
