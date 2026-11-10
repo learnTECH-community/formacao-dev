@@ -3,6 +3,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router';
 import { BarraProgresso } from './BarraProgresso';
 import { CartaoTrilha } from './CartaoTrilha';
 import { Filtros, type FiltroEscolhido } from './Filtros';
@@ -66,15 +67,18 @@ describe('ItemDoCatalogo', () => {
 });
 
 describe('CartaoTrilha', () => {
-  it('tem o título, a barra com o nome da trilha e os links do roadmap.sh', () => {
+  it('tem o título com link para o detalhe, a barra com o nome da trilha e os links do roadmap.sh', () => {
     render(
-      <ol>
-        <CartaoTrilha trilha={TRILHAS[1]} />
-      </ol>,
+      <MemoryRouter>
+        <ol>
+          <CartaoTrilha trilha={TRILHAS[1]} />
+        </ol>
+      </MemoryRouter>,
     );
     expect(screen.getByRole('heading', { level: 3, name: 'T2 Frontend base' })).toBeInTheDocument();
     const barra = screen.getByRole('progressbar', { name: 'T2 Frontend base' });
     expect(barra).toHaveAttribute('aria-valuetext', '0 de 1 item');
+    expect(screen.getByRole('link', { name: 'T2 Frontend base' })).toHaveAttribute('href', '/trilha/T2');
     expect(screen.getByRole('link', { name: 'Frontend' })).toHaveAttribute('href', 'https://roadmap.sh/frontend');
     expect(screen.getByRole('link', { name: 'CSS' })).toHaveAttribute('href', 'https://roadmap.sh/css');
   });

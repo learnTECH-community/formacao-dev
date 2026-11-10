@@ -12,8 +12,8 @@ export type EstadoDoCatalogo =
 
 export type Catalogo = EstadoDoCatalogo & { tentarDeNovo: () => void };
 
-/** Endereço do catálogo, ao lado do index.html no build. */
-export const ENDERECO_DO_CATALOGO = 'CATALOGO.md';
+/** Endereço do catálogo, ao lado do index.html no build (vale em qualquer rota). */
+export const ENDERECO_DO_CATALOGO = `${import.meta.env.BASE_URL}CATALOGO.md`;
 
 /** Busca e lê o catálogo. Sem item nenhum, devolve "vazio". */
 export async function buscarCatalogo(endereco: string, sinal?: AbortSignal): Promise<EstadoDoCatalogo> {

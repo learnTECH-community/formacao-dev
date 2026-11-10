@@ -1,5 +1,6 @@
 // Partes fixas da página: cabeçalho com navegação e rodapé.
 import type { ReactNode } from 'react';
+import { useLocation } from 'react-router';
 import { BotaoTema } from './BotaoTema';
 
 const GITHUB = 'https://github.com/learnTECH-community/formacao-dev';
@@ -11,6 +12,8 @@ interface PropsTopo {
 }
 
 export function Topo({ total, ocupado }: PropsTopo) {
+  // Fora da página inicial, as âncoras levam de volta a ela.
+  const inicio = useLocation().pathname === '/' ? '' : import.meta.env.BASE_URL;
   return (
     <header className="topo">
       <div className="faixa">
@@ -20,13 +23,13 @@ export function Topo({ total, ocupado }: PropsTopo) {
         <nav aria-label="Principal">
           <ul className="menu">
             <li>
-              <a href="#trilhas">Trilhas</a>
+              <a href={`${inicio}#trilhas`}>Trilhas</a>
             </li>
             <li>
-              <a href="#itens">Itens</a>
+              <a href={`${inicio}#itens`}>Itens</a>
             </li>
             <li>
-              <a href="#como-participar">Como participar</a>
+              <a href={`${inicio}#como-participar`}>Como participar</a>
             </li>
             <li>
               <a href={`${GITHUB}/blob/main/CATALOGO.md`}>Catálogo no GitHub</a>

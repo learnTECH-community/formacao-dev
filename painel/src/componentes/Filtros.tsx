@@ -1,12 +1,9 @@
 // T3.3: filtros da lista de itens, por trilha e por situação.
 import { ehSituacao } from '../filtro';
-import type { Situacao, Trilha } from '../tipos';
+import type { FiltroEscolhido } from '../filtroNoEndereco';
+import type { Trilha } from '../tipos';
 
-export interface FiltroEscolhido {
-  /** Código da trilha; vazio quer dizer todas. */
-  trilha: string;
-  situacao: Situacao;
-}
+export type { FiltroEscolhido };
 
 interface Props {
   trilhas: Pick<Trilha, 'codigo' | 'nome'>[];
