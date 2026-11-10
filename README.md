@@ -64,6 +64,7 @@ npm run painel                          # abre o painel em http://127.0.0.1:4317
 npm run typecheck                       # confere os tipos do painel (TypeScript, strict)
 npm run lint                            # confere o código com o oxlint (React, hooks e acessibilidade)
 npm test                                # testes do catálogo e das funções do painel (Vitest)
+npm run cobertura                       # cobertura dos cálculos (progresso, catálogo, filtro); abaixo de 90% falha
 npm run build                           # gera o site em dist/, com o CATALOGO.md junto
 npx playwright install chromium         # baixa o navegador dos testes (uma vez)
 npm run test:e2e                        # testes do painel no navegador, temas claro e escuro
