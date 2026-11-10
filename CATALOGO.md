@@ -143,7 +143,7 @@ Roadmaps de referência: [QA](https://roadmap.sh/qa) · [Desempenho no frontend]
 - [ ] **T7.8** Teste de contrato da API. (#109)
 - [ ] **T7.9** Ponta a ponta no celular e em vários navegadores. (#110)
 - [ ] **T7.10** Teste de carga da API. (#111)
-- [ ] **T7.11** Relatório do Playwright no CI. (#112)
+- [x] **T7.11** Relatório do Playwright no CI. (#112)
 - [ ] **T7.12** Orçamento de peso da página no CI. (#113)
 - [ ] **T7.13** Compressão e cabeçalhos de cache. (#114)
 - [ ] **T7.14** Fontes, imagens e CSS otimizados. (#115)
