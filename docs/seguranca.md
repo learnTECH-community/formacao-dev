@@ -20,6 +20,17 @@ O que protege o Painel de Formação e a API, onde está no código e qual teste
 
 Os tempos limite ficam em `api/src/tempos.mjs`. Eles valem para receber o pedido: a rota de eventos em tempo real (`/v1/eventos`) segue aberta depois que o pedido chegou.
 
+## XSS e injeção de SQL (T10.7)
+
+Os dois casos estão na categoria **Injection** do [OWASP Top 10](https://owasp.org/Top10/): A03 na lista de 2021 e A05 na de 2025. Nos dois, o ataque é o mesmo: texto que vem de fora é tratado como código.
+
+| Caso | Onde o texto de fora entra | Por que não vira código | Teste |
+|---|---|---|---|
+| XSS (OWASP A03:2021 e A05:2025, Injection) | o título dos itens, lido do `CATALOGO.md` | o React escapa todo texto; o painel não usa `innerHTML` nem `dangerouslySetInnerHTML`; os trechos entre crases viram `<code>` com o texto dentro (`painel/src/componentes/TextoDoItem.tsx`) | `e2e/xss.spec.mjs`: `<script>`, `<img onerror>` e link `javascript:` aparecem como texto, nenhum elemento é criado e nada roda |
+| Injeção de SQL (OWASP A03:2021 e A05:2025, Injection) | filtros (`?trilha=`), parâmetros de rota (`/trilhas/:codigo`) e o corpo dos POST | entrada validada com `zod` (`T\d+` para trilha) e toda consulta com parâmetros `?` ou `:nome` (`api/src/repositorios/sqlite.mjs`) | `api/test/injecao.test.mjs`: `' OR 1=1 --`, `UNION` e `DROP TABLE` são recusados (400 ou 404) na API e, direto no repositório, viram um valor que não acha nada; a tabela segue inteira |
+
+Regra: **nenhuma consulta é montada com texto do usuário**. O teste `injecao.test.mjs` lê o código da API e falha se um `prepare` ou `exec` tiver `${...}`; as únicas exceções contam as linhas de tabelas com nome fixo no código (backup e semente). No MongoDB, a mesma validação com `zod` só aceita texto nos campos, e um objeto como `{"$gt": ""}` é recusado com 400.
+
 ## Segredos e dependências (T10.1, T10.2)
 
 - Nenhum segredo no Git: só variáveis de ambiente, com os nomes em `api/.env.example`. O `node scripts/segredos.mjs` roda no CI e falha se achar `.env` versionado ou texto com cara de credencial.
