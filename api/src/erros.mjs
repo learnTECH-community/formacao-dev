@@ -63,7 +63,7 @@ export function tratarErros(log) {
       return responder(resposta, 'corpo-grande', 'O corpo do pedido passa de 10 KB.', { instance: pedido.path });
     }
     // Inesperado: a pilha vai para o log do servidor, nunca para a resposta.
-    log.error({ msg: 'erro inesperado', rota: pedido.path, erro: erro?.message, pilha: erro?.stack });
+    log.error({ msg: 'erro inesperado', id: pedido.id, rota: pedido.path, erro: erro?.message, pilha: erro?.stack });
     responder(resposta, 'interno', 'Algo falhou do nosso lado. Tente de novo mais tarde.', { instance: pedido.path });
   };
 }

@@ -147,6 +147,16 @@ O repositório de dados não respondeu. Tente de novo em instantes.
 #### interno
 Algo falhou do nosso lado. O detalhe ficou no log do servidor.
 
+## Logs
+
+A API escreve uma linha JSON por pedido na saída padrão, com `hora`, `nivel`, `id`, `metodo`, `rota` (o modelo, como `/v1/itens/:codigo`), `status` e `ms`. O mesmo `id` volta no cabeçalho `X-Request-Id`; um id recebido nesse cabeçalho (8 a 64 letras, números, `-` ou `_`) é mantido. Erro 4xx sai como `warn`, 5xx como `error`. O nível mínimo vem de `NIVEL_DO_LOG` (`debug`, `info`, `warn`, `error`).
+
+O log nunca guarda a query, o corpo nem os cabeçalhos do pedido; campos como `token`, `senha`, `cookie`, `authorization`, `usuario` e `email` viram `[omitido]`.
+
+```json
+{"hora":"2026-11-10T12:00:00.000Z","nivel":"info","msg":"pedido","id":"3f1c...","metodo":"GET","rota":"/v1/catalogo","status":200,"ms":4.2}
+```
+
 ## Versões e desativação
 
 - A versão vai no caminho: `/v1`. Mudança que quebra um cliente (tirar um campo, mudar o tipo, mudar o sentido) só entra numa versão nova, `/v2`.
