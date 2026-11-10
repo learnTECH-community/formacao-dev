@@ -50,6 +50,13 @@ Segredos nunca entram no Git: só variáveis de ambiente, com os nomes no `api/.
 
 Se um job falha, o PR não está pronto. Rode o mesmo comando local antes do push.
 
+## Alertas de segurança (CodeQL)
+
+O workflow `.github/workflows/codeql.yml` analisa o código em todo PR e toda segunda (T10.11). Os alertas ficam na aba **Security → Code scanning**.
+- Alerta alto ou crítico: corrija no mesmo PR ou abra uma issue com prazo.
+- **Não dispense um alerta sem motivo.** Se for falso positivo, use "Dismiss" com o motivo escrito (por exemplo: "o valor vem de uma lista fixa do código") e registre no `docs/seguranca.md`.
+- Na dúvida, pergunte no PR antes de dispensar.
+
 ## Dependências (Dependabot)
 
 O `.github/dependabot.yml` abre, toda segunda, PRs de atualização para a `main`: um para o painel, um para a API e um para as Actions (T9.6). Versões menores e correções vêm agrupadas num PR só; versão maior vem sozinha.
