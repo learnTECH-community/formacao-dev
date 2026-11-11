@@ -1,7 +1,7 @@
 // T7.3: leitura do relatório do Lighthouse, execuções válidas e mediana.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { lerRelatorio, mediana, valida } from './lcp.mjs';
+import { argumentosDoLighthouse, caminhoDoNpx, enderecoValido, lerRelatorio, mediana, valida } from './lcp.mjs';
 
 const relatorio = (lcp, tbt, fcp, erro) => ({
   runtimeError: erro ? { code: erro } : undefined,
@@ -30,4 +30,24 @@ test('descarta execução com erro ou com máquina sobrecarregada', () => {
 test('mediana de 3 e de 4 valores', () => {
   assert.equal(mediana([1573, 1509, 1569]), 1569);
   assert.equal(mediana([1, 2, 3, 4]), 3);
+});
+
+// #266: o endereço da linha de comando é validado e vai sem shell, como um argumento só.
+test('enderecoValido: só http e https bem formados', () => {
+  assert.equal(enderecoValido('https://exemplo.org'), 'https://exemplo.org/');
+  assert.equal(enderecoValido('http://127.0.0.1:4318/'), 'http://127.0.0.1:4318/');
+  assert.equal(enderecoValido('x; rm -rf ~'), null);
+  assert.equal(enderecoValido('file:///etc/passwd'), null);
+  assert.equal(enderecoValido('javascript:alert(1)'), null);
+});
+
+test('argumentosDoLighthouse: endereço numa posição só, sem aspas', () => {
+  const args = argumentosDoLighthouse('https://exemplo.org/?a=1&b=2', '/tmp/lh-1.json');
+  assert.equal(args[2], 'https://exemplo.org/?a=1&b=2');
+  assert.ok(args.includes('--output-path=/tmp/lh-1.json'));
+  assert.ok(args.every((a) => !a.includes('"')));
+});
+
+test('caminhoDoNpx: acha o npx-cli.js do Node que roda os testes', () => {
+  assert.match(caminhoDoNpx() ?? '', /npx-cli\.js$/);
 });
