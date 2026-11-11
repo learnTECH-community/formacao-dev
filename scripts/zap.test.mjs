@@ -45,3 +45,13 @@ test('o arquivo de regras do repositório é válido', () => {
   const { erros } = lerRegras(readFileSync(new URL('../zap/regras.tsv', import.meta.url), 'utf8'));
   assert.deepEqual(erros, []);
 });
+
+// #267: sem porta fixa, o proxy do ZAP podia cair numa porta efêmera já usada e não subir.
+test('as duas varreduras do ZAP usam a porta fixa, fora da faixa efêmera', () => {
+  const fluxo = readFileSync(new URL('../.github/workflows/varreduras.yml', import.meta.url), 'utf8');
+  const porta = Number(fluxo.split('ZAP_PORTA: "')[1]?.split('"')[0]);
+  assert.ok(porta > 1024 && porta < 32768, `porta ${porta}`);
+  for (const script of ['zap-baseline.py', 'zap-api-scan.py']) {
+    assert.ok(fluxo.includes(`${script} -P "$ZAP_PORTA"`), script);
+  }
+});
