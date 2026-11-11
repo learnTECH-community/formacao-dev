@@ -100,5 +100,5 @@ test('o plano: a versão com JOIN não tem subconsulta correlacionada; a outra t
   assert.match(plano('concluintes_da_trilha_join'), /SEARCH i USING INDEX idx_itens_trilha \(trilha=\?\)/);
   assert.match(plano('concluintes_da_trilha_subconsulta'), /CORRELATED SCALAR SUBQUERY/);
   assert.match(consulta('concluintes_da_trilha_join'), /JOIN/);
-  assert.doesNotMatch(consulta('concluintes_da_trilha_subconsulta'), /^JOIN|\nJOIN/);
+  assert.doesNotMatch(consulta('concluintes_da_trilha_subconsulta'), /(?:^|\n)JOIN/);
 });
