@@ -151,7 +151,7 @@ A imagem da API é feita em estágios (`api/Dockerfile`): a final leva só as de
 - [SECURITY.md](SECURITY.md): como avisar uma falha de segurança.
 - [docs/incidente.md](docs/incidente.md): roteiro de resposta a incidente, com o ensaio.
 - [docs/ameacas.md](docs/ameacas.md): modelagem de ameaças (STRIDE), com os riscos aceitos.
-- [docs/dados-pessoais.md](docs/dados-pessoais.md): que dados pessoais o painel guarda e por quê (proposta para o responsável aprovar).
+- [docs/dados-pessoais.md](docs/dados-pessoais.md): que dados pessoais o painel guarda e por quê (aprovada em 11/11/2026).
 - [docs/publicar.md](docs/publicar.md): publicar o painel (Pages), a API (Render) e a imagem (GHCR), e a checagem de disponibilidade.
 - [docs/seguranca.md](docs/seguranca.md): o que protege o painel e a API, item por item da T10, com o teste de cada proteção.
 - [docs/plano-de-testes.md](docs/plano-de-testes.md): o que se testa em cada nível e os riscos que cada teste cobre.

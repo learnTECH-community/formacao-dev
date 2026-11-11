@@ -36,6 +36,7 @@ Agentes de IA seguem o papel "quem mantém": não revogam, não trocam segredos 
 ### 4. Avisar (responsável)
 
 - Se dados de pessoas foram expostos, avisar as pessoas afetadas e registrar o que foi exposto (LGPD, ver [docs/dados-pessoais.md](dados-pessoais.md)).
+- Se o incidente puder causar risco ou dano relevante às pessoas, comunicar também a ANPD, em prazo razoável, como pede o art. 48 da LGPD.
 - Responder a quem avisou, com o prazo do `SECURITY.md`.
 
 ### 5. Registrar (quem mantém)
