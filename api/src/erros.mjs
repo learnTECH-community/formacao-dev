@@ -40,9 +40,18 @@ export function problema(tipo, detail, extras = {}) {
   return { type: `${DOC}#${tipo}`, title, status, detail, ...extras };
 }
 
+/**
+ * JSON seguro para devolver texto do usuário (como o caminho pedido): troca <, > e &
+ * pelo escape Unicode (<, >, &). O JSON continua o mesmo para quem o lê, mas, se um navegador
+ * o mostrar como HTML, não há tag para executar (XSS refletido).
+ */
+export function jsonSeguro(valor) {
+  return JSON.stringify(valor).replace(/[<>&]/g, (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, '0')}`);
+}
+
 function responder(resposta, tipo, detail, extras = {}, cabecalhos = {}) {
   const corpo = problema(tipo, detail, extras);
-  resposta.status(corpo.status).set(cabecalhos).type('application/problem+json').send(JSON.stringify(corpo));
+  resposta.status(corpo.status).set(cabecalhos).type('application/problem+json').send(jsonSeguro(corpo));
 }
 
 /** Rota que não existe: 404 no mesmo formato. */

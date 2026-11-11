@@ -17,11 +17,17 @@ function validadorDe(ref) {
   return validadores.get(ref);
 }
 
+/** Escapa todo metacaractere de regex (inclusive a barra invertida). */
+export function escaparRegex(texto) {
+  return texto.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 /** Acha o caminho da especificação que casa com o caminho pedido ("/v1/itens/T2.3" → "/v1/itens/{codigo}"). */
 export function caminhoDaEspecificacao(caminho) {
   const semConsulta = caminho.split('?')[0];
   return Object.keys(especificacao.paths).find((modelo) => {
-    const regex = new RegExp(`^${modelo.replace(/[.]/g, '\\.').replace(/\{\w+\}/g, '[^/]+')}$`);
+    const partes = modelo.split(/\{\w+\}/).map(escaparRegex);
+    const regex = new RegExp(`^${partes.join('[^/]+')}$`);
     return regex.test(semConsulta);
   });
 }
