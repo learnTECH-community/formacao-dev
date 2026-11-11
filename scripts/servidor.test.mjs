@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { cacheDe, codificacaoAceita, criarServidor } from './servidor.mjs';
+import { cacheDe, codificacaoAceita, criarServidor, lerArquivo } from './servidor.mjs';
 
 let pasta;
 let servidor;
@@ -60,4 +60,19 @@ test('funções de apoio', () => {
   assert.equal(cacheDe('/assets/DetalheTrilha-fp-NUQb9.js'), 'public, max-age=31536000, immutable');
   assert.equal(codificacaoAceita('gzip, deflate, br;q=1.0'), 'br');
   assert.equal(codificacaoAceita('identity'), null);
+});
+
+// #266: o servidor abre o arquivo direto, sem checar antes (corrida no disco).
+test('lerArquivo: pasta e arquivo que não existe dão null; arquivo dá conteúdo e data', () => {
+  assert.equal(lerArquivo(join(pasta, 'assets')), null);
+  assert.equal(lerArquivo(join(pasta, 'nao-existe.js')), null);
+  const lido = lerArquivo(join(pasta, 'CATALOGO.md'));
+  assert.ok(lido.bruto.toString('utf8').startsWith('# Catálogo'));
+  assert.equal(typeof lido.mtimeMs, 'number');
+});
+
+test('pedido de uma pasta cai no index.html', async () => {
+  const r = await pedir('/assets', 'identity');
+  assert.equal(r.status, 200);
+  assert.match(await r.text(), /<title>painel<\/title>/);
 });
