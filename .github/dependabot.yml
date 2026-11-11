@@ -1,0 +1,57 @@
+# T9.6: o Dependabot abre PRs de atualização para a main uma vez por semana.
+# Cada PR passa pelo mesmo CI dos outros (lint, testes, build, e2e e API):
+# um PR que quebra o CI não entra. Atualização de versão maior chega sozinha,
+# para revisar a migração com calma; menores e correções vêm agrupadas.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: America/Sao_Paulo
+    open-pull-requests-limit: 5
+    labels: [dependencias]
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      painel-menores:
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directory: /api
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: America/Sao_Paulo
+    open-pull-requests-limit: 5
+    labels: [dependencias]
+    commit-message:
+      prefix: "chore(deps-api)"
+    groups:
+      api-menores:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: America/Sao_Paulo
+    labels: [dependencias]
+    commit-message:
+      prefix: "ci(deps)"
+    groups:
+      actions:
+        update-types: [minor, patch]
+
+  # A imagem base da API (api/Dockerfile, T9.4).
+  - package-ecosystem: docker
+    directory: /api
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: America/Sao_Paulo
+    labels: [dependencias]
+    commit-message:
+      prefix: "chore(deps-docker)"

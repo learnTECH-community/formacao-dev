@@ -1,0 +1,80 @@
+# T9.4: o painel, a API e o banco para rodar local com um comando.
+#   docker compose up --build --wait    sobe tudo e espera ficar saudável
+#   docker compose down                 para e remove os contêineres (os dados ficam no volume)
+#   docker compose down -v              para e APAGA o volume do banco (todos os dados)
+# T9.7: só o Nginx (web) tem porta aberta, e só no 127.0.0.1. A API fica atrás dele.
+# O banco fica na rede "interna", sem porta e sem saída para a internet.
+# Só valores de exemplo aqui; nenhum segredo (os nomes das variáveis estão em api/.env.example).
+name: formacao-dev
+
+services:
+  banco:
+    image: mongo:7
+    # T9.11: os dados ficam no volume nomeado, fora do contêiner.
+    volumes:
+      - dados-do-banco:/data/db
+    networks: [interna]
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+      target: final
+    environment:
+      REPOSITORIO: mongo
+      MONGO_URL: mongodb://banco:27017
+      MONGO_BANCO: painel
+      # O painel chega pela porta do Nginx (mesma origem); a lista serve à checagem de origem (T10.8).
+      ORIGENS_PERMITIDAS: http://127.0.0.1:8080,http://localhost:8080
+      # T9.9: liga GET /metricas para o Prometheus (o Nginx não a repassa).
+      METRICAS: sim
+      # Na varredura do ZAP (T10.12), o CI sobe o limite: LIMITE_POR_MINUTO=100000 docker compose up.
+      LIMITE_POR_MINUTO: ${LIMITE_POR_MINUTO:-60}
+    depends_on:
+      banco:
+        condition: service_healthy
+    # Sem "ports": só o Nginx e o banco falam com a API.
+    networks: [interna, borda]
+
+  web:
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
+      target: final
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8080:8080"
+    networks: [borda]
+
+  # T9.9: coletor das métricas da API, em http://127.0.0.1:9090 (consulta de exemplo no README).
+  metricas:
+    image: prom/prometheus:v2.55.1
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:9090:9090"
+    networks: [borda]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:9090/-/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  dados-do-banco:
+
+networks:
+  # internal: sem rota para fora; o banco não é alcançado de fora nem sai para a internet.
+  interna:
+    internal: true
+  borda:

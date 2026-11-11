@@ -1,0 +1,1418 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "API do Painel de Formação",
+    "version": "1.0.0",
+    "description": "Catálogo de formação da learnTECH Community e quem fez cada item. Documentação em docs/api.md.",
+    "license": {
+      "name": "MIT",
+      "identifier": "MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:4320",
+      "description": "Local (a API não está publicada)"
+    }
+  ],
+  "paths": {
+    "/v1/health": {
+      "get": {
+        "summary": "Situação da API e do repositório de dados",
+        "operationId": "saude",
+        "responses": {
+          "200": {
+            "description": "API e repositório respondendo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Saude"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problema"
+          }
+        }
+      }
+    },
+    "/v1/catalogo": {
+      "get": {
+        "summary": "Trilhas, itens e quem fez cada item",
+        "operationId": "catalogo",
+        "responses": {
+          "200": {
+            "description": "Catálogo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Catalogo"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-cache"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Nada mudou desde o ETag enviado; sem corpo",
+            "headers": {
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema"
+          }
+        },
+        "parameters": [
+          {
+            "name": "If-None-Match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ETag de uma resposta anterior"
+          }
+        ]
+      }
+    },
+    "/v1/catalogo.md": {
+      "get": {
+        "summary": "Texto do CATALOGO.md (rota antiga)",
+        "operationId": "catalogoEmMarkdown",
+        "deprecated": true,
+        "description": "Antiga desde 10/11/2026; sai do ar em 08/02/2027. Use /v1/catalogo.",
+        "responses": {
+          "200": {
+            "description": "Texto do catálogo",
+            "headers": {
+              "Deprecation": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Sunset": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Link": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "text/markdown": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/Problema"
+          }
+        }
+      }
+    },
+    "/v1/conclusoes": {
+      "post": {
+        "summary": "Registrar que uma pessoa fez um item",
+        "operationId": "registrarConclusao",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EntradaDaConclusao"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A conclusão já existia e é devolvida como estava",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Conclusao"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Conclusão gravada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Conclusao"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "413": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problema"
+          }
+        },
+        "security": [
+          {
+            "sessao": []
+          }
+        ],
+        "description": "Só para quem tem o papel mantenedor (T5.14)."
+      }
+    },
+    "/v1/itens": {
+      "get": {
+        "summary": "Itens com filtros e paginação",
+        "operationId": "listarItens",
+        "parameters": [
+          {
+            "name": "trilha",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^T\\d+$"
+            },
+            "description": "Código da trilha, como T2"
+          },
+          {
+            "name": "situacao",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "todos",
+                "feitos",
+                "a-fazer"
+              ],
+              "default": "todos"
+            },
+            "description": "Situação dos itens"
+          },
+          {
+            "name": "limite",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20
+            },
+            "description": "Itens por página (máximo 50)"
+          },
+          {
+            "name": "pagina",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "description": "Página, a partir de 1"
+          },
+          {
+            "name": "If-None-Match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ETag de uma resposta anterior"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Uma página de itens",
+            "headers": {
+              "Link": {
+                "description": "Próxima página, com rel=\"next\"",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-cache"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginaDeItens"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Nada mudou desde o ETag enviado; sem corpo",
+            "headers": {
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problema"
+          }
+        }
+      }
+    },
+    "/v1/itens/{codigo}": {
+      "get": {
+        "summary": "Um item pelo código",
+        "operationId": "obterItem",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^T\\d+\\.\\d+$"
+            }
+          },
+          {
+            "name": "If-None-Match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ETag de uma resposta anterior"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "O item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemDaLista"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-cache"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Nada mudou desde o ETag enviado; sem corpo",
+            "headers": {
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problema"
+          }
+        }
+      }
+    },
+    "/v1/sincronizar": {
+      "post": {
+        "summary": "Ler os PRs mesclados na main e gravar quem fez cada item",
+        "operationId": "sincronizar",
+        "responses": {
+          "200": {
+            "description": "Quantas conclusões foram lidas, quantas eram novas e quantas já existiam",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sincronizacao"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "502": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problema"
+          }
+        }
+      }
+    },
+    "/v1/progresso.csv": {
+      "get": {
+        "summary": "Progresso de todos os itens em CSV, enviado por stream",
+        "operationId": "progressoEmCsv",
+        "responses": {
+          "200": {
+            "description": "CSV com as colunas trilha, codigo, texto, feito, usuarios e prs",
+            "headers": {
+              "Content-Disposition": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema"
+          }
+        }
+      }
+    },
+    "/v1/progresso/trilhas": {
+      "get": {
+        "summary": "Progresso de cada trilha, na ordem do catálogo",
+        "operationId": "progressoPorTrilha",
+        "parameters": [
+          {
+            "name": "If-None-Match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Progresso de cada trilha, na ordem do catálogo",
+            "headers": {
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProgressoPorTrilha"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Nada mudou desde o ETag enviado"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema"
+          }
+        }
+      }
+    },
+    "/v1/progresso/pessoas": {
+      "get": {
+        "summary": "Progresso de cada pessoa, de quem concluiu mais para quem concluiu menos",
+        "operationId": "progressoPorPessoa",
+        "parameters": [
+          {
+            "name": "If-None-Match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Progresso de cada pessoa, de quem concluiu mais para quem concluiu menos",
+            "headers": {
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProgressoPorPessoa"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Nada mudou desde o ETag enviado"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema"
+          }
+        }
+      }
+    },
+    "/v1/trilhas/{codigo}/concluintes": {
+      "get": {
+        "summary": "Quem concluiu todos os itens de uma trilha",
+        "operationId": "concluintesDaTrilha",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "If-None-Match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pessoas que fecharam a trilha, pela data",
+            "headers": {
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Concluintes"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Nada mudou desde o ETag enviado"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problema"
+          }
+        }
+      }
+    },
+    "/v1/auth/entrar": {
+      "get": {
+        "summary": "Começa o login com o GitHub (OAuth)",
+        "operationId": "entrar",
+        "responses": {
+          "302": {
+            "description": "Vai ao GitHub, com o state guardado no cookie oauth_state",
+            "headers": {
+              "Location": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problema"
+          }
+        }
+      }
+    },
+    "/v1/auth/retorno": {
+      "get": {
+        "summary": "Volta do GitHub: confere o state, cria a sessão e volta ao painel",
+        "operationId": "retorno",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Sessão criada; volta ao painel",
+            "headers": {
+              "Location": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "502": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problema"
+          }
+        }
+      }
+    },
+    "/v1/auth/sair": {
+      "post": {
+        "summary": "Encerra a sessão no servidor e apaga o cookie",
+        "operationId": "sair",
+        "responses": {
+          "204": {
+            "description": "Sessão encerrada"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problema"
+          }
+        }
+      }
+    },
+    "/v1/auth/eu": {
+      "get": {
+        "summary": "Quem está na sessão",
+        "operationId": "eu",
+        "security": [
+          {
+            "sessao": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Usuário e papel",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sessao"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problema"
+          }
+        }
+      }
+    },
+    "/v1/eventos": {
+      "get": {
+        "summary": "Avisos em tempo real (Server-Sent Events)",
+        "operationId": "eventos",
+        "description": "Conexão aberta. Cada conclusão nova manda event: conclusao, com data {motivo, itens}. O campo retry diz quanto esperar para reconectar.",
+        "responses": {
+          "200": {
+            "description": "Fluxo de eventos",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/Problema"
+          }
+        }
+      }
+    },
+    "/v1/ranking": {
+      "get": {
+        "summary": "Quem mais concluiu itens; empate divide a posição",
+        "operationId": "ranking",
+        "parameters": [
+          {
+            "name": "If-None-Match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Quem mais concluiu itens; empate divide a posição",
+            "headers": {
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ranking"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Nada mudou desde o ETag enviado"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema"
+          }
+        }
+      }
+    },
+    "/v1/progresso/semanas": {
+      "get": {
+        "summary": "Conclusões por semana e o total acumulado",
+        "operationId": "progressoSemanal",
+        "parameters": [
+          {
+            "name": "If-None-Match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Conclusões por semana e o total acumulado",
+            "headers": {
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProgressoSemanal"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Nada mudou desde o ETag enviado"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problema"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problema"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "responses": {
+      "Problema": {
+        "description": "Erro no formato Problem Details (RFC 9457)",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problema"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Saude": {
+        "type": "object",
+        "required": [
+          "situacao",
+          "repositorio"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "situacao": {
+            "const": "ok"
+          },
+          "repositorio": {
+            "type": "object",
+            "required": [
+              "situacao",
+              "conclusoes"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "situacao": {
+                "const": "ok"
+              },
+              "conclusoes": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      },
+      "Catalogo": {
+        "type": "object",
+        "required": [
+          "trilhas"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "trilhas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Trilha"
+            }
+          }
+        }
+      },
+      "Trilha": {
+        "type": "object",
+        "required": [
+          "codigo",
+          "nome",
+          "roadmaps",
+          "itens"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "codigo": {
+            "type": "string",
+            "pattern": "^T\\d+$"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "roadmaps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "nome",
+                "url"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "nome": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              }
+            }
+          },
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Item"
+            }
+          }
+        }
+      },
+      "Item": {
+        "type": "object",
+        "required": [
+          "codigo",
+          "texto",
+          "feito",
+          "conclusoes"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "codigo": {
+            "type": "string",
+            "pattern": "^T\\d+\\.\\d+$"
+          },
+          "texto": {
+            "type": "string"
+          },
+          "feito": {
+            "type": "boolean"
+          },
+          "issue": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "conclusoes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "usuario",
+                "pr"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "usuario": {
+                  "type": "string"
+                },
+                "pr": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              }
+            }
+          }
+        }
+      },
+      "EntradaDaConclusao": {
+        "type": "object",
+        "required": [
+          "item",
+          "usuario",
+          "pr"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "item": {
+            "type": "string",
+            "pattern": "^T\\d+\\.\\d+$",
+            "examples": [
+              "T2.3"
+            ]
+          },
+          "usuario": {
+            "type": "string",
+            "maxLength": 39,
+            "examples": [
+              "pessoa-ficticia"
+            ]
+          },
+          "pr": {
+            "type": "string",
+            "pattern": "^https://github\\.com/[A-Za-z0-9-]+/[A-Za-z0-9._-]+/pull/\\d+$"
+          }
+        }
+      },
+      "Conclusao": {
+        "type": "object",
+        "required": [
+          "id",
+          "item",
+          "usuario",
+          "pr",
+          "concluidaEm"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "item": {
+            "type": "string",
+            "pattern": "^T\\d+\\.\\d+$"
+          },
+          "usuario": {
+            "type": "string"
+          },
+          "pr": {
+            "type": "string",
+            "format": "uri"
+          },
+          "concluidaEm": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Problema": {
+        "type": "object",
+        "required": [
+          "type",
+          "title",
+          "status",
+          "detail"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "format": "uri"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer",
+            "minimum": 400,
+            "maximum": 599
+          },
+          "detail": {
+            "type": "string"
+          },
+          "instance": {
+            "type": "string"
+          },
+          "erros": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "campo",
+                "mensagem"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "campo": {
+                  "type": "string"
+                },
+                "mensagem": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "ItemDaLista": {
+        "type": "object",
+        "required": [
+          "codigo",
+          "texto",
+          "feito",
+          "conclusoes",
+          "trilha"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "codigo": {
+            "type": "string",
+            "pattern": "^T\\d+\\.\\d+$"
+          },
+          "texto": {
+            "type": "string"
+          },
+          "feito": {
+            "type": "boolean"
+          },
+          "issue": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "conclusoes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "usuario",
+                "pr"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "usuario": {
+                  "type": "string"
+                },
+                "pr": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              }
+            }
+          },
+          "trilha": {
+            "type": "string",
+            "pattern": "^T\\d+$"
+          }
+        }
+      },
+      "PaginaDeItens": {
+        "type": "object",
+        "required": [
+          "itens",
+          "total",
+          "pagina",
+          "limite",
+          "proxima"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ItemDaLista"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "pagina": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "limite": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50
+          },
+          "proxima": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "Sincronizacao": {
+        "type": "object",
+        "required": [
+          "lidas",
+          "novas",
+          "repetidas"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "lidas": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "novas": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "repetidas": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "ProgressoPorTrilha": {
+        "type": "object",
+        "required": [
+          "trilhas"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "trilhas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "trilha",
+                "nome",
+                "feitos",
+                "total",
+                "percentual"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "trilha": {
+                  "type": "string"
+                },
+                "nome": {
+                  "type": "string"
+                },
+                "feitos": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "total": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "percentual": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              }
+            }
+          }
+        }
+      },
+      "ProgressoPorPessoa": {
+        "type": "object",
+        "required": [
+          "pessoas"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "pessoas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "usuario",
+                "concluidos",
+                "trilhas",
+                "percentual",
+                "primeira",
+                "ultima"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "usuario": {
+                  "type": "string"
+                },
+                "concluidos": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "trilhas": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "percentual": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "primeira": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "ultima": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Concluintes": {
+        "type": "object",
+        "required": [
+          "trilha",
+          "concluintes"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "trilha": {
+            "type": "string"
+          },
+          "concluintes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "usuario",
+                "concluiu_em"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "usuario": {
+                  "type": "string"
+                },
+                "concluiu_em": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Sessao": {
+        "type": "object",
+        "required": [
+          "usuario",
+          "papel"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "usuario": {
+            "type": "string"
+          },
+          "papel": {
+            "enum": [
+              "pessoa",
+              "mantenedor"
+            ]
+          }
+        }
+      },
+      "Ranking": {
+        "type": "object",
+        "required": [
+          "ranking"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "ranking": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "posicao",
+                "usuario",
+                "concluidos",
+                "empatado"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "posicao": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "usuario": {
+                  "type": "string"
+                },
+                "concluidos": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "empatado": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      },
+      "ProgressoSemanal": {
+        "type": "object",
+        "required": [
+          "semanas"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "semanas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "semana",
+                "concluidas",
+                "acumulado"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "semana": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "concluidas": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "acumulado": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "sessao": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "sessao",
+        "description": "Cookie HttpOnly da sessão, criado pelo login com o GitHub (T5.13)"
+      }
+    }
+  }
+}

@@ -1,0 +1,68 @@
+# T9.14: desenvolver dentro do compose, com recarga ao salvar. Um comando sobe tudo:
+#   npm run docker:dev
+#   (o mesmo que: docker compose -f compose.yaml -f compose.dev.yaml up --build --watch)
+# - API em http://127.0.0.1:4320: ao salvar um arquivo de api/src, o "watch" o copia para o
+#   contêiner e o node --watch reinicia a API. Mudou o api/package.json: a imagem é refeita.
+# - Painel (Vite) em http://127.0.0.1:4317: ao salvar em painel/, a página recarrega.
+# O banco é o mesmo do compose.yaml, com o mesmo volume. O Nginx (web) fica desligado.
+services:
+  api:
+    build:
+      target: desenvolvimento
+    environment:
+      NODE_ENV: development
+      ORIGENS_PERMITIDAS: http://127.0.0.1:4317,http://localhost:4317
+    ports:
+      - "127.0.0.1:4320:4320"
+    # O estágio de desenvolvimento não tem o HEALTHCHECK da imagem final.
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4320/v1/health').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    develop:
+      watch:
+        - action: sync
+          path: ./api/src
+          target: /app/api/src
+        - action: sync
+          path: ./CATALOGO.md
+          target: /app/CATALOGO.md
+        - action: rebuild
+          path: ./api/package.json
+
+  painel:
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
+      target: desenvolvimento
+    environment:
+      # O navegador chama a API pela porta publicada acima.
+      VITE_API_URL: http://127.0.0.1:4320
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:4317:4317"
+    networks: [borda]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:4317/"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    develop:
+      watch:
+        - action: sync
+          path: ./painel
+          target: /app/painel
+          ignore:
+            - node_modules/
+        - action: sync
+          path: ./CATALOGO.md
+          target: /app/CATALOGO.md
+        - action: rebuild
+          path: ./package.json
+
+  # No desenvolvimento, o painel é o do Vite; o Nginx só sobe com --profile producao.
+  web:
+    profiles: [producao]

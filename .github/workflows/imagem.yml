@@ -1,0 +1,81 @@
+# T9.10: publica a imagem da API no GitHub Container Registry (ghcr.io) ao publicar
+# uma release. Tags: a versão da release (1.2.3 e 1.2) e o commit (sha-abc1234).
+# Rótulos OCI de origem, versão e commit vêm do docker/metadata-action.
+# Em PR que muda a API, o mesmo build roda sem publicar e confere os rótulos.
+# Publicar uma release (e decidir se o pacote fica público) é do responsável.
+# As Actions de terceiros ficam presas ao commit (o CodeQL pede; o Dependabot atualiza).
+name: Imagem da API
+on:
+  release:
+    types: [published]
+  pull_request:
+    branches: [main, "developer/**"]
+    paths:
+      - "api/**"
+      - ".dockerignore"
+      - ".github/workflows/imagem.yml"
+permissions:
+  contents: read
+jobs:
+  imagem:
+    runs-on: ubuntu-latest
+    # O token do Actions só lê o código e escreve pacotes; nada mais.
+    permissions:
+      contents: read
+      packages: write
+    env:
+      IMAGEM: ghcr.io/learntech-community/formacao-dev-api
+      PUBLICAR: ${{ github.event_name == 'release' }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: meta
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5
+        with:
+          images: ${{ env.IMAGEM }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix=sha-,format=short
+            type=ref,event=pr
+          labels: |
+            org.opencontainers.image.title=formacao-dev-api
+            org.opencontainers.image.description=API do Painel de Formação da learnTECH Community
+            org.opencontainers.image.licenses=MIT
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - name: Entrar no ghcr.io (só na release)
+        if: env.PUBLICAR == 'true'
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: api/Dockerfile
+          target: final
+          push: ${{ env.PUBLICAR == 'true' }}
+          load: ${{ env.PUBLICAR != 'true' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+      - name: Conferir tags e rótulos OCI
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+          VERSAO: ${{ steps.meta.outputs.version }}
+        run: |
+          echo "Tags:"; echo "$TAGS"
+          grep -q ":sha-" <<< "$TAGS"
+          if [ "$PUBLICAR" != "true" ]; then
+            imagem=$(head -n1 <<< "$TAGS")
+            rotulos=$(docker inspect "$imagem" --format '{{json .Config.Labels}}')
+            echo "$rotulos"
+            grep -q '"org.opencontainers.image.source":"https://github.com/learnTECH-community/formacao-dev"' <<< "$rotulos"
+            grep -q '"org.opencontainers.image.revision":"' <<< "$rotulos"
+            grep -q '"org.opencontainers.image.version":"' <<< "$rotulos"
+          fi
+          {
+            echo "### Imagem da API"
+            echo "- publicar: $PUBLICAR"
+            echo "- versão: $VERSAO"
+            echo '```'; echo "$TAGS"; echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

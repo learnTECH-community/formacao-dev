@@ -1,0 +1,581 @@
+/* Painel de Formação · estilo base (T2.2: responsivo de 320 px a 1440 px) */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:root {
+  /* Cores do painel. Pares de texto e fundo com contraste AA (4,5:1 ou mais). */
+  --fundo: #ffffff;
+  --fundo-alt: #eef2f6;
+  --texto: #1b1f24;
+  --texto-suave: #4a5560;
+  --link: #0b5cad;
+  --borda: #d0d7de;
+  --borda-forte: #6e7781;
+  --trilho: #e6eaee;
+  --preenchido: #1f7a4d;
+  --preenchido-texto: #1a6b43;
+  --erro: #b42318;
+  --foco: #0b5cad;
+  --foco-fundo: #ffffff;
+  color-scheme: light;
+}
+
+/* T2.5: tema escuro. Segue o sistema, a menos que a pessoa tenha escolhido o claro. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema="claro"]) {
+    --fundo: #12161b;
+    --fundo-alt: #1c232b;
+    --texto: #e6edf3;
+    --texto-suave: #aeb8c2;
+    --link: #79b8ff;
+    --borda: #3a444f;
+    --borda-forte: #8b96a1;
+    --trilho: #2a323b;
+    --preenchido: #3fb27f;
+  --preenchido-texto: #6fd3a0;
+  --erro: #ff8b80;
+    --foco: #79b8ff;
+    --foco-fundo: #12161b;
+    color-scheme: dark;
+  }
+}
+
+/* Escolha feita pelo botão. */
+:root[data-tema="escuro"] {
+  --fundo: #12161b;
+  --fundo-alt: #1c232b;
+  --texto: #e6edf3;
+  --texto-suave: #aeb8c2;
+  --link: #79b8ff;
+  --borda: #3a444f;
+  --borda-forte: #8b96a1;
+  --trilho: #2a323b;
+  --preenchido: #3fb27f;
+  --preenchido-texto: #6fd3a0;
+  --erro: #ff8b80;
+  --foco: #79b8ff;
+  --foco-fundo: #12161b;
+  color-scheme: dark;
+}
+
+html {
+  font-size: 100%; /* 16 px, ou o que a pessoa escolheu no navegador */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--texto);
+  background: var(--fundo);
+  overflow-wrap: break-word;
+}
+
+.faixa {
+  width: min(100% - 2rem, 72rem);
+  margin-inline: auto;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.2;
+}
+
+h1 {
+  font-size: clamp(1.75rem, 1.2rem + 2.5vw, 2.75rem);
+  margin: 0.25rem 0 0.5rem;
+}
+
+h2 {
+  font-size: clamp(1.375rem, 1.1rem + 1.2vw, 1.875rem);
+}
+
+h3 {
+  font-size: 1.125rem;
+  margin: 0 0 0.5rem;
+}
+
+.topo {
+  padding-block: 2rem 1rem;
+  background: var(--fundo-alt);
+  border-bottom: 1px solid var(--borda);
+}
+
+.marca {
+  margin: 0;
+  font-weight: 600;
+  color: var(--texto-suave);
+}
+
+.resumo {
+  margin: 0 0 1rem;
+  max-width: 40rem;
+}
+
+.menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.menu a {
+  display: inline-block;
+  padding-block: 0.5rem; /* alvo de toque de pelo menos 40 px */
+}
+
+a {
+  color: var(--link);
+}
+
+main {
+  padding-block: 1rem 2rem;
+}
+
+.trilhas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trilha {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1rem;
+  border: 1px solid var(--borda);
+  border-radius: 0.5rem;
+}
+
+.trilha p {
+  margin: 0;
+}
+
+.codigo {
+  display: inline-block;
+  min-width: 2.75rem;
+  margin-right: 0.25rem;
+  color: var(--texto-suave);
+}
+
+.itens {
+  color: var(--texto-suave);
+}
+
+.passos {
+  padding-left: 1.25rem;
+}
+
+code {
+  font-size: 1rem;
+}
+
+.rodape {
+  padding-block: 1.5rem;
+  background: var(--fundo-alt);
+  border-top: 1px solid var(--borda);
+}
+
+.rodape p {
+  margin: 0.25rem 0;
+}
+
+/* T2.3: barra de progresso. O texto ao lado diz o mesmo que a barra. */
+.progresso {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+}
+
+.barra {
+  flex: 1 1 8rem;
+  height: 0.75rem;
+  overflow: hidden;
+  background: var(--trilho);
+  border: 1px solid var(--borda-forte);
+  border-radius: 999px;
+}
+
+.preenchido {
+  display: block;
+  height: 100%;
+  background: var(--preenchido);
+}
+
+/* T2.4: foco visível em todo link e botão, ao navegar com o teclado. */
+:focus-visible {
+  outline: 3px solid var(--foco);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+main:focus {
+  outline: none; /* recebe o foco do "Pular para o conteúdo"; não é um controle */
+}
+
+/* T2.6: o link de pular aparece quando recebe o foco. */
+.pular {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 10;
+  padding: 0.5rem 1rem;
+  color: var(--link);
+  background: var(--foco-fundo);
+  border: 1px solid var(--borda-forte);
+  border-radius: 0.25rem;
+  transform: translateY(-200%);
+}
+
+.pular:focus {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .pular {
+    transition: transform 0.15s ease-out;
+  }
+}
+
+/* T2.5: botão de tema. aria-pressed="true" quer dizer tema escuro ligado. */
+.botao-tema {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  font: inherit;
+  color: var(--texto);
+  background: var(--fundo);
+  border: 1px solid var(--borda-forte);
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+
+.botao-tema[aria-pressed="true"] {
+  color: var(--fundo);
+  background: var(--texto);
+}
+
+/* T3.1: progresso total no topo e lista de itens lida do catálogo. */
+.total {
+  max-width: 32rem;
+  margin-top: 1rem;
+}
+
+.total-rotulo {
+  margin: 0 0 0.25rem;
+  font-weight: 600;
+}
+
+.grupo h3 {
+  margin-top: 1.5rem;
+}
+
+.lista-itens {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--borda);
+}
+
+.item {
+  display: grid;
+  grid-template-columns: 3.5rem 1fr auto;
+  gap: 0.25rem 0.75rem;
+  align-items: baseline;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--borda);
+}
+
+.codigo-item {
+  font-weight: 600;
+  color: var(--texto-suave);
+}
+
+.situacao {
+  padding: 0 0.5rem;
+  border: 1px solid var(--borda-forte);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.item[data-feito="true"] .situacao {
+  color: var(--fundo);
+  background: var(--preenchido-texto);
+  border-color: var(--preenchido-texto);
+}
+
+@media (max-width: 30rem) {
+  .item {
+    grid-template-columns: 1fr auto;
+  }
+
+  .texto-item {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}
+
+.aviso {
+  padding: 1rem;
+  border: 1px solid var(--borda-forte);
+  border-radius: 0.5rem;
+}
+
+/* T3.5: carregamento, erro e vazio. */
+.estado {
+  margin-block: 1rem;
+}
+
+/* As regiões de aviso ficam sempre na página (leitores de tela anunciam melhor
+   uma região viva que já existe); vazias, não ocupam espaço. */
+.estado .aviso:empty {
+  padding: 0;
+  border: 0;
+}
+
+.estado:has(.aviso:empty + .aviso:empty) {
+  margin-block: 0;
+}
+
+.estado:focus,
+h2:focus {
+  outline: none; /* recebem o foco só pelo código, para guiar o leitor de tela */
+}
+
+.estado .aviso p {
+  margin: 0 0 0.5rem;
+}
+
+.estado .aviso p:last-child {
+  margin-bottom: 0;
+}
+
+.aviso-erro {
+  border-color: var(--erro);
+  border-left-width: 0.5rem;
+}
+
+.botao {
+  padding: 0.5rem 1rem;
+  font: inherit;
+  color: var(--texto);
+  background: var(--fundo);
+  border: 1px solid var(--borda-forte);
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+
+/* T3.3: filtros da lista de itens. */
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1 1 12rem;
+  max-width: 20rem;
+}
+
+.campo label {
+  font-weight: 600;
+}
+
+.campo select {
+  min-height: 2.75rem;
+  padding: 0.25rem 0.5rem;
+  font: inherit;
+  color: var(--texto);
+  background: var(--fundo);
+  border: 1px solid var(--borda-forte);
+  border-radius: 0.25rem;
+}
+
+.contagem {
+  margin: 1rem 0 0;
+  color: var(--texto-suave);
+}
+
+/* T4.3: detalhe da trilha. */
+.trilha h3 a {
+  display: inline-block;
+  padding-block: 0.25rem; /* alvo de toque maior */
+}
+
+.detalhe .voltar {
+  margin: 0 0 1rem;
+}
+
+.detalhe .lista-itens {
+  margin-top: 0.5rem;
+}
+
+/* T4.8: botão de fixar um item. aria-pressed="true" quer dizer fixado. */
+.item {
+  grid-template-columns: 3.5rem 1fr auto auto;
+}
+
+.botao-fixar {
+  min-height: 2.75rem;
+  padding: 0.25rem 0.75rem;
+  font: inherit;
+  color: var(--texto);
+  background: var(--fundo);
+  border: 1px solid var(--borda-forte);
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+
+.botao-fixar[aria-pressed="true"] {
+  color: var(--fundo);
+  background: var(--texto);
+}
+
+#fixados .lista-itens {
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 30rem) {
+  .item {
+    grid-template-columns: 1fr auto auto;
+  }
+}
+
+/* T4.15: janela modal do detalhe do item. */
+.fundo-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgb(0 0 0 / 0.6);
+}
+
+.janela-modal {
+  width: min(100%, 36rem);
+  max-height: calc(100vh - 2rem);
+  overflow: auto;
+  padding: 1rem 1.5rem 1.5rem;
+  color: var(--texto);
+  background: var(--fundo);
+  border: 1px solid var(--borda-forte);
+  border-radius: 0.5rem;
+}
+
+.janela-modal:focus {
+  outline: none; /* recebe o foco só ao abrir, para o leitor de tela ler o título */
+}
+
+.cabeca-modal {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+
+.detalhe-do-item dt {
+  font-weight: 600;
+}
+
+.detalhe-do-item dd {
+  margin: 0 0 0.5rem;
+}
+
+.item:has(.botao-fixar + .botao-fixar) {
+  grid-template-columns: 3.5rem 1fr auto auto auto;
+}
+
+@media (max-width: 30rem) {
+  .item:has(.botao-fixar + .botao-fixar) {
+    grid-template-columns: 1fr auto auto auto;
+  }
+}
+
+/* T4.12: formulário "Propor item". */
+.proposta form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 40rem;
+}
+
+.campo-largo {
+  max-width: none;
+}
+
+.campo input,
+.campo textarea {
+  min-height: 2.75rem;
+  padding: 0.5rem;
+  font: inherit;
+  color: var(--texto);
+  background: var(--fundo);
+  border: 1px solid var(--borda-forte);
+  border-radius: 0.25rem;
+}
+
+.campo [aria-invalid="true"] {
+  border-color: var(--erro);
+  border-width: 2px;
+}
+
+.dica {
+  margin: 0;
+  color: var(--texto-suave);
+}
+
+.erro-do-campo {
+  margin: 0;
+  font-weight: 600;
+  color: var(--erro);
+}
+
+/* T7.14: sem deslocamento de layout quando o catálogo chega (CLS).
+   O total do topo tem a altura do rótulo e da barra já reservada, e a seção das
+   trilhas ocupa a tela enquanto carrega, para nada visível ser empurrado. */
+.total {
+  min-height: 5.25rem;
+}
+
+#trilhas[aria-busy="true"] {
+  min-height: 100vh;
+}
+
+/* T6.9: tabela do ranking (só com a API configurada). */
+.ranking {
+  border-collapse: collapse;
+  width: 100%;
+  max-width: 32rem;
+}
+.ranking caption {
+  text-align: left;
+  color: var(--texto-suave);
+  margin-bottom: 0.5rem;
+}
+.ranking th,
+.ranking td {
+  text-align: left;
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid var(--borda);
+}
+.ranking td:last-child {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}

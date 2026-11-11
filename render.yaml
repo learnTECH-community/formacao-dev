@@ -1,0 +1,47 @@
+# T9.5: Blueprint do Render para publicar a API (plano gratuito), com o banco no
+# MongoDB Atlas M0. Passo a passo em docs/publicar.md. Criar a conta, o Blueprint e o
+# banco é do responsável. Segredos: "sync: false" (o Render pede o valor no painel) ou
+# "generateValue" (o Render gera). Nenhum valor secreto neste arquivo.
+services:
+  - type: web
+    name: formacao-dev-api
+    runtime: docker
+    plan: free
+    region: oregon
+    branch: main
+    # O contexto é a raiz: a imagem leva o CATALOGO.md. O último estágio é o "final".
+    dockerfilePath: ./api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /v1/health
+    autoDeployTrigger: commit
+    envVars:
+      - key: REPOSITORIO
+        value: mongo
+      - key: MONGO_URL
+        sync: false
+      - key: MONGO_BANCO
+        value: painel
+      # O painel publicado no Pages (a origem, sem o caminho).
+      - key: ORIGENS_PERMITIDAS
+        value: https://learntech-community.github.io
+      - key: URL_DO_PAINEL
+        value: https://learntech-community.github.io/formacao-dev/
+      # Conferir o endereço real do serviço no painel do Render (pode ganhar sufixo).
+      - key: URL_DE_RETORNO
+        value: https://formacao-dev-api.onrender.com/v1/auth/retorno
+      # T10.10: o Render termina o TLS no proxy; a API redireciona HTTP para HTTPS.
+      - key: SO_HTTPS
+        value: sim
+      # T10.9: chave HMAC do cookie da sessão.
+      - key: CHAVE_DA_SESSAO
+        generateValue: true
+      - key: GITHUB_CLIENT_ID
+        sync: false
+      - key: GITHUB_CLIENT_SECRET
+        sync: false
+      - key: GITHUB_TOKEN
+        sync: false
+      - key: MANTENEDORES
+        sync: false
+      - key: NIVEL_DO_LOG
+        value: info

@@ -1,0 +1,115 @@
+# T9.13: varredura das imagens (Trivy) e T10.12: varredura dinâmica (OWASP ZAP).
+# Roda em PR que muda as imagens, as dependências, a API, o painel ou este arquivo.
+# Tudo contra o que sobe dentro do próprio CI: nenhum alvo externo.
+name: Varreduras
+on:
+  pull_request:
+    branches: [main, "developer/**"]
+    paths:
+      - "api/**"
+      - "painel/**"
+      - "nginx/**"
+      - "scripts/catalogo.mjs"
+      - "scripts/zap.mjs"
+      - "zap/**"
+      - "compose.yaml"
+      - ".dockerignore"
+      - ".trivyignore"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/varreduras.yml"
+  push:
+    branches: [main]
+permissions:
+  contents: read
+env:
+  # Versões fixas das ferramentas (o Dependabot não atualiza imagens usadas assim).
+  TRIVY: aquasec/trivy:0.58.1
+  ZAP: ghcr.io/zaproxy/zaproxy:2.16.1
+  # Porta fixa do proxy do ZAP, fora da faixa efêmera do Linux (32768 a 60999). Sem -P, o
+  # script sorteia uma porta nessa faixa, e o ZAP abre antes outras portas da mesma faixa
+  # (o serviço de callback do OAST e as conexões que baixam add-ons). Quando coincidem, o
+  # proxy não sobe ("Address already in use"), o ZAP encerra e o script espera 10 minutos
+  # até falhar com "Failed to connect to ZAP after 600 seconds" (#267).
+  ZAP_PORTA: "8090"
+jobs:
+  imagem:
+    name: trivy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build das imagens da API e do Nginx
+        run: |
+          docker build -f api/Dockerfile --target final -t formacao-dev-api:ci .
+          docker build -f nginx/Dockerfile -t formacao-dev-web:ci .
+      - name: Relatório completo (todas as severidades)
+        run: |
+          mkdir -p relatorio-trivy
+          for imagem in api web; do
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD:/trabalho" -w /trabalho -v trivy-cache:/root/.cache "$TRIVY" \
+              image --scanners vuln --format table --output "relatorio-trivy/$imagem.txt" "formacao-dev-$imagem:ci"
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD:/trabalho" -w /trabalho -v trivy-cache:/root/.cache "$TRIVY" \
+              image --scanners vuln --format json --output "relatorio-trivy/$imagem.json" "formacao-dev-$imagem:ci"
+            cat "relatorio-trivy/$imagem.txt"
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: relatorio-trivy
+          path: relatorio-trivy/
+          retention-days: 14
+      # Barra alta e crítica com correção disponível. As exceções ficam no .trivyignore,
+      # com motivo e prazo. As sem correção aparecem no relatório acima.
+      - name: Falha com vulnerabilidade alta ou crítica
+        run: |
+          for imagem in api web; do
+            echo "== formacao-dev-$imagem"
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD:/trabalho" -w /trabalho -v trivy-cache:/root/.cache "$TRIVY" \
+              image --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed --ignorefile .trivyignore --exit-code 1 "formacao-dev-$imagem:ci"
+          done
+
+  zap:
+    name: zap
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Subir o compose (limite de pedidos alto, para a varredura)
+        run: LIMITE_POR_MINUTO=100000 docker compose up --build --wait --wait-timeout 180
+      - name: Dados fictícios no banco
+        run: docker compose exec -T api node src/banco/semear-repositorio.mjs
+      - name: Pasta de trabalho do ZAP
+        run: |
+          mkdir -p zap-saida && chmod 777 zap-saida
+          cp zap/regras.tsv api/openapi.json zap-saida/
+      # A página: varredura passiva (baseline), com o spider, pelo Nginx.
+      - name: ZAP baseline no painel
+        run: |
+          docker run --rm --network formacao-dev_borda -v "$PWD/zap-saida:/zap/wrk:rw" "$ZAP" \
+            zap-baseline.py -P "$ZAP_PORTA" -t http://web:8080/ -c regras.tsv -J painel.json -r painel.html -I -m 2
+      # A API: varredura ativa das rotas do OpenAPI, pelo Nginx (/api).
+      # -T 5: se o ZAP não responder em 5 minutos, falha logo, em vez de esperar 10.
+      - name: ZAP na API (OpenAPI)
+        timeout-minutes: 30
+        run: |
+          docker run --rm --network formacao-dev_borda -v "$PWD/zap-saida:/zap/wrk:rw" "$ZAP" \
+            zap-api-scan.py -P "$ZAP_PORTA" -T 5 -t /zap/wrk/openapi.json -f openapi -O http://web:8080/api -c regras.tsv -J api.json -r api.html -I
+      - name: Nenhum alerta alto (fora das exceções)
+        run: node scripts/zap.mjs zap/regras.tsv zap-saida/painel.json zap-saida/api.json | tee -a "$GITHUB_STEP_SUMMARY"
+        shell: bash
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: relatorio-zap
+          path: |
+            zap-saida/*.html
+            zap-saida/*.json
+          retention-days: 14
+      - name: Logs do compose
+        if: failure()
+        run: docker compose logs --no-color | tail -100
+      - name: Descer o compose
+        if: always()
+        run: docker compose down -v

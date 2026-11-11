@@ -1,3 +1,4 @@
+# T9.1: lint, testes e build em todo PR para a main e para as sprints (jobs no CONTRIBUTING.md).
 name: CI
 on:
   pull_request:
@@ -14,5 +15,262 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
       - run: npm test
       - run: node scripts/catalogo.mjs
+      # T10.1: nenhum segredo nos arquivos versionados.
+      - run: node scripts/segredos.mjs
+  app:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+      - run: npm run orcamento
+      # T10.2: dependências de produção do painel sem vulnerabilidade alta ou crítica.
+      - run: npm audit --omit=dev --audit-level=high
+  cobertura:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run cobertura
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cobertura
+          path: cobertura/
+          retention-days: 14
+  painel:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium webkit
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: painel-test-results
+          path: test-results/
+          retention-days: 14
+  api:
+    runs-on: ubuntu-latest
+    # T6.12: MongoDB para a mesma bateria de testes do repositório.
+    services:
+      mongo:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      MONGO_URL: mongodb://127.0.0.1:27017
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: api/package-lock.json
+      - run: npm ci
+      # shell: bash liga o pipefail: se o npm test falhar, o passo falha mesmo com o tee.
+      - run: npm test | tee teste.log
+        shell: bash
+      # Os únicos pulados aceitos no Node 22 são os da trava de acesso (rodam no passo do Node 24).
+      - name: Nenhum teste do MongoDB pulado
+        run: '! grep -q "sem MONGO_URL" teste.log'
+      # T10.2: dependências de produção da API sem vulnerabilidade alta ou crítica.
+      - run: npm audit --omit=dev --audit-level=high
+      # T6.11: o autorizador do node:sqlite chegou no Node 24.10; no 22, esses testes ficam
+      # pulados com o motivo. Aqui eles rodam no 24 e não podem ser pulados.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: node --test --test-timeout=60000 --test-reporter=spec test/acesso.test.mjs | tee acesso.log
+        shell: bash
+      - name: Testes de acesso sem nenhum pulado (Node 24)
+        run: grep -qx 'ℹ skipped 0' acesso.log
+  # T9.4 e T9.12: a imagem da API em estágios e o compose. O Docker roda nos runners do
+  # GitHub; na máquina de quem não tem Docker, este job é a prova.
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build da imagem em estágios
+        run: docker build -f api/Dockerfile --target final -t formacao-dev-api:ci .
+      - name: Build de comparação, num estágio só (todas as dependências, imagem cheia)
+        run: |
+          docker build -t formacao-dev-api:um-estagio -f - . <<'DOCKERFILE'
+          FROM node:24
+          WORKDIR /app/api
+          COPY api/package.json api/package-lock.json ./
+          RUN npm ci
+          COPY api ./
+          COPY CATALOGO.md /app/CATALOGO.md
+          COPY scripts/catalogo.mjs /app/scripts/catalogo.mjs
+          CMD ["node", "src/servidor.mjs"]
+          DOCKERFILE
+      - name: Tamanho das imagens (antes e depois)
+        run: |
+          docker image ls --format '{{.Repository}}:{{.Tag}} {{.Size}}' | grep formacao-dev-api | tee tamanhos.txt
+          echo '### Tamanho da imagem da API' >> "$GITHUB_STEP_SUMMARY"
+          sed 's/^/- /' tamanhos.txt >> "$GITHUB_STEP_SUMMARY"
+      - name: Usuário sem privilégio, só dependências de produção e nada do .dockerignore
+        run: |
+          uid=$(docker run --rm formacao-dev-api:ci id -u)
+          echo "uid do processo: $uid"; test "$uid" != "0"
+          # ajv e autocannon são de desenvolvimento: não podem estar na imagem.
+          docker run --rm formacao-dev-api:ci sh -c 'test ! -d node_modules/ajv && test ! -d node_modules/autocannon && test -d node_modules/express'
+          docker run --rm formacao-dev-api:ci sh -c 'test ! -e /app/.git && test ! -e /app/api/.env && test ! -d /app/api/test && test -f /app/CATALOGO.md'
+          # A imagem sobe sozinha (sem banco, com o repositório em memória) e responde.
+          docker run -d --name api-sozinha -e REPOSITORIO=memoria -p 127.0.0.1:4399:4320 formacao-dev-api:ci
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:4399/v1/health && break; sleep 1; done
+          docker logs api-sozinha
+          curl -fsS http://127.0.0.1:4399/v1/health
+          docker rm -f api-sozinha
+      - name: Subir o compose e esperar a saúde
+        run: |
+          inicio=$(date +%s)
+          docker compose up --build --wait --wait-timeout 180
+          echo "compose saudável em $(( $(date +%s) - inicio )) s (com o build)" | tee -a "$GITHUB_STEP_SUMMARY"
+      # T9.7: o Nginx entrega o painel e repassa /api para a API.
+      - name: Fumaça pelo Nginx (painel, API, compressão e cache)
+        run: |
+          html=$(curl -fsS http://127.0.0.1:8080/)
+          grep -q '<div id="app">' <<< "$html"
+          curl -fsS http://127.0.0.1:8080/trilha/T2 -o /dev/null
+          curl -fsS http://127.0.0.1:8080/api/v1/health | tee health.json; echo
+          grep -q '"situacao":"ok"' health.json
+          js=$(grep -o '/assets/[^"]*\.js' <<< "$html" | sed -n 1p)
+          echo "arquivo: $js"
+          curl -fsS -D cabecalhos.txt -o /dev/null -H 'Accept-Encoding: gzip' "http://127.0.0.1:8080$js"
+          cat cabecalhos.txt
+          grep -qi '^content-encoding: gzip' cabecalhos.txt
+          grep -qi '^cache-control: max-age=31536000' cabecalhos.txt
+          curl -fsS -D index.txt -o /dev/null http://127.0.0.1:8080/
+          grep -qi '^cache-control: no-cache' index.txt
+          grep -qi '^x-content-type-options: nosniff' index.txt
+          ! grep -qi '^server: nginx/' index.txt
+          # As métricas não saem pelo Nginx.
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/api/metricas)" = 404
+      - name: O banco fica na rede interna, sem porta exposta
+        run: |
+          for servico in banco api; do
+            portas=$(docker inspect "$(docker compose ps -q $servico)" --format '{{json .NetworkSettings.Ports}}')
+            echo "$servico: $portas"
+            if grep -q HostPort <<< "$portas"; then echo "$servico tem porta publicada"; exit 1; fi
+          done
+          # O Nginx (rede borda) não alcança o banco (rede interna).
+          ! docker compose exec -T web wget -q -T 3 -O /dev/null http://banco:27017/
+          # A API (nas duas redes) alcança.
+          docker compose exec -T api node -e "require('node:net').connect(27017, 'banco').on('connect', () => process.exit(0)).on('error', () => process.exit(1))"
+      # T9.9: o Prometheus do compose lê as métricas da API.
+      - name: Métricas da API no Prometheus
+        run: |
+          for i in $(seq 1 5); do curl -fsS -o /dev/null http://127.0.0.1:8080/api/v1/health; done
+          curl -fsS -o /dev/null http://127.0.0.1:8080/api/v1/catalogo
+          consulta='sum by (rota, status) (api_pedidos_total)'
+          for i in $(seq 1 30); do
+            curl -fsS -G http://127.0.0.1:9090/api/v1/query --data-urlencode "query=$consulta" > resultado.json
+            grep -q '/v1/health' resultado.json && break
+            sleep 2
+          done
+          cat resultado.json; echo
+          grep -q '"rota":"/v1/health"' resultado.json
+          curl -fsS -G http://127.0.0.1:9090/api/v1/query --data-urlencode 'query=histogram_quantile(0.95, sum by (le) (rate(api_duracao_segundos_bucket[1m])))' ; echo
+          curl -fsS -G http://127.0.0.1:9090/api/v1/targets | grep -q '"health":"up"'
+      # T9.11: os dados sobrevivem a recriar os contêineres; só o down -v apaga.
+      - name: Volume nomeado mantém os dados entre down e up
+        run: |
+          conta() { curl -fsS http://127.0.0.1:8080/api/v1/health | node -e "let t='';process.stdin.on('data',d=>t+=d).on('end',()=>console.log(JSON.parse(t).repositorio.conclusoes))"; }
+          docker compose exec -T api node src/banco/semear-repositorio.mjs
+          antes=$(conta); echo "antes do down: $antes conclusões"
+          test "$antes" -gt 0
+          docker compose down
+          docker volume ls | grep formacao-dev_dados-do-banco
+          docker compose up --wait --wait-timeout 120
+          depois=$(conta); echo "depois do down e up: $depois conclusões"
+          test "$antes" = "$depois"
+          docker compose down -v
+          ! docker volume ls | grep -q formacao-dev_dados-do-banco
+          docker compose up --wait --wait-timeout 120
+          zerado=$(conta); echo "depois do down -v: $zerado conclusões"
+          test "$zerado" = 0
+          printf -- '- volume: %s antes, %s depois do down e up, %s depois do down -v\n' "$antes" "$depois" "$zerado" >> "$GITHUB_STEP_SUMMARY"
+      - name: Logs do compose
+        if: always()
+        run: docker compose logs --no-color | tail -100
+      - name: Descer o compose
+        if: always()
+        run: docker compose down -v
+  # T9.14: o compose de desenvolvimento sobe num comando e recarrega a API ao salvar.
+  compose-dev:
+    runs-on: ubuntu-latest
+    env:
+      COMPOSE_FILE: compose.yaml:compose.dev.yaml
+    steps:
+      - uses: actions/checkout@v4
+      - name: Subir o compose de desenvolvimento e medir o tempo
+        run: |
+          inicio=$(date +%s)
+          docker compose up --build --wait --wait-timeout 240
+          echo "compose de desenvolvimento saudável em $(( $(date +%s) - inicio )) s (com o build)" | tee -a "$GITHUB_STEP_SUMMARY"
+          docker compose down
+          inicio=$(date +%s)
+          docker compose up --wait --wait-timeout 120
+          echo "e em $(( $(date +%s) - inicio )) s com as imagens prontas" | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: O painel (Vite) e a API respondem
+        run: |
+          html=$(curl -fsS http://127.0.0.1:4317/)
+          grep -q '/@vite/client' <<< "$html"
+          curl -fsS http://127.0.0.1:4320/v1/health
+      - name: Salvar um arquivo da API reinicia a API
+        run: |
+          nohup docker compose watch --no-up > watch.log 2>&1 &
+          sleep 5
+          antes=$(docker compose logs api | grep -c 'API em http' || true)
+          echo "inícios da API antes: $antes"
+          echo "// mudança de teste do CI (T9.14)" >> api/src/versao.mjs
+          for i in $(seq 1 30); do
+            depois=$(docker compose logs api | grep -c 'API em http' || true)
+            [ "$depois" -gt "$antes" ] && break
+            sleep 1
+          done
+          echo "inícios da API depois: $depois (em ${i} s)" | tee -a "$GITHUB_STEP_SUMMARY"
+          cat watch.log
+          test "$depois" -gt "$antes"
+          for i in $(seq 1 20); do curl -fsS http://127.0.0.1:4320/v1/health && break; sleep 1; done
+      - name: Logs do compose
+        if: always()
+        run: docker compose logs --no-color | tail -60
+      - name: Descer o compose
+        if: always()
+        run: docker compose down -v

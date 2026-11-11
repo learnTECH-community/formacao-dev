@@ -4,9 +4,49 @@
   "type": "module",
   "description": "Catálogo de formação e Painel de Formação da learnTECH Community",
   "scripts": {
-    "test": "node --test scripts/catalogo.test.mjs",
+    "test": "node --test scripts/catalogo.test.mjs scripts/servidor.test.mjs scripts/lcp.test.mjs scripts/orcamento.test.mjs scripts/segredos.test.mjs scripts/zap.test.mjs scripts/disponibilidade.test.mjs scripts/render.test.mjs && vitest run",
+    "cobertura": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "dev": "vite",
+    "build": "vite build",
+    "orcamento": "node scripts/orcamento.mjs",
+    "preview": "vite preview",
+    "servir": "node scripts/servidor.mjs",
+    "lcp": "node scripts/lcp.mjs",
+    "painel": "vite --host 127.0.0.1 --port 4317",
     "catalogo": "node scripts/catalogo.mjs",
-    "catalogo:atualizar": "node scripts/catalogo.mjs --atualizar"
+    "catalogo:atualizar": "node scripts/catalogo.mjs --atualizar",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint --deny-warnings",
+    "docker:dev": "docker compose -f compose.yaml -f compose.dev.yaml up --build --watch"
   },
-  "engines": { "node": ">=20" }
+  "engines": {
+    "node": ">=22.12"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "^1.65.0",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.9",
+    "@types/node": "^22.20.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.3.0",
+    "@vitest/coverage-v8": "^5.1.0",
+    "jsdom": "^31.0.0",
+    "msw": "^2.15.0",
+    "oxlint": "^1.93.0",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.7",
+    "vitest": "^5.1.0"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.107.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "react-router": "^7.18.5",
+    "zod": "^4.6.7"
+  }
 }

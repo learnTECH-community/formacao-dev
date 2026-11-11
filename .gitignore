@@ -1,0 +1,10 @@
+node_modules/
+test-results/
+playwright-report/
+dist/
+cobertura/
+api/dados/
+# T10.1: variáveis locais nunca entram no Git; só o .env.example, com os nomes.
+.env
+.env.*
+!.env.example

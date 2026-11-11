@@ -1,0 +1,51 @@
+# T9.8: checagem agendada de disponibilidade do painel publicado e da API.
+# Roda a cada 6 horas (e à mão). Os endereços vêm das variáveis URL_DO_PAINEL e
+# URL_DA_API (do responsável, depois da publicação: T9.3, T9.5 e #230). Sem elas, o job
+# só registra que não há o que conferir. Uma falha abre (ou comenta) a issue de incidente.
+# O resumo de cada execução guarda a tabela de respostas: o histórico fica nas execuções.
+name: Disponibilidade
+on:
+  schedule:
+    - cron: "23 */6 * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  conferir:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    env:
+      URL_DO_PAINEL: ${{ vars.URL_DO_PAINEL }}
+      URL_DA_API: ${{ vars.URL_DA_API }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Conferir o painel e o /v1/health
+        id: conferir
+        run: |
+          alvos=()
+          [ -n "$URL_DO_PAINEL" ] && alvos+=("$URL_DO_PAINEL")
+          [ -n "$URL_DA_API" ] && alvos+=("${URL_DA_API%/}/v1/health")
+          if [ ${#alvos[@]} -eq 0 ]; then
+            echo "Sem endereço publicado (URL_DO_PAINEL e URL_DA_API vazias): nada a conferir." | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          node scripts/disponibilidade.mjs "${alvos[@]}"
+      - name: Abrir ou comentar a issue de incidente
+        if: failure() && steps.conferir.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXECUCAO: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          titulo="Incidente: painel ou API fora do ar"
+          aberta=$(gh issue list --label incidente --state open --search "in:title \"$titulo\"" --json number --jq '.[0].number // empty')
+          corpo="A checagem agendada falhou em $(date -u +%Y-%m-%dT%H:%MZ). Detalhes no resumo da execução: $EXECUCAO. Roteiro: docs/incidente.md."
+          if [ -n "$aberta" ]; then
+            gh issue comment "$aberta" --body "$corpo"
+          else
+            gh issue create --title "$titulo" --label incidente --body "$corpo"
+          fi
