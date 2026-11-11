@@ -26,6 +26,12 @@ env:
   # Versões fixas das ferramentas (o Dependabot não atualiza imagens usadas assim).
   TRIVY: aquasec/trivy:0.58.1
   ZAP: ghcr.io/zaproxy/zaproxy:2.16.1
+  # Porta fixa do proxy do ZAP, fora da faixa efêmera do Linux (32768 a 60999). Sem -P, o
+  # script sorteia uma porta nessa faixa, e o ZAP abre antes outras portas da mesma faixa
+  # (o serviço de callback do OAST e as conexões que baixam add-ons). Quando coincidem, o
+  # proxy não sobe ("Address already in use"), o ZAP encerra e o script espera 10 minutos
+  # até falhar com "Failed to connect to ZAP after 600 seconds" (#267).
+  ZAP_PORTA: "8090"
 jobs:
   imagem:
     name: trivy
@@ -82,12 +88,14 @@ jobs:
       - name: ZAP baseline no painel
         run: |
           docker run --rm --network formacao-dev_borda -v "$PWD/zap-saida:/zap/wrk:rw" "$ZAP" \
-            zap-baseline.py -t http://web:8080/ -c regras.tsv -J painel.json -r painel.html -I -m 2
+            zap-baseline.py -P "$ZAP_PORTA" -t http://web:8080/ -c regras.tsv -J painel.json -r painel.html -I -m 2
       # A API: varredura ativa das rotas do OpenAPI, pelo Nginx (/api).
+      # -T 5: se o ZAP não responder em 5 minutos, falha logo, em vez de esperar 10.
       - name: ZAP na API (OpenAPI)
+        timeout-minutes: 30
         run: |
           docker run --rm --network formacao-dev_borda -v "$PWD/zap-saida:/zap/wrk:rw" "$ZAP" \
-            zap-api-scan.py -t /zap/wrk/openapi.json -f openapi -O http://web:8080/api -c regras.tsv -J api.json -r api.html -I
+            zap-api-scan.py -P "$ZAP_PORTA" -T 5 -t /zap/wrk/openapi.json -f openapi -O http://web:8080/api -c regras.tsv -J api.json -r api.html -I
       - name: Nenhum alerta alto (fora das exceções)
         run: node scripts/zap.mjs zap/regras.tsv zap-saida/painel.json zap-saida/api.json | tee -a "$GITHUB_STEP_SUMMARY"
         shell: bash
