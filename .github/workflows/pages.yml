@@ -64,7 +64,7 @@ jobs:
         env:
           VITE_API_URL: ${{ vars.URL_DA_API }}
       - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: dist
 
