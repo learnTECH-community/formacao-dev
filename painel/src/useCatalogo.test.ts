@@ -21,7 +21,7 @@ servidor.events.on('request:start', () => {
   pedidos += 1;
 });
 
-beforeAll(() => servidor.listen({ onUnhandledRequest: 'error' }));
+beforeAll(() => servidor.listen({ onUnhandledFrame: 'error' }));
 afterEach(() => {
   servidor.resetHandlers();
   pedidos = 0;

@@ -44,7 +44,7 @@ Use as [Discussions](https://github.com/learnTECH-community/formacao-dev/discuss
 
 ## Rodar o catálogo
 
-Requisito: Node 22.12 ou mais novo.
+Requisito: Node 22.22 ou mais novo.
 
 ```bash
 node scripts/catalogo.mjs              # confere o catálogo e mostra o progresso
@@ -54,7 +54,7 @@ npm test                               # testes do catálogo e do painel
 
 ## Rodar o painel
 
-O painel fica em `painel/`, é um app React com Vite e TypeScript e lê o `CATALOGO.md` da raiz (pilha nas ADRs [002](docs/adr/002-pilha-do-painel.md) e [003](docs/adr/003-react-no-painel.md)). Requisitos: Git e Node 22.12 ou mais novo (o mesmo do `engines` no `package.json`). Tudo roda pelo terminal:
+O painel fica em `painel/`, é um app React com Vite e TypeScript e lê o `CATALOGO.md` da raiz (pilha nas ADRs [002](docs/adr/002-pilha-do-painel.md) e [003](docs/adr/003-react-no-painel.md)). Requisitos: Git e Node 22.22 ou mais novo (o mesmo do `engines` no `package.json`). Tudo roda pelo terminal:
 
 ```bash
 git clone https://github.com/learnTECH-community/formacao-dev.git   # baixa o repositório
