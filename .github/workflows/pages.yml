@@ -29,7 +29,7 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -54,7 +54,7 @@ jobs:
       # Sem "ref": o checkout pega a main como ela está agora, nunca o código de um PR.
       # Sem cache do npm: o job que publica não reaproveita nada que um PR possa ter gravado
       # (alertas actions/untrusted-checkout e actions/cache-poisoning do CodeQL).
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: 22
