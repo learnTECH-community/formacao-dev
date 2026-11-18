@@ -14,6 +14,11 @@ updates:
     labels: [dependencias]
     commit-message:
       prefix: "chore(deps)"
+    # Os tipos do Node seguem o Node do engines (22): uma versão maior deixaria
+    # passar funções que não existem no 22. Sobe junto com o engines, à mão.
+    ignore:
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
     groups:
       painel-menores:
         update-types: [minor, patch]
