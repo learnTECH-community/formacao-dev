@@ -5,14 +5,14 @@
 # Dentro da imagem, as pastas seguem o repositório: /app/CATALOGO.md, /app/scripts/catalogo.mjs e /app/api/.
 
 # Estágio 1: só as dependências de produção (sem ajv, autocannon e outras de teste).
-FROM node:24-alpine AS dependencias
+FROM node:26-alpine AS dependencias
 WORKDIR /app/api
 COPY api/package.json api/package-lock.json ./
 RUN npm ci --omit=dev --ignore-scripts --no-audit --no-fund && npm cache clean --force
 
 # Estágio de desenvolvimento (T9.14): todas as dependências e o código. No compose de
 # desenvolvimento, o "watch" copia cada arquivo salvo para cá e o node --watch reinicia.
-FROM node:24-alpine AS desenvolvimento
+FROM node:26-alpine AS desenvolvimento
 WORKDIR /app/api
 COPY api/package.json api/package-lock.json ./
 RUN npm ci --ignore-scripts --no-audit --no-fund
@@ -26,7 +26,7 @@ EXPOSE 4320
 CMD ["node", "--watch", "src/servidor.mjs"]
 
 # Estágio final: Node, as dependências de produção e o código. Nada de testes nem do npm cache.
-FROM node:24-alpine AS final
+FROM node:26-alpine AS final
 ENV NODE_ENV=production \
     ENDERECO=0.0.0.0 \
     PORTA=4320 \

@@ -37,7 +37,7 @@ jobs:
     name: trivy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Build das imagens da API e do Nginx
         run: |
           docker build -f api/Dockerfile --target final -t formacao-dev-api:ci .
@@ -72,7 +72,7 @@ jobs:
     name: zap
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: 22
