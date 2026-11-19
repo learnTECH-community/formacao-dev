@@ -60,3 +60,15 @@ updates:
     labels: [dependencias]
     commit-message:
       prefix: "chore(deps-docker)"
+
+  # A imagem do painel com o Nginx (nginx/Dockerfile, T9.7): o estágio de build segue
+  # o mesmo Node da API.
+  - package-ecosystem: docker
+    directory: /nginx
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: America/Sao_Paulo
+    labels: [dependencias]
+    commit-message:
+      prefix: "chore(deps-docker)"

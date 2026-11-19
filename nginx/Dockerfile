@@ -3,7 +3,7 @@
 #   docker build -f nginx/Dockerfile -t formacao-dev-web .
 
 # Estágio 1: dependências e código do painel.
-FROM node:24-alpine AS painel
+FROM node:26-alpine AS painel
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --ignore-scripts --no-audit --no-fund
