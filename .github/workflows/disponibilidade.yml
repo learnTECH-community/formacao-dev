@@ -21,7 +21,7 @@ jobs:
       URL_DA_API: ${{ vars.URL_DA_API }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
       - name: Conferir o painel e o /v1/health
