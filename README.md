@@ -77,7 +77,7 @@ O painel tem rotas: `/` (trilhas e itens, com o filtro no endereço, como `/?tri
 
 ## Rodar a API
 
-A API fica em `api/`, com Node 22.13 ou mais novo (a trava de acesso ao banco, T6.11, pede o 24.10), Express 5, `helmet` e `zod` (trilhas T5 e T6). Ela tem o próprio `package.json` e lê o `CATALOGO.md` da raiz. Os testes usam o repositório em memória e o SQLite em memória; os do MongoDB rodam com `MONGO_URL` (no CI, sempre) e, sem ela, aparecem pulados com o motivo.
+A API fica em `api/`, com Node 22.13 ou mais novo (a trava de acesso ao banco, T6.11, pede o 24.10), Express 5, `helmet` e `zod` (trilhas T5 e T6). Ela tem o próprio `package.json` e lê o `CATALOGO.md` da raiz. As versões do Node: o `engines` diz o mínimo (22.13 na API, 22.22 no painel), as imagens Docker usam o 26, e o CI testa a API no 22 e no 26 (o Node 24 saiu da matriz; no 26 o teste do CSV de 10 mil linhas fica de fora, porque trava como travava no 24, #241). Os testes usam o repositório em memória e o SQLite em memória; os do MongoDB rodam com `MONGO_URL` (no CI, sempre) e, sem ela, aparecem pulados com o motivo.
 
 ```bash
 cd api
