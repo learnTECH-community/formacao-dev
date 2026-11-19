@@ -52,7 +52,7 @@ jobs:
               image --scanners vuln --format json --output "relatorio-trivy/$imagem.json" "formacao-dev-$imagem:ci"
             cat "relatorio-trivy/$imagem.txt"
           done
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: relatorio-trivy
@@ -99,7 +99,7 @@ jobs:
       - name: Nenhum alerta alto (fora das exceções)
         run: node scripts/zap.mjs zap/regras.tsv zap-saida/painel.json zap-saida/api.json | tee -a "$GITHUB_STEP_SUMMARY"
         shell: bash
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: relatorio-zap
