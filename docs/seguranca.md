@@ -74,7 +74,7 @@ Regra: **nenhuma consulta é montada com texto do usuário**. O teste `injecao.t
 ## Varredura das imagens e varredura dinâmica (T9.13, T10.12)
 
 - Workflow `Varreduras` (`.github/workflows/varreduras.yml`), em PR que muda as imagens, as dependências, a API ou o painel.
-- **Trivy** (job `trivy`): relatório completo das imagens da API e do Nginx no artefato `relatorio-trivy`; falha com vulnerabilidade alta ou crítica que já tem correção. Exceções no `.trivyignore`, com motivo, issue e prazo (`exp:`). A primeira rodada achou 64 altas e 3 críticas na imagem do Nginx 1.27; com o Nginx 1.30 e o `apk upgrade` nas imagens finais, ficou em 0 (10/11/2026, PR #258).
+- **Trivy** (job `trivy`): relatório completo das imagens da API e do Nginx no artefato `relatorio-trivy`; falha com vulnerabilidade alta ou crítica que já tem correção. Exceções no `.trivyignore`, com motivo, issue e prazo (`exp:`). A primeira rodada achou 64 altas e 3 críticas na imagem do Nginx 1.27; com o Nginx 1.30 e o `apk upgrade` nas imagens finais, ficou em 0 (10/11/2026, PR #258). Em 19/11/2026 surgiram 3 críticas e 3 altas no nginx 1.30.6 da imagem base, ainda sem pacote corrigido no repositório dela; por decisão do responsável, ficam no `.trivyignore` até 03/12/2026 (#312).
 - **OWASP ZAP** (job `zap`): sobe o compose no próprio CI, roda o baseline no painel e a varredura ativa nas rotas do `api/openapi.json`, pelo Nginx. Relatórios no artefato `relatorio-zap`. Falha com alerta alto fora do `zap/regras.tsv` (`scripts/zap.mjs`). Primeira rodada (10/11/2026, PR #258): 15 alertas, **nenhum alto**; o médio é a falta de CSP no painel. Os médios e os 5xx da varredura ativa viraram as issues #264 e #263.
 
 ## Segredos e dependências (T10.1, T10.2)
