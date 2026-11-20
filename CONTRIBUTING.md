@@ -2,6 +2,16 @@
 
 Português do Brasil, frases curtas e diretas, em código, issues, PRs e revisões.
 
+## Comece em 15 minutos
+
+1. **(2 min)** Leia a issue fixada [Comece aqui](https://github.com/learnTECH-community/formacao-dev/issues/311) e escolha uma issue com o rótulo `good first issue`. Comente "vou fazer" nela: uma pessoa por issue.
+2. **(5 min)** Faça o fork, clone e instale: `git clone`, `npm install`, `npm test`. Precisa do Node 22.22 ou mais novo.
+3. **(1 min)** Traga a sprint da semana do repositório original e crie a sua branch a partir dela: `git remote add upstream https://github.com/learnTECH-community/formacao-dev.git`, `git fetch upstream` e `git switch -c feature/AAAA-MM-DD upstream/developer/sprint-<quinta>`.
+4. **(5 min)** Faça a mudança pedida na seção "Onde mexer" da issue e rode `npm test` de novo.
+5. **(2 min)** Abra o PR para a sprint, com o código do item no título e `Closes #N` na descrição.
+
+Travou em algum passo? Pergunte na própria issue ou nas [Discussions](https://github.com/learnTECH-community/formacao-dev/discussions). A primeira resposta chega em até 48 horas. Ao participar, você segue o [código de conduta](CODE_OF_CONDUCT.md).
+
 ## Fluxo
 
 ```
@@ -79,4 +89,4 @@ Ao contribuir em outro projeto do GitHub, abra uma issue aqui com o modelo "Cont
 
 ## Conduta
 
-Respeito, paciência com quem está começando e nenhum dado pessoal de outras pessoas em issues ou PRs.
+Respeito, paciência com quem está começando e nenhum dado pessoal de outras pessoas em issues ou PRs. As regras completas, como denunciar e os passos de moderação estão no [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).

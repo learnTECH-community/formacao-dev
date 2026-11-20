@@ -4,7 +4,7 @@ Cada item tem um código (ex.: `T2.3`). O PR que pratica o item no **Painel de F
 
 O roadmap.sh é o nosso referencial: cada trilha cresce, na ordem dos tópicos do roadmap dela, até todo tópico ter um item prático aqui (issue de `cobertura` de cada trilha). Os itens foram escritos pela comunidade, com palavras próprias. O link de cada trilha leva ao roadmap correspondente no [roadmap.sh](https://roadmap.sh), onde está o conteúdo de estudo. Este repositório não copia o conteúdo do roadmap.sh: a licença dele só permite compartilhar os links (ver [ADR 001](docs/adr/001-roadmap-sh-so-por-link.md)).
 
-**Progresso:** 87 de 161 itens
+**Progresso:** 88 de 161 itens
 
 ## T0 · Fundamentos
 Roadmaps de referência: [Full Stack](https://roadmap.sh/full-stack) · [Computer Science](https://roadmap.sh/computer-science) · [Linux](https://roadmap.sh/linux)
@@ -212,5 +212,5 @@ Roadmap de referência: [Full Stack](https://roadmap.sh/full-stack)
 - [ ] **T11.6** Triagem das issues novas por uma semana. (#142)
 - [ ] **T11.7** Tradução de documentação open source. (#143)
 - [ ] **T11.8** Reprodução mínima de um defeito de fora. (#144)
-- [ ] **T11.9** Preparar issues boa-primeira-issue. (#145)
+- [x] **T11.9** Preparar issues boa-primeira-issue. (#145)
 - [ ] **T11.10** Código de conduta da comunidade. (#146)

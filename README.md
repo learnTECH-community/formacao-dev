@@ -142,6 +142,7 @@ A imagem da API é feita em estágios (`api/Dockerfile`): a final leva só as de
 
 - [CATALOGO.md](CATALOGO.md): as trilhas e os itens.
 - [CONTRIBUTING.md](CONTRIBUTING.md): fluxo, PR e revisão.
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md): código de conduta, como denunciar e os passos de moderação.
 - [docs/MVP.md](docs/MVP.md): estado do projeto pela régua da comunidade.
 - [docs/api.md](docs/api.md): rotas da API, exemplos, erros e a política de versão.
 - [docs/banco.md](docs/banco.md): tabelas, migrações e dados de teste do banco.
