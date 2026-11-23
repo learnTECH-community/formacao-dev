@@ -83,6 +83,18 @@ Uma boa revisão tem três partes:
 
 Revise o código, não a pessoa. Quem abriu o PR responde a cada comentário: com o ajuste ou com o motivo para não ajustar.
 
+## Tempo de resposta
+
+A primeira resposta a issues, PRs e Discussions de quem é de fora chega em até 48 horas. Pode ser só "recebi, vou olhar até tal dia": o importante é que ninguém fique sem retorno.
+
+Quem mantém o projeto confere isso com a triagem diária, que só lê o GitHub:
+
+```bash
+node scripts/triagem.mjs            # grava triagem/AAAA-MM-DD.md
+```
+
+O relatório marca 🟠 o que está sem resposta há 36 horas ou mais (alerta) e 🔴 o que passou das 48 horas (prazo perdido). Ele também lista os PRs do Dependabot, as exceções do Trivy que vão vencer e as issues `depende-do-responsavel`. Conta como resposta qualquer comentário de um membro da organização ou de alguém com acesso ao repositório.
+
 ## Contribuição externa
 
 Ao contribuir em outro projeto do GitHub, abra uma issue aqui com o modelo "Contribuição externa". Ela registra o link e o item do catálogo que você praticou. Siga sempre o `CONTRIBUTING.md` do outro projeto.
