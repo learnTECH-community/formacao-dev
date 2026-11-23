@@ -1,0 +1,29 @@
+# Formulário da categoria Dúvidas (docs/comunidade/discussions.md). O nome do arquivo é o slug da categoria.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Travou? Pergunte. Quem perguntou marca a resposta que resolveu (*Mark as answer*).
+        Não cole senhas, tokens nem dados pessoais.
+  - type: input
+    id: tarefa
+    attributes:
+      label: Em qual tarefa ou issue você está?
+      placeholder: "Ex.: #48 ou T0.7"
+    validations:
+      required: true
+  - type: textarea
+    id: tentou
+    attributes:
+      label: O que você tentou?
+      description: Os comandos que rodou ou o trecho de código que mudou.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: aconteceu
+    attributes:
+      label: O que aconteceu, e o que você esperava?
+      description: Cole a mensagem de erro como texto, não como imagem.
+    validations:
+      required: true

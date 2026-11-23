@@ -1,0 +1,33 @@
+# Formulário da categoria Boas-vindas (docs/comunidade/discussions.md). O nome do arquivo é o slug da categoria.
+title: "Oi! Sou "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Que bom ter você aqui! Conte um pouco sobre você. A primeira resposta chega em até 48 horas.
+        Não coloque dados pessoais (telefone, endereço, e-mail).
+  - type: textarea
+    id: quem
+    attributes:
+      label: Quem é você e o que quer aprender?
+      placeholder: "Ex.: estudo desenvolvimento há 6 meses e quero aprender Git e React."
+    validations:
+      required: true
+  - type: dropdown
+    id: trilha
+    attributes:
+      label: Por qual trilha quer começar?
+      options:
+        - Ainda não sei
+        - T0 Fundamentos
+        - T1 Git e GitHub
+        - T2 Frontend base
+        - T3 JavaScript e TypeScript
+        - T4 React
+        - T5 Backend com Node e APIs
+        - T6 Bancos de dados
+        - T7 Qualidade
+        - T8 Code review e colaboração
+        - T9 Entrega
+        - T10 Segurança
+        - T11 Comunidade e open source

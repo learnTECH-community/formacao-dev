@@ -1,0 +1,22 @@
+# Formulário da categoria Ideias (docs/comunidade/discussions.md). O nome do arquivo é o slug da categoria.
+body:
+  - type: textarea
+    id: problema
+    attributes:
+      label: Qual problema a ideia resolve?
+      placeholder: "Ex.: quem começa não sabe por qual trilha ir."
+    validations:
+      required: true
+  - type: textarea
+    id: proposta
+    attributes:
+      label: O que você propõe?
+      description: Uma tarefa nova no catálogo, uma trilha ou uma melhoria no Painel de Formação.
+    validations:
+      required: true
+  - type: checkboxes
+    id: ajuda
+    attributes:
+      label: Participação
+      options:
+        - label: Quero ajudar a fazer, se a ideia for aceita.

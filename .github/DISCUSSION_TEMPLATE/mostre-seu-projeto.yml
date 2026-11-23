@@ -1,0 +1,21 @@
+# Formulário da categoria Mostre seu projeto (docs/comunidade/discussions.md). O nome do arquivo é o slug da categoria.
+body:
+  - type: input
+    id: link
+    attributes:
+      label: Link do projeto
+      placeholder: https://github.com/voce/projeto
+    validations:
+      required: true
+  - type: textarea
+    id: oque
+    attributes:
+      label: O que você construiu?
+      description: Pode colar um print. Diga o que funciona e o que ainda falta.
+    validations:
+      required: true
+  - type: input
+    id: item
+    attributes:
+      label: Qual item do catálogo você praticou?
+      placeholder: "Ex.: T2.3"
