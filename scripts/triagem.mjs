@@ -60,17 +60,40 @@ export function excecoesDoTrivy(texto, agora = new Date()) {
 
 export const ESTOQUE_LIMITE = 200;
 
-// "vou fazer", "vou pegar", "quero fazer", "posso fazer?", "irei fazer", "eu faço", "deixa comigo",
-// com qualquer espaço ou quebra de linha entre as palavras (R19 do #338, achado 1).
-const PEDIDO = /(^|[^\p{L}])(?:(?:vou|quero|posso|irei)\s+(?:fazer|pegar)|eu\s+fa[cç]o|deixa\s+comigo)(?![\p{L}])/iu;
-// "não vou fazer", "nao quero pegar" (achado 2).
-const NEGADO = /(^|[^\p{L}])n[aã]o\s+(?:vou|quero|posso|irei)\s+(?:fazer|pegar)(?![\p{L}])/iu;
-// "vou fazer uma pergunta" (achado 2).
-const PERGUNTA = /(?:fazer|pegar)\s+(?:uma\s+)?(?:pergunta|d[uú]vida)/iu;
+// "vou fazer", "vou pegar", "quero fazer", "posso fazer?", "irei fazer", "vou fazê-la", "vou pegá-la",
+// "eu faço", "deixa comigo" e "deixar comigo", com qualquer espaço ou quebra de linha entre as
+// palavras (R19 do #338, achado 1; R19 do #340, item 4).
+const PEDIDO = /(^|[^\p{L}])((?:vou|quero|posso|irei)\s+(?:fazer|pegar|faz[eê]-la|peg[aá]-la)|eu\s+fa[cç]o|deixar?\s+comigo)(?![\p{L}])/giu;
+// Logo antes do pedido: "não", "nao," (R19 do #340, item 1: o veto vale para aquela ocorrência).
+const NEGADO_ANTES = /n[aã]o[\s,]*$/iu;
+// Logo depois do pedido: "uma pergunta", "uma dúvida", "uma sugestão", "um comentário", "o curso",
+// "outra coisa" e "parte" (como em "eu faço parte").
+const VETO_DEPOIS = /^\s+(?:(?:uma?|o|a)\s+)?(?:pergunta|d[uú]vida|sugest[aã]o|coment[aá]rio|curso|outra\s+coisa|parte)(?![\p{L}])/iu;
+// "eu faço" só pede a issue no fim da frase, sozinho ou com "essa", "esta", "isso" ou "ela"
+// (e "essa issue", "esta tarefa"). "Eu faço isso no trabalho" não pede (item 3).
+const EU_FACO_OK = /^\s*(?:(?:essa|esta|isso|ela)(?:\s+(?:issue|tarefa))?\s*)?(?:$|[.!?,;)])/iu;
 
-/** O comentário pede a issue? Recusa o "não" antes do verbo e o "vou fazer uma pergunta". */
+/**
+ * O comentário pede a issue? Procura cada pedido e descarta só aquele que tem "não" logo antes ou
+ * um veto logo depois, para que um "não vou fazer a #12, mas vou fazer esta" continue pedindo.
+ * As linhas citadas ("> vou fazer", de outra pessoa) não contam.
+ */
 export function pedeAIssue(texto = '') {
-  return PEDIDO.test(texto) && !NEGADO.test(texto) && !PERGUNTA.test(texto);
+  const proprio = String(texto ?? '')
+    .split('\n')
+    .filter((linha) => !/^\s*>/.test(linha))
+    .join('\n');
+  for (const m of proprio.matchAll(PEDIDO)) {
+    const inicio = m.index + m[1].length;
+    const fim = m.index + m[0].length;
+    const antes = proprio.slice(Math.max(0, inicio - 6), inicio);
+    const depois = proprio.slice(fim, fim + 25);
+    if (NEGADO_ANTES.test(antes)) continue;
+    if (VETO_DEPOIS.test(depois)) continue;
+    if (/^eu/iu.test(m[2]) && !EU_FACO_OK.test(depois)) continue;
+    return true;
+  }
+  return false;
 }
 
 /**

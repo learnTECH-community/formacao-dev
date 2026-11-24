@@ -99,7 +99,7 @@ test('relatório: estoque abaixo da meta pede reposição e lista quem está tra
 });
 
 test('pedido da issue: os formatos que ocupam (R19 do #338, achado 1)', () => {
-  for (const texto of ['vou  fazer', 'Vou\nfazer', 'vou pegar essa', 'quero fazer!', 'Posso fazer?', 'eu faço', 'Eu faco hoje', 'Deixa comigo', 'VOU FAZER']) {
+  for (const texto of ['vou  fazer', 'Vou\nfazer', 'vou pegar essa', 'quero fazer!', 'Posso fazer?', 'eu faço', 'Eu faco essa', 'Deixa comigo', 'VOU FAZER']) {
     assert.equal(pedeAIssue(texto), true, texto);
   }
 });
@@ -134,4 +134,19 @@ test('relatório: a borda da meta (9 pede reposição, 10 não) e o aviso de lim
   const muitas = Array.from({ length: ESTOQUE_LIMITE }, (_, n) => ({ number: n }));
   assert.match(relatorio({ ...base, entrada: estoque(muitas) }), new RegExp(`Atenção: foram lidas só ${ESTOQUE_LIMITE} issues de entrada`));
   assert.match(relatorio({ ...base, entrada: { total: 1, livres: 0, ocupadas: [{ number: 5, title: 'T', url: 'u', motivo: 'PR ligado' }] } }), /- \[#5\]\(u\) T \(PR ligado\)/);
+});
+
+test('pedido da issue: o veto vale por ocorrência, não pelo comentário (R19 do #340, item 1)', () => {
+  assert.equal(pedeAIssue('Vou fazer! Mas antes, posso fazer uma pergunta?'), true);
+  assert.equal(pedeAIssue('Não vou fazer a #12, mas vou fazer esta'), true);
+  assert.equal(pedeAIssue('nao, vou fazer outra coisa'), false);
+});
+
+test('pedido da issue: citações, "eu faço" solto e as formas novas (itens 2 a 4)', () => {
+  for (const texto of ['> vou fazer', 'Ela disse:\n> vou fazer\nE eu fico só olhando', 'Eu faço parte da comunidade e tenho uma dúvida', 'eu faço isso no trabalho', 'Vou fazer o curso antes', 'quero fazer uma sugestão', 'posso fazer um comentário?']) {
+    assert.equal(pedeAIssue(texto), false, texto);
+  }
+  for (const texto of ['vou fazê-la', 'Vou pegá-la hoje', 'deixar comigo', 'Pode deixar que eu faço', 'eu\nfaço essa', '> vou fazer\nEu também! Vou pegar a próxima parte']) {
+    assert.equal(pedeAIssue(texto), true, texto);
+  }
 });
