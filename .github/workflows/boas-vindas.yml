@@ -1,0 +1,42 @@
+# Melhoria 3 da semana de abertura (docs/comunidade/semana-de-abertura.md): uma mensagem de
+# boas-vindas na primeira issue e no primeiro PR de cada pessoa. Ela não substitui a resposta
+# de uma pessoa, que continua chegando em até 48 h (CONTRIBUTING, "Tempo de resposta").
+#
+# Segurança: usa pull_request_target para poder comentar em PRs vindos de fork, e por isso
+# NÃO faz checkout nem roda código do PR. Só a action oficial, fixada por SHA (v3.1.0).
+name: Boas-vindas
+on:
+  issues:
+    types: [opened]
+  pull_request_target:
+    types: [opened]
+permissions: {}
+jobs:
+  boas-vindas:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/first-interaction@1c4688942c71f71d4f5502a26ea67c331730fa4d # v3.1.0
+        with:
+          issue_message: |
+            Oi! Obrigado pela sua primeira issue na formacao-dev. 👋
+
+            Esta é uma mensagem automática. Uma pessoa da manutenção responde aqui em até 48 horas, mesmo que seja só para dizer quando vai olhar com calma.
+
+            Enquanto isso:
+            - Se você quer contribuir, a lista [Comece aqui](https://github.com/learnTECH-community/formacao-dev/issues/311) traz issues pequenas, com o lugar exato onde mexer.
+            - Se a sua dúvida é sobre uma tarefa, as [Discussions](https://github.com/learnTECH-community/formacao-dev/discussions), em Dúvidas, também servem.
+            - Ao participar, você segue o [código de conduta](https://github.com/learnTECH-community/formacao-dev/blob/main/CODE_OF_CONDUCT.md).
+          pr_message: |
+            Oi! Obrigado pelo seu primeiro PR na formacao-dev. 🎉
+
+            Esta é uma mensagem automática. Uma pessoa da manutenção revisa em até 48 horas.
+
+            Para a revisão andar rápido, confira:
+            - a descrição tem `Closes #N`, com a issue que o PR resolve;
+            - o checklist "Pronto com UX, UI e QA" do modelo está marcado (o que não se aplica fica como "não se aplica");
+            - o CI está verde. Se ficar vermelho e você não souber por quê, pergunte aqui mesmo.
+
+            O passo a passo está no [Comece em 15 minutos](https://github.com/learnTECH-community/formacao-dev/blob/main/CONTRIBUTING.md#comece-em-15-minutos).
