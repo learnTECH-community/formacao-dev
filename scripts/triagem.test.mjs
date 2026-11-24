@@ -204,3 +204,13 @@ test('R19 QA do #358: borda das 48 h, bot, autor, fusos e review', () => {
   assert.match(relatorio({ ...base, fora: [], semDentro: true }), /não deu para ler os membros/);
   assert.doesNotMatch(relatorio({ ...base, fora: [] }), /não deu para ler os membros/);
 });
+
+test('1ª resposta nos fechados da semana (limite do #358)', () => {
+  const base = { hoje: '2026-11-24', hora: '08:00:00', fora: [], dependabot: [], excecoes: [], dependeDoResponsavel: [], agora };
+  assert.doesNotMatch(relatorio(base), /fechados dos últimos/, 'sem o campo, a linha não aparece');
+  assert.match(relatorio({ ...base, fechadosDaSemana: [] }), /\| 1ª resposta nos fechados dos últimos 7 dias \| nenhum respondido \|/);
+  assert.match(
+    relatorio({ ...base, fechadosDaSemana: [{ horasAteResposta: 2 }, { horasAteResposta: 50 }, { horasAteResposta: null }] }),
+    /\| 1ª resposta nos fechados dos últimos 7 dias \| mediana 26 h, pior 50 h \(2\) 🔴; 1 fechado\(s\) sem resposta \|/,
+  );
+});
