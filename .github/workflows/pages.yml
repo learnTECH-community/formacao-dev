@@ -28,6 +28,8 @@ jobs:
   previa:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    # #343: previa: 9 a 15 s. Um travamento cai aqui, e não nas 6 h padrão.
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
@@ -50,6 +52,8 @@ jobs:
       (github.event_name == 'workflow_dispatch' ||
        (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'))
     runs-on: ubuntu-latest
+    # #343: build: ainda não rodou (PAGES_ATIVO desligado, #230); o build do painel no CI leva menos de 1 min. Um travamento cai aqui, e não nas 6 h padrão.
+    timeout-minutes: 10
     steps:
       # Sem "ref": o checkout pega a main como ela está agora, nunca o código de um PR.
       # Sem cache do npm: o job que publica não reaproveita nada que um PR possa ter gravado
@@ -71,6 +75,8 @@ jobs:
   publicar:
     needs: build
     runs-on: ubuntu-latest
+    # #343: publicar: ainda não rodou; o deploy do Pages costuma levar 1 a 2 min. Um travamento cai aqui, e não nas 6 h padrão.
+    timeout-minutes: 10
     permissions:
       pages: write
       id-token: write

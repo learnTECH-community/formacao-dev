@@ -36,6 +36,8 @@ jobs:
   imagem:
     name: trivy
     runs-on: ubuntu-latest
+    # #343: imagem (Trivy): 37 a 43 s. Um travamento cai aqui, e não nas 6 h padrão.
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
       - name: Build das imagens da API e do Nginx
@@ -71,6 +73,8 @@ jobs:
   zap:
     name: zap
     runs-on: ubuntu-latest
+    # #343: zap: 344 a 426 s; o passo do ZAP já tem 30 min, e o job soma a subida do compose. Um travamento cai aqui, e não nas 6 h padrão.
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
