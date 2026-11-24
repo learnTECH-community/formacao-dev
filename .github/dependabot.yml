@@ -20,8 +20,16 @@ updates:
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
     groups:
+      # #352: o job painel roda na imagem oficial do Playwright, na mesma versão do
+      # @playwright/test. Quando o pacote sobe, a imagem do ci.yml (tag, digest e
+      # PLAYWRIGHT_DA_IMAGEM) precisa subir junto, À MÃO: o Dependabot não atualiza o
+      # container: dos workflows. Por isso o Playwright vem num PR só dele, onde a dona
+      # acerta a imagem, sem travar as outras atualizações da semana (R19 DevOps do #353).
+      playwright:
+        patterns: ["@playwright/test", "playwright", "playwright-core"]
       painel-menores:
         update-types: [minor, patch]
+        exclude-patterns: ["@playwright/test", "playwright", "playwright-core"]
 
   - package-ecosystem: npm
     directory: /api
