@@ -5,9 +5,13 @@
 'trilha:T5':
   - changed-files:
       - any-glob-to-any-file: ['api/**']
+# A api/ mistura T5 e T6: um PR de migração ou de consulta é das duas trilhas (R19 QA do #342).
+'trilha:T6':
+  - changed-files:
+      - any-glob-to-any-file: ['api/migracoes/**', 'api/consultas/**', 'api/src/banco/**', 'api/src/repositorios/**', 'docs/banco.md', 'docs/consultas.md', 'docs/backup.md']
 'trilha:T7':
   - changed-files:
-      - any-glob-to-any-file: ['e2e/**', 'painel/**/*.test.ts', 'painel/**/*.test.tsx', 'scripts/*.test.mjs', 'playwright.config.mjs']
+      - any-glob-to-any-file: ['e2e/**', 'painel/**/*.test.ts', 'painel/**/*.test.tsx', 'scripts/*.test.mjs', 'playwright.config.mjs', 'api/test/**', 'api/carga/**', 'docs/plano-de-testes.md']
 'trilha:T9':
   - changed-files:
       - any-glob-to-any-file: ['.github/workflows/**', 'compose*.yaml', 'nginx/**', 'prometheus/**', 'render.yaml']
