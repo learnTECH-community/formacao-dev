@@ -1,7 +1,7 @@
 // #324: as regras da triagem diária (36 h de alerta, 48 h de prazo) e o relatório, sem chamar o GitHub.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { comoComentarios, deFora, ehVersaoMaior, estadoDoCi, estoque, ESTOQUE_LIMITE, excecoesDoTrivy, horasAtePrimeiraResposta, pedeAIssue, recomendacao, relatorio, resumoDaPrimeiraResposta, situacao } from './triagem.mjs';
+import { comoComentarios, deFora, desdeDosFechados, ehVersaoMaior, estadoDoCi, estoque, ESTOQUE_LIMITE, excecoesDoTrivy, horasAtePrimeiraResposta, pedeAIssue, recomendacao, relatorio, resumoDaPrimeiraResposta, situacao } from './triagem.mjs';
 
 const agora = new Date('2026-11-23T12:00:00-03:00');
 const horasAtras = (h) => new Date(agora - h * 36e5).toISOString();
@@ -203,4 +203,34 @@ test('R19 QA do #358: borda das 48 h, bot, autor, fusos e review', () => {
   // Sem a lista de dentro, o relatório avisa.
   assert.match(relatorio({ ...base, fora: [], semDentro: true }), /não deu para ler os membros/);
   assert.doesNotMatch(relatorio({ ...base, fora: [] }), /não deu para ler os membros/);
+});
+
+test('1ª resposta nos fechados da semana (limite do #358)', () => {
+  const base = { hoje: '2026-11-24', hora: '08:00:00', fora: [], dependabot: [], excecoes: [], dependeDoResponsavel: [], agora };
+  assert.doesNotMatch(relatorio(base), /fechados dos últimos/, 'sem o campo, a linha não aparece');
+  assert.match(relatorio({ ...base, fechadosDaSemana: [] }), /\| 1ª resposta nos fechados dos últimos 7 dias \| nenhum respondido \|/);
+  assert.match(
+    relatorio({ ...base, fechadosDaSemana: [{ horasAteResposta: 2 }, { horasAteResposta: 50 }, { horasAteResposta: null }] }),
+    /\| 1ª resposta nos fechados dos últimos 7 dias \| mediana 26 h, pior 50 h \(2\) 🔴; 1 fechado\(s\) sem resposta \|/,
+  );
+});
+
+test('R19 QA do #359: janela de 7 dias exatos, limite, merge como resposta e fechado pelo autor', () => {
+  // A janela tem hora: 7 dias antes, ao segundo, em UTC, sem depender do fuso de agora.
+  assert.equal(desdeDosFechados(new Date('2026-11-24T11:48:30-03:00')), '2026-11-17T14:48:30Z');
+  assert.equal(desdeDosFechados(new Date('2026-11-24T14:48:30Z')), '2026-11-17T14:48:30Z');
+  // O merge por alguém de dentro é resposta, na hora do merge; por alguém de fora, não.
+  const criado = horasAtras(30);
+  const mesclado = { comments: [], reviews: [], mergedAt: horasAtras(26), mergedBy: { login: 'Mantenedora' } };
+  assert.equal(horasAtePrimeiraResposta(criado, comoComentarios(mesclado), dentro), 4);
+  assert.equal(horasAtePrimeiraResposta(criado, comoComentarios({ ...mesclado, mergedBy: { login: 'visitante' } }), dentro), null);
+  assert.equal(comoComentarios({ mergedAt: null, mergedBy: null }).length, 0);
+  // Fechado pelo próprio autor, sem nenhum comentário de dentro: conta como fechado sem resposta.
+  const base = { hoje: '2026-11-24', hora: '08:00:00', fora: [], dependabot: [], excecoes: [], dependeDoResponsavel: [], agora };
+  const fechadoPeloAutor = { horasAteResposta: horasAtePrimeiraResposta(criado, [{ author: { login: 'visitante' }, createdAt: horasAtras(29) }], dentro) };
+  assert.match(relatorio({ ...base, fechadosDaSemana: [fechadoPeloAutor] }), /nenhum respondido; 1 fechado\(s\) sem resposta \|/);
+  // O corte aparece na linha, no horário de Brasília, e o limite avisa.
+  assert.match(relatorio({ ...base, fechadosDaSemana: [], fechadosDesde: '2026-11-17T14:48:30Z' }), /fechados dos últimos 7 dias \(desde 17\/11,? 11:48\)/);
+  assert.match(relatorio({ ...base, fechadosDaSemana: [], fechadosNoLimite: true }), /⚠️ Fechados no limite \| a leitura bateu em 200/);
+  assert.doesNotMatch(relatorio({ ...base, fechadosDaSemana: [] }), /Fechados no limite/);
 });
