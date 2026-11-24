@@ -1,7 +1,7 @@
 // #324: as regras da triagem diária (36 h de alerta, 48 h de prazo) e o relatório, sem chamar o GitHub.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { deFora, ehVersaoMaior, estadoDoCi, excecoesDoTrivy, recomendacao, relatorio, situacao } from './triagem.mjs';
+import { deFora, ehVersaoMaior, estadoDoCi, estoque, excecoesDoTrivy, recomendacao, relatorio, situacao } from './triagem.mjs';
 
 const agora = new Date('2026-11-23T12:00:00-03:00');
 const horasAtras = (h) => new Date(agora - h * 36e5).toISOString();
@@ -71,4 +71,29 @@ test('relatório: resume, ordena e marca o que pede ação', () => {
   assert.ok(texto.indexOf('#8') < texto.indexOf('#9'), 'o mais antigo vem primeiro');
   assert.match(texto, /\| \[#305\]\(u\) \| Bump x from 4 to 7 \| 5 d \| verde \| sim \| ler as notas de migração e mesclar \|/);
   assert.match(texto, /5 dia\(s\) 🟠/);
+});
+
+test('estoque: atribuída ou com "vou fazer" está ocupada; o texto da issue não conta', () => {
+  const issues = [
+    { number: 1, title: 'Livre', url: 'u1', assignees: [], comments: [] },
+    { number: 2, title: 'Atribuída', url: 'u2', assignees: [{ login: 'a' }], comments: [] },
+    { number: 3, title: 'Pegou', url: 'u3', assignees: [], comments: [{ body: 'Oi! Vou fazer esta.' }] },
+    { number: 4, title: 'Só pergunta', url: 'u4', assignees: [], comments: [{ body: 'Posso usar o Map?' }] },
+  ];
+  const e = estoque(issues);
+  assert.equal(e.total, 4);
+  assert.equal(e.livres, 2);
+  assert.deepEqual(e.ocupadas.map((i) => i.number), [2, 3]);
+  assert.deepEqual(estoque(), { total: 0, livres: 0, ocupadas: [] });
+});
+
+test('relatório: estoque abaixo da meta pede reposição e lista quem está trabalhando', () => {
+  const base = { hoje: '2026-11-24', hora: '08:00:00', fora: [], dependabot: [], excecoes: [], dependeDoResponsavel: [], agora };
+  const baixo = relatorio({ ...base, entrada: { total: 9, livres: 8, ocupadas: [{ number: 7, title: 'T0.6', url: 'u7' }] } });
+  assert.match(baixo, /\| Issues de entrada livres \(meta: 10 ou mais\) \| 8 de 9 🟠 repor \|/);
+  assert.match(baixo, /- \[#7\]\(u7\) T0\.6/);
+  const ok = relatorio({ ...base, entrada: { total: 21, livres: 21, ocupadas: [] } });
+  assert.match(ok, /\| 21 de 21 \|/);
+  assert.doesNotMatch(ok, /alguém trabalhando/);
+  assert.doesNotMatch(relatorio(base), /Issues de entrada livres/, 'sem o campo, a linha não aparece');
 });

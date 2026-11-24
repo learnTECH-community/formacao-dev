@@ -50,6 +50,7 @@ Ajuste o nome e a tarefa. O importante é a pessoa saber que foi vista e quando 
 
 - **Dependabot:** PR com mais de 2 dias aparece na lista com a recomendação. Mesclar é de quem administra; a recomendação não é aplicada sozinha. A ordem e os motivos ficam no [CONTRIBUTING.md](../../CONTRIBUTING.md), seção "Dependências (Dependabot)".
 - **Exceções do Trivy:** a que vence em até 7 dias ganha 🟠. Antes do vencimento, ou se atualiza a imagem, ou se renova a exceção com motivo.
+- **Issues de entrada livres:** conta as `good first issue` sem ninguém atribuído e sem um comentário "vou fazer". Abaixo de 10, ganha 🟠 repor: prepare uma nova no padrão do CONTRIBUTING, seção "Issues de entrada", e acrescente-a na lista do #311. As que têm alguém trabalhando aparecem em "Prazos", para acompanhar o PR.
 - **`depende-do-responsavel`:** a lista do que está esperando quem administra. Serve para a conversa da semana, não para a triagem do dia.
 
 ## 6. Como saber se está funcionando
