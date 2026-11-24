@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { lerCatalogo, progresso, linhaProgresso } from './catalogo.mjs';
+import { atualizarTexto, lerCatalogo, progresso, linhaProgresso } from './catalogo.mjs';
 
 const exemplo = `## T1 · Git
 - [x] **T1.1** fluxo
@@ -31,4 +31,17 @@ test('o CATALOGO.md real está válido e a linha de progresso bate', () => {
   const { trilhas, erros } = lerCatalogo(texto);
   assert.deepEqual(erros, []);
   assert.ok(texto.includes(linhaProgresso(progresso(trilhas))));
+});
+
+test('--atualizar falha fechado: sem a linha Progresso ou com item fora do formato, não grava', () => {
+  const bom = '**Progresso:** 0 de 0 itens\n\n## T1 · Git\n- [x] **T1.1** Um.\n- [ ] **T1.2** Dois.\n';
+  const r = atualizarTexto(bom);
+  assert.deepEqual(r.erros, []);
+  assert.match(r.novo, /^\*\*Progresso:\*\* 1 de 2 itens$/m);
+  const semLinha = atualizarTexto('## T1 · Git\n- [x] **T1.1** Um.\n');
+  assert.equal(semLinha.novo, null);
+  assert.match(semLinha.erros.join(), /não tem a linha "\*\*Progresso:\*\* \.\.\."/);
+  const comErro = atualizarTexto('**Progresso:** 0 de 0 itens\n\n## T1 · Git\n- [X] **T1.1** maiúsculo.\n');
+  assert.equal(comErro.novo, null, 'item fora do formato: não grava');
+  assert.match(comErro.erros.join(), /fora do formato/);
 });

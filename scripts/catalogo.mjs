@@ -38,6 +38,18 @@ export function linhaProgresso({ feitos, total }) {
   return `**Progresso:** ${feitos} de ${total} itens`;
 }
 
+/**
+ * O texto com a linha "Progresso" atualizada, ou os erros que impedem gravar. Não grava nada se
+ * houver item fora do formato, nem se a linha "Progresso" não existir (checklist de autorrevisão,
+ * itens 4 e 17: falhar fechado, e nada calado).
+ */
+export function atualizarTexto(texto) {
+  const { trilhas, erros } = lerCatalogo(texto);
+  if (!PROGRESSO.test(texto)) erros.push('o CATALOGO.md não tem a linha "**Progresso:** ..."; acrescente-a antes de atualizar');
+  if (erros.length) return { novo: null, erros };
+  return { novo: texto.replace(PROGRESSO, linhaProgresso(progresso(trilhas))), erros };
+}
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const caminho = new URL('../CATALOGO.md', import.meta.url);
   const texto = readFileSync(caminho, 'utf8');
@@ -49,7 +61,9 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   }
   console.log(linhaProgresso(p));
   if (process.argv.includes('--atualizar')) {
-    writeFileSync(caminho, texto.replace(PROGRESSO, linhaProgresso(p)));
+    const { novo, erros: errosDaGravacao } = atualizarTexto(texto);
+    if (novo) writeFileSync(caminho, novo);
+    else erros.splice(0, erros.length, ...errosDaGravacao);
   } else if (!texto.includes(linhaProgresso(p))) {
     erros.push(`a linha "Progresso" do CATALOGO.md não bate: rode "node scripts/catalogo.mjs --atualizar"`);
   }
