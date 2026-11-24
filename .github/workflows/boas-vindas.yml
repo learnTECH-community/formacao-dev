@@ -4,6 +4,7 @@
 #
 # Segurança: usa pull_request_target para poder comentar em PRs vindos de fork, e por isso
 # NÃO faz checkout nem roda código do PR. Só a action oficial, fixada por SHA (v3.1.0).
+# Um job por evento, cada um só com a permissão de escrita de que precisa (R19 SecOps do #339).
 name: Boas-vindas
 on:
   issues:
@@ -12,11 +13,12 @@ on:
     types: [opened]
 permissions: {}
 jobs:
-  boas-vindas:
+  primeira-issue:
+    if: github.event_name == 'issues'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       issues: write
-      pull-requests: write
     steps:
       - uses: actions/first-interaction@1c4688942c71f71d4f5502a26ea67c331730fa4d # v3.1.0
         with:
@@ -29,6 +31,17 @@ jobs:
             - Se você quer contribuir, a lista [Comece aqui](https://github.com/learnTECH-community/formacao-dev/issues/311) traz issues pequenas, com o lugar exato onde mexer.
             - Se a sua dúvida é sobre uma tarefa, as [Discussions](https://github.com/learnTECH-community/formacao-dev/discussions), em Dúvidas, também servem.
             - Ao participar, você segue o [código de conduta](https://github.com/learnTECH-community/formacao-dev/blob/main/CODE_OF_CONDUCT.md).
+
+  primeiro-pr:
+    # O Dependabot não é uma pessoa chegando, e o token dele é só de leitura.
+    if: github.event_name == 'pull_request_target' && github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/first-interaction@1c4688942c71f71d4f5502a26ea67c331730fa4d # v3.1.0
+        with:
           pr_message: |
             Oi! Obrigado pelo seu primeiro PR na formacao-dev. 🎉
 
