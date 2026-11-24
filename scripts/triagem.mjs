@@ -58,14 +58,59 @@ export function excecoesDoTrivy(texto, agora = new Date()) {
   }));
 }
 
+export const ESTOQUE_LIMITE = 200;
+
+// "vou fazer", "vou pegar", "quero fazer", "posso fazer?", "irei fazer", "vou fazê-la", "vou pegá-la",
+// "eu faço", "deixa comigo" e "deixar comigo", com qualquer espaço ou quebra de linha entre as
+// palavras (R19 do #338, achado 1; R19 do #340, item 4).
+const PEDIDO = /(^|[^\p{L}])((?:vou|quero|posso|irei)\s+(?:fazer|pegar|faz[eê]-la|peg[aá]-la)|eu\s+fa[cç]o|deixar?\s+comigo)(?![\p{L}])/giu;
+// Logo antes do pedido: "não" negando o verbo (R19 do #340, item 1: o veto vale para aquela
+// ocorrência). Sem vírgula: "Não, vou fazer sim!" é resposta, e pede a issue (reconferência, item 2).
+const NEGADO_ANTES = /n[aã]o\s+$/iu;
+// Logo depois do pedido: "uma pergunta", "uma dúvida", "uma sugestão", "um comentário", "o curso"
+// e "outra coisa". O "parte" fica só no ramo do "eu faço" (reconferência, item 3).
+const VETO_DEPOIS = /^\s+(?:(?:uma?|o|a)\s+)?(?:pergunta|d[uú]vida|sugest[aã]o|coment[aá]rio|curso|outra\s+coisa)(?![\p{L}])/iu;
+// "eu faço" pede a issue no fim da frase, com "sim", com "essa"/"esta" (e o que vier depois, como
+// "essa amanhã") ou com "isso"/"ela" no fim. "Eu faço parte" e "eu faço isso no trabalho" não pedem.
+const EU_FACO_OK = /^\s*(?:$|[.!?,;)]|sim(?![\p{L}])|(?:essa|esta)(?![\p{L}])|(?:isso|ela)\s*(?:$|[.!?,;)]))/iu;
+
 /**
- * Estoque de issues de entrada (`good first issue`). Livre é a que não tem ninguém atribuído nem um
- * comentário "vou fazer". A meta é ter ESTOQUE_MIN ou mais livres (CONTRIBUTING, "Issues de entrada").
+ * O comentário pede a issue? Procura cada pedido e descarta só aquele que tem "não" logo antes ou
+ * um veto logo depois, para que um "não vou fazer a #12, mas vou fazer esta" continue pedindo.
+ * As linhas citadas ("> vou fazer", de outra pessoa) não contam.
  */
-export function estoque(issues = []) {
-  const ocupada = (i) => (i.assignees ?? []).length > 0 || (i.comments ?? []).some((c) => /vou fazer/i.test(c.body ?? ''));
-  const ocupadas = issues.filter(ocupada);
-  return { total: issues.length, livres: issues.length - ocupadas.length, ocupadas };
+export function pedeAIssue(texto = '') {
+  const proprio = String(texto ?? '')
+    .split('\n')
+    .filter((linha) => !/^\s*>/.test(linha))
+    .join('\n');
+  for (const m of proprio.matchAll(PEDIDO)) {
+    const inicio = m.index + m[1].length;
+    const fim = m.index + m[0].length;
+    const antes = proprio.slice(Math.max(0, inicio - 6), inicio);
+    const depois = proprio.slice(fim, fim + 25);
+    if (NEGADO_ANTES.test(antes)) continue;
+    if (VETO_DEPOIS.test(depois)) continue;
+    if (/^eu/iu.test(m[2]) && !EU_FACO_OK.test(depois)) continue;
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Estoque de issues de entrada (`good first issue`). Ocupada é a que tem alguém atribuído, um PR
+ * ligado (achado 3) ou um comentário de quem é de fora pedindo a issue (achados 1 e 2; o "vou fazer
+ * o merge" de quem mantém não conta). A meta é ter ESTOQUE_MIN ou mais livres.
+ */
+export function estoque(issues = [], dentro = new Set()) {
+  const motivo = (i) => {
+    if ((i.assignees ?? []).length > 0) return 'atribuída';
+    if ((i.closedByPullRequestsReferences ?? []).length > 0) return 'PR ligado';
+    const pedido = (i.comments ?? []).some((c) => !dentro.has((c.author?.login ?? '').toLowerCase()) && pedeAIssue(c.body ?? ''));
+    return pedido ? 'pediu para fazer' : null;
+  };
+  const ocupadas = issues.map((i) => ({ ...i, motivo: motivo(i) })).filter((i) => i.motivo);
+  return { total: issues.length, livres: issues.length - ocupadas.length, ocupadas, noLimite: issues.length >= ESTOQUE_LIMITE };
 }
 
 /** Monta o relatório em Markdown. Função pura: recebe os dados já lidos. */
@@ -84,6 +129,7 @@ export function relatorio({ hoje, hora, fora, dependabot, excecoes, dependeDoRes
     L.push(`| Issues de entrada livres (meta: ${ESTOQUE_MIN} ou mais) | ${entrada.livres} de ${entrada.total}${repor} |`);
   }
   L.push('');
+  if (entrada?.noLimite) L.push(`Atenção: foram lidas só ${ESTOQUE_LIMITE} issues de entrada. A contagem pode estar incompleta.`, '');
 
   L.push('## a) Contribuições de fora', '');
   if (!fora.length) L.push('Nenhuma aberta.', '');
@@ -115,7 +161,7 @@ export function relatorio({ hoje, hora, fora, dependabot, excecoes, dependeDoRes
   } else L.push('Nenhuma exceção no `.trivyignore`.', '');
   if (entrada?.ocupadas.length) {
     L.push('Issues de entrada com alguém trabalhando:', '');
-    for (const i of entrada.ocupadas) L.push(`- [#${i.number}](${i.url}) ${i.title}`);
+    for (const i of entrada.ocupadas) L.push(`- [#${i.number}](${i.url}) ${i.title}${i.motivo ? ` (${i.motivo})` : ''}`);
     L.push('');
   }
   L.push(`Issues \`depende-do-responsavel\` abertas: ${dependeDoResponsavel.length}`, '');
@@ -170,7 +216,10 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     fora,
     dependabot: prs.filter((p) => ehBot(p.author?.login)),
     excecoes,
-    entrada: estoque(json(['issue', 'list', '-R', REPO, '--state', 'open', '--label', 'good first issue', '--limit', '200', '--json', 'number,title,url,assignees,comments'])),
+    entrada: estoque(
+      json(['issue', 'list', '-R', REPO, '--state', 'open', '--label', 'good first issue', '--limit', String(ESTOQUE_LIMITE), '--json', 'number,title,url,assignees,comments,closedByPullRequestsReferences']),
+      dentro,
+    ),
     dependeDoResponsavel: json(['issue', 'list', '-R', REPO, '--state', 'open', '--label', 'depende-do-responsavel', '--limit', '100', '--json', 'number,title,createdAt,url']),
     agora,
   });
