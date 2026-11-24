@@ -106,6 +106,20 @@ node scripts/triagem.mjs            # grava triagem/AAAA-MM-DD.md
 
 O relatório marca 🟠 o que está sem resposta há 36 horas ou mais (alerta) e 🔴 o que passou das 48 horas (prazo perdido). Ele também lista os PRs do Dependabot, as exceções do Trivy que vão vencer e as issues `depende-do-responsavel`. Conta como resposta qualquer comentário de um membro da organização ou de alguém com acesso ao repositório.
 
+## Issues de entrada (para quem mantém)
+
+Uma issue de entrada leva **sempre os dois rótulos**: `good first issue`, que é o padrão do GitHub e põe a issue na página [contribute](https://github.com/learnTECH-community/formacao-dev/contribute) e na busca de quem quer começar, e `boa-primeira-issue`, que é o nome em português usado nos filtros daqui. A decisão de manter os dois é de 21/11/2026.
+
+Antes de pôr os rótulos, confira se a issue tem:
+
+- **Objetivo** e **Motivo**, em poucas linhas;
+- **Onde mexer**, com o arquivo e, quando der, a função ou a linha;
+- **Critérios de aceite** que outra pessoa consegue conferir com sim ou não;
+- **Tempo estimado** de até 2 horas;
+- **Como começar** e **Pronto com UX, UI e QA**, como nas issues da lista [Comece aqui (#311)](https://github.com/learnTECH-community/formacao-dev/issues/311).
+
+O rótulo é uma promessa: quem rotula acompanha o PR até o merge e responde em até 48 horas. Issue de entrada fica para quem vem de fora; quem mantém o repositório não a resolve. A meta é ter sempre 10 ou mais livres, ou seja, sem ninguém atribuído. Quando uma fecha, acrescente outra na lista do #311.
+
 ## Contribuição externa
 
 Ao contribuir em outro projeto do GitHub, abra uma issue aqui com o modelo "Contribuição externa". Ela registra o link e o item do catálogo que você praticou. Siga sempre o `CONTRIBUTING.md` do outro projeto.
