@@ -1,7 +1,7 @@
 // #324: as regras da triagem diária (36 h de alerta, 48 h de prazo) e o relatório, sem chamar o GitHub.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { comoComentarios, deFora, desdeDosFechados, ehVersaoMaior, estadoDoCi, estoque, ESTOQUE_LIMITE, excecoesDoTrivy, horasAtePrimeiraResposta, pedeAIssue, recomendacao, relatorio, resumoDaPrimeiraResposta, situacao } from './triagem.mjs';
+import { comoComentarios, deFora, desdeDosFechados, leiturasNoLimite, LIMITES_ABERTOS, ehVersaoMaior, estadoDoCi, estoque, ESTOQUE_LIMITE, excecoesDoTrivy, horasAtePrimeiraResposta, pedeAIssue, recomendacao, relatorio, resumoDaPrimeiraResposta, situacao } from './triagem.mjs';
 
 const agora = new Date('2026-11-23T12:00:00-03:00');
 const horasAtras = (h) => new Date(agora - h * 36e5).toISOString();
@@ -233,4 +233,13 @@ test('R19 QA do #359: janela de 7 dias exatos, limite, merge como resposta e fec
   assert.match(relatorio({ ...base, fechadosDaSemana: [], fechadosDesde: '2026-11-17T14:48:30Z' }), /fechados dos últimos 7 dias \(desde 17\/11,? 11:48\)/);
   assert.match(relatorio({ ...base, fechadosDaSemana: [], fechadosNoLimite: true }), /⚠️ Fechados no limite \| a leitura bateu em 200/);
   assert.doesNotMatch(relatorio({ ...base, fechadosDaSemana: [] }), /Fechados no limite/);
+});
+
+test('checklist item 17: as leituras dos abertos avisam quando batem no limite', () => {
+  assert.deepEqual(leiturasNoLimite({ issues: 499, prs: 10, dependeDoResponsavel: 3 }), []);
+  assert.deepEqual(leiturasNoLimite({ issues: LIMITES_ABERTOS.issues, prs: 200, dependeDoResponsavel: 99 }), ['issues', 'prs']);
+  assert.deepEqual(leiturasNoLimite({}), []);
+  const base = { hoje: '2026-11-24', hora: '08:00:00', fora: [], dependabot: [], excecoes: [], dependeDoResponsavel: [], agora };
+  assert.match(relatorio({ ...base, abertosNoLimite: ['issues'] }), /a leitura de issues bateu no limite \(500\)/);
+  assert.doesNotMatch(relatorio(base), /bateu no limite/);
 });

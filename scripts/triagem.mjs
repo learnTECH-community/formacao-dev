@@ -12,6 +12,13 @@ export const EXCECAO_DIAS = 7;
 export const ESTOQUE_MIN = 10;
 export const FECHADOS_DIAS = 7;
 export const FECHADOS_LIMITE = 200;
+// Os limites das leituras dos abertos (checklist de autorrevisão, item 17: nada corta calado).
+export const LIMITES_ABERTOS = { issues: 500, prs: 200, dependeDoResponsavel: 100 };
+
+/** Os nomes das leituras que bateram no limite: o relatório avisa que a conta pode estar incompleta. */
+export function leiturasNoLimite(lidos, limites = LIMITES_ABERTOS) {
+  return Object.keys(limites).filter((k) => (lidos[k] ?? 0) >= limites[k]);
+}
 
 const horasEntre = (desde, agora) => Math.floor((agora - new Date(desde)) / 36e5);
 const diasEntre = (desde, agora) => Math.floor((agora - new Date(desde)) / 864e5);
@@ -158,9 +165,10 @@ export function desdeDosFechados(agora = new Date()) {
 }
 
 /** Monta o relatório em Markdown. Função pura: recebe os dados já lidos. */
-export function relatorio({ hoje, hora, fora, dependabot, excecoes, dependeDoResponsavel, entrada = null, semDentro = false, fechadosDaSemana = null, fechadosDesde = null, fechadosNoLimite = false, agora = new Date() }) {
+export function relatorio({ hoje, hora, fora, dependabot, excecoes, dependeDoResponsavel, entrada = null, semDentro = false, fechadosDaSemana = null, fechadosDesde = null, fechadosNoLimite = false, abertosNoLimite = [], agora = new Date() }) {
   const L = [`# Triagem do formacao-dev · ${hoje}`, '', `Gerado às ${hora}, só leitura.`, ''];
   // R19 QA do #358, item 5: sem a lista de quem é de dentro, ninguém conta como resposta.
+  if (abertosNoLimite.length) L.push(`⚠️ Atenção: a leitura de ${abertosNoLimite.join(', ')} bateu no limite (${abertosNoLimite.map((k) => LIMITES_ABERTOS[k]).join(', ')}). A contagem pode estar incompleta.`, '');
   if (semDentro) L.push('⚠️ Atenção: não deu para ler os membros nem os colaboradores. Todos aparecem como de fora e nenhum comentário conta como resposta. Confira o login do `gh`.', '');
   const vermelhos = fora.filter((x) => x.sit.startsWith('🔴')).length;
   const laranjas = fora.filter((x) => x.sit.startsWith('🟠')).length;
@@ -245,8 +253,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     }
   }
 
-  const issues = json(['issue', 'list', '-R', REPO, '--state', 'open', '--limit', '500', '--json', 'number,title,author,createdAt,comments,url']);
-  const prs = json(['pr', 'list', '-R', REPO, '--state', 'open', '--limit', '200', '--json', 'number,title,author,createdAt,comments,reviews,url,statusCheckRollup']);
+  const issues = json(['issue', 'list', '-R', REPO, '--state', 'open', '--limit', String(LIMITES_ABERTOS.issues), '--json', 'number,title,author,createdAt,comments,url']);
+  const prs = json(['pr', 'list', '-R', REPO, '--state', 'open', '--limit', String(LIMITES_ABERTOS.prs), '--json', 'number,title,author,createdAt,comments,reviews,url,statusCheckRollup']);
   // Os fechados nos últimos FECHADOS_DIAS dias (issues e PRs), para a 1ª resposta não perder quem já foi atendido.
   const desde = desdeDosFechados(agora);
   const issuesFechadas = json(['issue', 'list', '-R', REPO, '--state', 'closed', '--search', `closed:>=${desde}`, '--limit', String(FECHADOS_LIMITE), '--json', 'number,author,createdAt,comments']);
@@ -277,6 +285,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     excecoes = [];
   }
 
+  const dependeDoResponsavel = json(['issue', 'list', '-R', REPO, '--state', 'open', '--label', 'depende-do-responsavel', '--limit', String(LIMITES_ABERTOS.dependeDoResponsavel), '--json', 'number,title,createdAt,url']);
   const texto = relatorio({
     semDentro: dentro.size === 0,
     fechadosDesde: desde,
@@ -294,7 +303,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       json(['issue', 'list', '-R', REPO, '--state', 'open', '--label', 'good first issue', '--limit', String(ESTOQUE_LIMITE), '--json', 'number,title,url,assignees,comments,closedByPullRequestsReferences']),
       dentro,
     ),
-    dependeDoResponsavel: json(['issue', 'list', '-R', REPO, '--state', 'open', '--label', 'depende-do-responsavel', '--limit', '100', '--json', 'number,title,createdAt,url']),
+    dependeDoResponsavel,
+    abertosNoLimite: leiturasNoLimite({ issues: issues.length, prs: prs.length, dependeDoResponsavel: dependeDoResponsavel.length }),
     agora,
   });
   const pasta = new URL('../triagem/', import.meta.url);
