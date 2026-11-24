@@ -120,6 +120,17 @@ Antes de pôr os rótulos, confira se a issue tem:
 
 O rótulo é uma promessa: quem rotula acompanha o PR até o merge e responde em até 48 horas. Issue de entrada fica para quem vem de fora; quem mantém o repositório não a resolve. A meta é ter sempre 10 ou mais livres, ou seja, sem ninguém atribuído. Quando uma fecha, acrescente outra na lista do #311.
 
+### Prazo de quem pediu a issue
+
+Quem comenta "vou fazer" tem **7 dias** para abrir o PR, que pode ser um rascunho (*draft*). Assim, uma issue não fica presa por alguém que precisou parar.
+
+- **No 5º dia sem PR**, quem mantém pergunta na issue se a pessoa precisa de ajuda: "Oi! Como está indo? Se travou em algum passo, me conta aqui."
+- **No 8º dia sem PR**, a issue volta a ficar livre, com um comentário gentil: "Liberamos esta issue para outra pessoa. Se quiser retomar, é só comentar de novo. Obrigado por ter começado!"
+- Um PR ligado à issue, mesmo em rascunho, suspende o prazo.
+- Se a pessoa avisar que precisa de mais tempo, o prazo é renovado por mais 7 dias.
+
+O prazo existe para que mais gente consiga começar, e não para cobrar quem já está trabalhando.
+
 ## Contribuição externa
 
 Ao contribuir em outro projeto do GitHub, abra uma issue aqui com o modelo "Contribuição externa". Ela registra o link e o item do catálogo que você praticou. Siga sempre o `CONTRIBUTING.md` do outro projeto.
