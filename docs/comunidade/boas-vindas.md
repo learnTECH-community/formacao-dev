@@ -1,6 +1,6 @@
 # Post fixado de boas-vindas
 
-Texto para publicar na categoria **Boas-vindas** das Discussions e fixar no topo (passos 4 e 5 de [discussions.md](discussions.md)). Quem publica é quem administra o repositório, depois de revisar: o post sai em nome dessa pessoa. Copie a partir do título.
+Texto para publicar na categoria **Boas-vindas** das Discussions e fixar no topo (passos 6 e 7 de [discussions.md](discussions.md)). Quem publica é quem administra o repositório, depois de revisar: o post sai em nome dessa pessoa. Copie a partir do título.
 
 ---
 
@@ -34,5 +34,5 @@ Paciência com quem está começando, e nenhum dado pessoal de outras pessoas. V
 ## Antes de publicar, confira
 - [ ] O PR da sprint (#318) já está na `main`: os links do CONTRIBUTING e do código de conduta abrem.
 - [ ] A issue #311 continua fixada.
-- [ ] *Reported content* está ligado (passo 6 de [discussions.md](discussions.md)), porque o post cita o botão de denúncia.
+- [ ] *Reported content* está ligado (passo 8 de [discussions.md](discussions.md)), porque o post cita o botão de denúncia.
 - [ ] O número de itens e trilhas ainda é 161 e 12 (o [README](../../README.md) mostra o total).

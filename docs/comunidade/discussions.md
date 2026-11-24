@@ -30,14 +30,18 @@ Se, depois de renomear, o endereço de alguma categoria ficar diferente, o formu
 
 ## Passo a passo para quem administra
 
-Faça depois do merge do PR da sprint na `main` (#318), para que os links do post apontem para arquivos que já existem na `main`.
+Faça depois do merge do PR da sprint na `main` (#318), para que os links do post apontem para arquivos que já existem na `main`. Leva cerca de 15 minutos. Em cada passo, a coluna "O que aparece na tela" diz o que você deve ver. Se aparecer outra coisa, pare e tire um print: ele mostra onde o caminho mudou.
 
-1. **Conferir que as Discussions estão ligadas.** Em [Settings → General → Features](https://github.com/learnTECH-community/formacao-dev/settings), a caixa *Discussions* deve estar marcada. Hoje ela já está.
-2. **Editar as 4 categorias.** Abra [Discussions](https://github.com/learnTECH-community/formacao-dev/discussions), clique no lápis ao lado de *Categories* e, em cada linha da tabela acima, clique em *Edit*: troque o nome, o emoji, a descrição e confira o formato. Salve com *Save changes*.
-3. **Conferir os endereços.** Clique em cada categoria e compare o fim do endereço com a tabela dos formulários.
-4. **Publicar o post de boas-vindas.** Clique em *New discussion*, escolha **Boas-vindas** e cole o título e o texto de [boas-vindas.md](boas-vindas.md). Revise antes de publicar: o post sai em seu nome.
-5. **Fixar o post.** Dentro do post, na barra da direita, clique em *Pin discussion* e confirme. Ele passa a aparecer no topo da página de Discussions.
-6. **Ligar a denúncia de conteúdo.** Em [Settings → General → Moderation options](https://github.com/learnTECH-community/formacao-dev/settings), em *Reported content*, escolha que qualquer pessoa pode denunciar e que as denúncias vão para quem mantém o projeto. Assim, o caminho de denúncia do [código de conduta](../../CODE_OF_CONDUCT.md) passa a existir de verdade.
-7. **Avisar.** Comente na issue #320 "feito". A partir daí, a [triagem diária](triagem.md) passa a contar as conversas abertas.
+| # | Faça | O que aparece na tela (o print esperado) |
+|---|---|---|
+| 1 | **Conferir que as Discussions estão ligadas.** Abra [Settings](https://github.com/learnTECH-community/formacao-dev/settings) e desça até *Features*. | Na lista de recursos, a caixa *Discussions* está marcada, com o botão *Set up discussions* ou *Discussions* ao lado. Hoje ela já está ligada: só confira. |
+| 2 | **Abrir o editor de categorias.** Abra [Discussions](https://github.com/learnTECH-community/formacao-dev/discussions). Na coluna da esquerda, ao lado de *Categories*, clique no lápis. | A página *Manage discussion categories*, com 6 linhas: Announcements, General, Ideas, Polls, Q&A e Show and tell, cada uma com *Edit* e *Delete*. **Não clique em Delete.** |
+| 3 | **Editar as 4 categorias.** Em General, Q&A, Ideas e Show and tell, clique em *Edit* e preencha como na tabela "As 4 categorias" acima: o emoji, o nome, a descrição e o formato. Salve cada uma com *Save changes*. | O formulário *Edit category*, com o campo do emoji à esquerda do nome, a descrição abaixo e os formatos (*Open-ended discussion*, *Question / Answer*, *Announcement*, *Poll*) como opções. Depois de salvar, a lista mostra os nomes novos. |
+| 4 | **Conferir os endereços.** Volte a Discussions e clique em cada categoria nova. | O endereço termina em `/categories/boas-vindas`, `/duvidas`, `/ideias` e `/mostre-seu-projeto`. Se algum for diferente, anote e avise na #320: eu ajusto o nome do formulário. |
+| 5 | **Conferir um formulário.** Em Dúvidas, clique em *New discussion*. | Os campos "Em qual tarefa ou issue você está?", "O que você tentou?" e "O que aconteceu, e o que você esperava?", em vez de uma caixa de texto em branco. Feche sem publicar. |
+| 6 | **Publicar o post de boas-vindas.** Em Boas-vindas, clique em *New discussion* e cole o título e o texto de [boas-vindas.md](boas-vindas.md). Use a aba *Preview* para revisar antes de clicar em *Start discussion*. O post sai em seu nome. | No *Preview*: o título, 3 blocos com subtítulos (Por onde começar, Onde conversar, Nosso compromisso) e os links em azul. Depois de publicar, a página do post, com o seu nome e a categoria Boas-vindas. |
+| 7 | **Fixar o post.** Na página do post, na coluna da direita, clique em *Pin discussion* e depois em *Pin discussion* de novo na janela. | Na página inicial das Discussions, o post aparece num cartão no topo, acima da lista. |
+| 8 | **Ligar a denúncia de conteúdo.** Abra [Settings](https://github.com/learnTECH-community/formacao-dev/settings). Na coluna da esquerda, em *Access*, clique em *Moderation options* e depois em *Reported content*. Escolha a opção que aceita denúncias de todos e salve. | A página *Reported content*, com as opções de quem pode denunciar (todos, quem já contribuiu, ou só colaboradores e membros). Depois de salvar, aparece a confirmação no topo. A partir daí, o menu `...` de cada comentário mostra *Report content*. |
+| 9 | **Avisar.** Comente "feito" na issue #320, com um print dos passos 4 e 7. | A partir do dia seguinte, a [triagem diária](triagem.md) passa a contar as conversas abertas. |
 
-Nada aqui apaga dados. Se quiser desfazer, as categorias podem ser renomeadas de volta e o post pode ser desafixado.
+Nada aqui apaga dados. Para desfazer, renomeie as categorias de volta e desafixe o post.
