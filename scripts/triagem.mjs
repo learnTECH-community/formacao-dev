@@ -9,6 +9,7 @@ export const ALERTA_H = 36;
 export const PRAZO_H = 48;
 export const DEPENDABOT_DIAS = 2;
 export const EXCECAO_DIAS = 7;
+export const ESTOQUE_MIN = 10;
 
 const horasEntre = (desde, agora) => Math.floor((agora - new Date(desde)) / 36e5);
 const diasEntre = (desde, agora) => Math.floor((agora - new Date(desde)) / 864e5);
@@ -57,8 +58,18 @@ export function excecoesDoTrivy(texto, agora = new Date()) {
   }));
 }
 
+/**
+ * Estoque de issues de entrada (`good first issue`). Livre é a que não tem ninguém atribuído nem um
+ * comentário "vou fazer". A meta é ter ESTOQUE_MIN ou mais livres (CONTRIBUTING, "Issues de entrada").
+ */
+export function estoque(issues = []) {
+  const ocupada = (i) => (i.assignees ?? []).length > 0 || (i.comments ?? []).some((c) => /vou fazer/i.test(c.body ?? ''));
+  const ocupadas = issues.filter(ocupada);
+  return { total: issues.length, livres: issues.length - ocupadas.length, ocupadas };
+}
+
 /** Monta o relatório em Markdown. Função pura: recebe os dados já lidos. */
-export function relatorio({ hoje, hora, fora, dependabot, excecoes, dependeDoResponsavel, agora = new Date() }) {
+export function relatorio({ hoje, hora, fora, dependabot, excecoes, dependeDoResponsavel, entrada = null, agora = new Date() }) {
   const L = [`# Triagem do formacao-dev · ${hoje}`, '', `Gerado às ${hora}, só leitura.`, ''];
   const vermelhos = fora.filter((x) => x.sit.startsWith('🔴')).length;
   const laranjas = fora.filter((x) => x.sit.startsWith('🟠')).length;
@@ -67,7 +78,12 @@ export function relatorio({ hoje, hora, fora, dependabot, excecoes, dependeDoRes
   L.push(`| Sem resposta há ${ALERTA_H} h ou mais | ${vermelhos + laranjas} (${vermelhos} passaram das ${PRAZO_H} h) |`);
   L.push(`| PRs do Dependabot abertos | ${dependabot.length} |`);
   L.push(`| Dependabot com mais de ${DEPENDABOT_DIAS} dias | ${dependabot.filter((d) => diasEntre(d.createdAt, agora) > DEPENDABOT_DIAS).length} |`);
-  L.push(`| Exceções do Trivy vencendo em até ${EXCECAO_DIAS} dias | ${excecoes.filter((e) => e.faltam <= EXCECAO_DIAS).length} |`, '');
+  L.push(`| Exceções do Trivy vencendo em até ${EXCECAO_DIAS} dias | ${excecoes.filter((e) => e.faltam <= EXCECAO_DIAS).length} |`);
+  if (entrada) {
+    const repor = entrada.livres < ESTOQUE_MIN ? ' 🟠 repor' : '';
+    L.push(`| Issues de entrada livres (meta: ${ESTOQUE_MIN} ou mais) | ${entrada.livres} de ${entrada.total}${repor} |`);
+  }
+  L.push('');
 
   L.push('## a) Contribuições de fora', '');
   if (!fora.length) L.push('Nenhuma aberta.', '');
@@ -97,6 +113,11 @@ export function relatorio({ hoje, hora, fora, dependabot, excecoes, dependeDoRes
     for (const e of excecoes) L.push(`| ${e.id} | ${e.exp} | ${e.faltam} dia(s)${e.faltam <= EXCECAO_DIAS ? ' 🟠' : ''} |`);
     L.push('');
   } else L.push('Nenhuma exceção no `.trivyignore`.', '');
+  if (entrada?.ocupadas.length) {
+    L.push('Issues de entrada com alguém trabalhando:', '');
+    for (const i of entrada.ocupadas) L.push(`- [#${i.number}](${i.url}) ${i.title}`);
+    L.push('');
+  }
   L.push(`Issues \`depende-do-responsavel\` abertas: ${dependeDoResponsavel.length}`, '');
   for (const i of dependeDoResponsavel) L.push(`- [#${i.number}](${i.url}) ${i.title} (aberta há ${diasEntre(i.createdAt, agora)} d)`);
   return `${L.join('\n')}\n`;
@@ -149,6 +170,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     fora,
     dependabot: prs.filter((p) => ehBot(p.author?.login)),
     excecoes,
+    entrada: estoque(json(['issue', 'list', '-R', REPO, '--state', 'open', '--label', 'good first issue', '--limit', '200', '--json', 'number,title,url,assignees,comments'])),
     dependeDoResponsavel: json(['issue', 'list', '-R', REPO, '--state', 'open', '--label', 'depende-do-responsavel', '--limit', '100', '--json', 'number,title,createdAt,url']),
     agora,
   });
