@@ -10,6 +10,8 @@ permissions:
 jobs:
   catalogo:
     runs-on: ubuntu-latest
+    # #343: duração normal cerca de 20 s. Um travamento cai aqui, e não nas 6 h padrão.
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
@@ -24,6 +26,8 @@ jobs:
       - run: node scripts/segredos.mjs
   app:
     runs-on: ubuntu-latest
+    # #343: duração normal cerca de 20 s. Um travamento cai aqui, e não nas 6 h padrão.
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
@@ -38,6 +42,8 @@ jobs:
       - run: npm audit --omit=dev --audit-level=high
   cobertura:
     runs-on: ubuntu-latest
+    # #343: duração normal cerca de 20 s. Um travamento cai aqui, e não nas 6 h padrão.
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
@@ -54,6 +60,8 @@ jobs:
           retention-days: 14
   painel:
     runs-on: ubuntu-latest
+    # #343: duração normal 2 a 3 min; 15 dá folga ao playwright install (#343). Um travamento cai aqui, e não nas 6 h padrão.
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
@@ -77,6 +85,8 @@ jobs:
           retention-days: 14
   api:
     runs-on: ubuntu-latest
+    # #343: duração normal cerca de 45 s. Um travamento cai aqui, e não nas 6 h padrão.
+    timeout-minutes: 10
     # T6.12: MongoDB para a mesma bateria de testes do repositório.
     services:
       mongo:
@@ -125,6 +135,8 @@ jobs:
   # GitHub; na máquina de quem não tem Docker, este job é a prova.
   docker:
     runs-on: ubuntu-latest
+    # #343: duração normal cerca de 3 min; as esperas do compose somam até 7 min. Um travamento cai aqui, e não nas 6 h padrão.
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
       - name: Build da imagem em estágios
@@ -237,6 +249,8 @@ jobs:
   # T9.14: o compose de desenvolvimento sobe num comando e recarrega a API ao salvar.
   compose-dev:
     runs-on: ubuntu-latest
+    # #343: duração normal cerca de 1,5 min; as esperas do compose somam até 6 min. Um travamento cai aqui, e não nas 6 h padrão.
+    timeout-minutes: 15
     env:
       COMPOSE_FILE: compose.yaml:compose.dev.yaml
     steps:
