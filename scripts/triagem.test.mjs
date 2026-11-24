@@ -240,6 +240,9 @@ test('checklist item 17: as leituras dos abertos avisam quando batem no limite',
   assert.deepEqual(leiturasNoLimite({ issues: LIMITES_ABERTOS.issues, prs: 200, dependeDoResponsavel: 99 }), ['issues', 'prs']);
   assert.deepEqual(leiturasNoLimite({}), []);
   const base = { hoje: '2026-11-24', hora: '08:00:00', fora: [], dependabot: [], excecoes: [], dependeDoResponsavel: [], agora };
-  assert.match(relatorio({ ...base, abertosNoLimite: ['issues'] }), /a leitura de issues bateu no limite \(500\)/);
+  assert.match(relatorio({ ...base, abertosNoLimite: ['issues'] }), /a leitura de issues abertas \(500\) bateu no limite/);
+  assert.deepEqual(leiturasNoLimite({ dependeDoResponsavel: 100 }), ['dependeDoResponsavel']);
+  assert.match(relatorio({ ...base, abertosNoLimite: ['prs', 'dependeDoResponsavel'] }), /PRs abertos \(200\), depende-do-responsavel \(100\) bateu/);
   assert.doesNotMatch(relatorio(base), /bateu no limite/);
+  assert.match(relatorio(base), /Discussions: leitura limitada a 50 tópicos e 20 comentários por tópico, sem aviso ainda \(#333\)\./);
 });

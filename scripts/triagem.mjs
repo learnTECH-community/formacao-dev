@@ -14,6 +14,7 @@ export const FECHADOS_DIAS = 7;
 export const FECHADOS_LIMITE = 200;
 // Os limites das leituras dos abertos (checklist de autorrevisão, item 17: nada corta calado).
 export const LIMITES_ABERTOS = { issues: 500, prs: 200, dependeDoResponsavel: 100 };
+const NOMES_DAS_LEITURAS = { issues: 'issues abertas', prs: 'PRs abertos', dependeDoResponsavel: 'depende-do-responsavel' };
 
 /** Os nomes das leituras que bateram no limite: o relatório avisa que a conta pode estar incompleta. */
 export function leiturasNoLimite(lidos, limites = LIMITES_ABERTOS) {
@@ -168,7 +169,10 @@ export function desdeDosFechados(agora = new Date()) {
 export function relatorio({ hoje, hora, fora, dependabot, excecoes, dependeDoResponsavel, entrada = null, semDentro = false, fechadosDaSemana = null, fechadosDesde = null, fechadosNoLimite = false, abertosNoLimite = [], agora = new Date() }) {
   const L = [`# Triagem do formacao-dev · ${hoje}`, '', `Gerado às ${hora}, só leitura.`, ''];
   // R19 QA do #358, item 5: sem a lista de quem é de dentro, ninguém conta como resposta.
-  if (abertosNoLimite.length) L.push(`⚠️ Atenção: a leitura de ${abertosNoLimite.join(', ')} bateu no limite (${abertosNoLimite.map((k) => LIMITES_ABERTOS[k]).join(', ')}). A contagem pode estar incompleta.`, '');
+  if (abertosNoLimite.length) {
+    const quais = abertosNoLimite.map((k) => `${NOMES_DAS_LEITURAS[k] ?? k} (${LIMITES_ABERTOS[k]})`).join(', ');
+    L.push(`⚠️ Atenção: a leitura de ${quais} bateu no limite. A contagem pode estar incompleta.`, '');
+  }
   if (semDentro) L.push('⚠️ Atenção: não deu para ler os membros nem os colaboradores. Todos aparecem como de fora e nenhum comentário conta como resposta. Confira o login do `gh`.', '');
   const vermelhos = fora.filter((x) => x.sit.startsWith('🔴')).length;
   const laranjas = fora.filter((x) => x.sit.startsWith('🟠')).length;
@@ -199,6 +203,8 @@ export function relatorio({ hoje, hora, fora, dependabot, excecoes, dependeDoRes
   if (entrada?.noLimite) L.push(`Atenção: foram lidas só ${ESTOQUE_LIMITE} issues de entrada. A contagem pode estar incompleta.`, '');
 
   L.push('## a) Contribuições de fora', '');
+  // A exceção que ainda não avisa fica escrita (R19 QA do #361; a correção é a good first issue #333).
+  L.push('Discussions: leitura limitada a 50 tópicos e 20 comentários por tópico, sem aviso ainda (#333).', '');
   if (!fora.length) L.push('Nenhuma aberta.', '');
   else {
     L.push('| Tipo | # | Título | Autor | Situação |', '|---|---|---|---|---|');
