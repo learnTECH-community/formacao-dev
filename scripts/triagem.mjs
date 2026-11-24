@@ -11,6 +11,7 @@ export const DEPENDABOT_DIAS = 2;
 export const EXCECAO_DIAS = 7;
 export const ESTOQUE_MIN = 10;
 export const FECHADOS_DIAS = 7;
+export const FECHADOS_LIMITE = 200;
 
 const horasEntre = (desde, agora) => Math.floor((agora - new Date(desde)) / 36e5);
 const diasEntre = (desde, agora) => Math.floor((agora - new Date(desde)) / 864e5);
@@ -26,7 +27,9 @@ export const deFora = (login, dentro) => Boolean(login) && !ehBot(login) && !den
  */
 export function comoComentarios(pr) {
   const reviews = (pr.reviews ?? []).map((r) => ({ author: r.author, createdAt: r.submittedAt }));
-  return [...(pr.comments ?? []), ...reviews];
+  // Decisão do Líder (R19 QA do #359): o merge por alguém de dentro também é resposta, na hora do merge.
+  const merge = pr.mergedAt && pr.mergedBy ? [{ author: pr.mergedBy, createdAt: pr.mergedAt }] : [];
+  return [...(pr.comments ?? []), ...reviews, ...merge];
 }
 
 /** Situação de um item de fora: respondido por alguém de dentro, ou há quantas horas espera. */
@@ -146,8 +149,16 @@ export function estoque(issues = [], dentro = new Set()) {
   return { total: issues.length, livres: issues.length - ocupadas.length, ocupadas, noLimite: issues.length >= ESTOQUE_LIMITE };
 }
 
+/**
+ * Início da janela dos fechados: exatamente FECHADOS_DIAS antes de `agora`, com hora, em UTC
+ * (a data sem hora virava 00:00 UTC e a janela chegava a 8 dias; R19 QA do #359).
+ */
+export function desdeDosFechados(agora = new Date()) {
+  return new Date(agora.getTime() - FECHADOS_DIAS * 864e5).toISOString().replace(/\.\d{3}Z$/, 'Z');
+}
+
 /** Monta o relatório em Markdown. Função pura: recebe os dados já lidos. */
-export function relatorio({ hoje, hora, fora, dependabot, excecoes, dependeDoResponsavel, entrada = null, semDentro = false, fechadosDaSemana = null, agora = new Date() }) {
+export function relatorio({ hoje, hora, fora, dependabot, excecoes, dependeDoResponsavel, entrada = null, semDentro = false, fechadosDaSemana = null, fechadosDesde = null, fechadosNoLimite = false, agora = new Date() }) {
   const L = [`# Triagem do formacao-dev · ${hoje}`, '', `Gerado às ${hora}, só leitura.`, ''];
   // R19 QA do #358, item 5: sem a lista de quem é de dentro, ninguém conta como resposta.
   if (semDentro) L.push('⚠️ Atenção: não deu para ler os membros nem os colaboradores. Todos aparecem como de fora e nenhum comentário conta como resposta. Confira o login do `gh`.', '');
@@ -165,8 +176,9 @@ export function relatorio({ hoje, hora, fora, dependabot, excecoes, dependeDoRes
     const daSemana = resumoDaPrimeiraResposta(fechadosDaSemana.map((x) => x.horasAteResposta));
     const semResposta = fechadosDaSemana.filter((x) => x.horasAteResposta === null).length;
     L.push(
-      `| 1ª resposta nos fechados dos últimos ${FECHADOS_DIAS} dias | ${textoDaResposta(daSemana, 'nenhum respondido')}${semResposta ? `; ${semResposta} fechado(s) sem resposta` : ''} |`,
+      `| 1ª resposta nos fechados dos últimos ${FECHADOS_DIAS} dias${fechadosDesde ? ` (desde ${new Date(fechadosDesde).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })})` : ''} | ${textoDaResposta(daSemana, 'nenhum respondido')}${semResposta ? `; ${semResposta} fechado(s) sem resposta` : ''} |`,
     );
+    if (fechadosNoLimite) L.push(`| ⚠️ Fechados no limite | a leitura bateu em ${FECHADOS_LIMITE} issues ou PRs; a conta pode estar incompleta |`);
   }
   L.push(`| PRs do Dependabot abertos | ${dependabot.length} |`);
   L.push(`| Dependabot com mais de ${DEPENDABOT_DIAS} dias | ${dependabot.filter((d) => diasEntre(d.createdAt, agora) > DEPENDABOT_DIAS).length} |`);
@@ -236,9 +248,9 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const issues = json(['issue', 'list', '-R', REPO, '--state', 'open', '--limit', '500', '--json', 'number,title,author,createdAt,comments,url']);
   const prs = json(['pr', 'list', '-R', REPO, '--state', 'open', '--limit', '200', '--json', 'number,title,author,createdAt,comments,reviews,url,statusCheckRollup']);
   // Os fechados nos últimos FECHADOS_DIAS dias (issues e PRs), para a 1ª resposta não perder quem já foi atendido.
-  const desde = new Date(agora - FECHADOS_DIAS * 864e5).toISOString().slice(0, 10);
-  const issuesFechadas = json(['issue', 'list', '-R', REPO, '--state', 'closed', '--search', `closed:>=${desde}`, '--limit', '200', '--json', 'number,author,createdAt,comments']);
-  const prsFechados = json(['pr', 'list', '-R', REPO, '--state', 'closed', '--search', `closed:>=${desde}`, '--limit', '200', '--json', 'number,author,createdAt,comments,reviews']);
+  const desde = desdeDosFechados(agora);
+  const issuesFechadas = json(['issue', 'list', '-R', REPO, '--state', 'closed', '--search', `closed:>=${desde}`, '--limit', String(FECHADOS_LIMITE), '--json', 'number,author,createdAt,comments']);
+  const prsFechados = json(['pr', 'list', '-R', REPO, '--state', 'closed', '--search', `closed:>=${desde}`, '--limit', String(FECHADOS_LIMITE), '--json', 'number,author,createdAt,comments,reviews,mergedAt,mergedBy']);
   const [dono, nome] = REPO.split('/');
   const consulta = 'query($dono:String!,$nome:String!){repository(owner:$dono,name:$nome){discussions(first:50,orderBy:{field:CREATED_AT,direction:DESC},states:OPEN){nodes{number title url createdAt author{login} comments(first:20){nodes{author{login} createdAt}}}}}}';
   let discussoes = [];
@@ -267,6 +279,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 
   const texto = relatorio({
     semDentro: dentro.size === 0,
+    fechadosDesde: desde,
+    fechadosNoLimite: issuesFechadas.length >= FECHADOS_LIMITE || prsFechados.length >= FECHADOS_LIMITE,
     fechadosDaSemana: [
       ...issuesFechadas.filter((i) => deFora(i.author?.login, dentro)).map((i) => ({ horasAteResposta: horasAtePrimeiraResposta(i.createdAt, i.comments, dentro) })),
       ...prsFechados.filter((p) => deFora(p.author?.login, dentro)).map((p) => ({ horasAteResposta: horasAtePrimeiraResposta(p.createdAt, comoComentarios(p), dentro) })),
