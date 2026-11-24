@@ -3,6 +3,9 @@
 #
 # Segurança: pull_request_target para poder rotular PRs vindos de fork. Por isso NÃO faz checkout
 # nem roda código do PR: a action lê a configuração da branch base. Fixada por SHA (v7.0.0).
+# NUNCA ponha um actions/checkout do head antes do labeler: com o disco preenchido, a configuração
+# passaria a vir do PR (R19 SecOps do #342). Rótulo novo no labeler.yml precisa existir antes no
+# repositório, porque o job não tem issues: write para criá-lo.
 name: Rótulos
 on:
   pull_request_target:
