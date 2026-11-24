@@ -60,10 +60,10 @@ jobs:
           retention-days: 14
   painel:
     runs-on: ubuntu-latest
-    # #343: duração normal 2 a 3 min, mas o playwright install --with-deps às vezes demora:
-    # 29,2 e 29,7 min em 2 dos 30 últimos runs verdes (R19 DevOps do #350). 35 evita o falso
-    # vermelho; a meta de voltar a 15 está na issue do cache/imagem do Playwright.
-    timeout-minutes: 35
+    # #343: duração normal 2 a 3 min. O --with-deps às vezes cai num mirror apt lento e leva de
+    # 26 a 31,5 min (3 vezes em 31 runs; R19 DevOps do #350). 45 evita o falso vermelho. A #352
+    # tira a causa (imagem oficial do Playwright ou deps só do necessário) e volta este limite a 15.
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
