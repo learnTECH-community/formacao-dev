@@ -16,6 +16,8 @@ jobs:
   analise:
     name: codeql (${{ matrix.linguagem }})
     runs-on: ubuntu-latest
+    # #343: analise: 35 a 73 s por linguagem. Um travamento cai aqui, e não nas 6 h padrão.
+    timeout-minutes: 20
     permissions:
       contents: read
       # Para enviar o resultado para a aba Security.
