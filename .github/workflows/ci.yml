@@ -60,10 +60,17 @@ jobs:
           retention-days: 14
   painel:
     runs-on: ubuntu-latest
-    # #343: duração normal 2 a 3 min. O --with-deps às vezes cai num mirror apt lento e leva de
-    # 26 a 31,5 min (3 vezes em 31 runs; R19 DevOps do #350). 45 evita o falso vermelho. A #352
-    # tira a causa (imagem oficial do Playwright ou deps só do necessário) e volta este limite a 15.
-    timeout-minutes: 45
+    # #352: o job roda na imagem oficial do Playwright, que já traz os navegadores (chromium e
+    # webkit) e os pacotes do sistema. Sai o `playwright install --with-deps`, cujo apt às vezes
+    # caía num mirror lento (26 a 31,5 min). A versão da imagem é a mesma do @playwright/test do
+    # package-lock.json, fixada por digest; o passo "Imagem e pacote na mesma versão" confere isso.
+    container:
+      image: mcr.microsoft.com/playwright:v1.65.1-noble@sha256:1507cbfc550a63a6b7396791ca4f00df17beb56342d2447b3f106c306f525579
+      options: --user 1001
+    env:
+      PLAYWRIGHT_DA_IMAGEM: 1.65.1
+    # #343 e #352: duração normal de 2 a 3 min, agora sem o apt.
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
@@ -71,7 +78,10 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium webkit
+      - name: Imagem e pacote na mesma versão
+        # Se o Dependabot subir o @playwright/test, este passo falha e diz qual imagem pôr acima.
+        run: |
+          node -e "const v=require('@playwright/test/package.json').version; if (v !== process.env.PLAYWRIGHT_DA_IMAGEM) { console.error('O @playwright/test está na ' + v + ', mas a imagem do job painel é a ' + process.env.PLAYWRIGHT_DA_IMAGEM + '. Atualize o container (tag e digest) e PLAYWRIGHT_DA_IMAGEM no ci.yml (#352).'); process.exit(1); }"
       - run: npm run test:e2e
       - uses: actions/upload-artifact@v4
         if: always()
