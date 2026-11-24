@@ -1,7 +1,7 @@
 // #324: as regras da triagem diária (36 h de alerta, 48 h de prazo) e o relatório, sem chamar o GitHub.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { deFora, ehVersaoMaior, estadoDoCi, estoque, excecoesDoTrivy, recomendacao, relatorio, situacao } from './triagem.mjs';
+import { deFora, ehVersaoMaior, estadoDoCi, estoque, ESTOQUE_LIMITE, excecoesDoTrivy, pedeAIssue, recomendacao, relatorio, situacao } from './triagem.mjs';
 
 const agora = new Date('2026-11-23T12:00:00-03:00');
 const horasAtras = (h) => new Date(agora - h * 36e5).toISOString();
@@ -84,7 +84,7 @@ test('estoque: atribuída ou com "vou fazer" está ocupada; o texto da issue nã
   assert.equal(e.total, 4);
   assert.equal(e.livres, 2);
   assert.deepEqual(e.ocupadas.map((i) => i.number), [2, 3]);
-  assert.deepEqual(estoque(), { total: 0, livres: 0, ocupadas: [] });
+  assert.deepEqual(estoque(), { total: 0, livres: 0, ocupadas: [], noLimite: false });
 });
 
 test('relatório: estoque abaixo da meta pede reposição e lista quem está trabalhando', () => {
@@ -96,4 +96,42 @@ test('relatório: estoque abaixo da meta pede reposição e lista quem está tra
   assert.match(ok, /\| 21 de 21 \|/);
   assert.doesNotMatch(ok, /alguém trabalhando/);
   assert.doesNotMatch(relatorio(base), /Issues de entrada livres/, 'sem o campo, a linha não aparece');
+});
+
+test('pedido da issue: os formatos que ocupam (R19 do #338, achado 1)', () => {
+  for (const texto of ['vou  fazer', 'Vou\nfazer', 'vou pegar essa', 'quero fazer!', 'Posso fazer?', 'eu faço', 'Eu faco hoje', 'Deixa comigo', 'VOU FAZER']) {
+    assert.equal(pedeAIssue(texto), true, texto);
+  }
+});
+
+test('pedido da issue: o que não ocupa (achado 2)', () => {
+  for (const texto of ['não vou fazer agora', 'Nao quero pegar', 'vou fazer uma pergunta: pode usar Map?', 'Posso fazer uma dúvida?', 'renovou fazer', 'Posso usar o Map?', '', undefined]) {
+    assert.equal(pedeAIssue(texto), false, String(texto));
+  }
+});
+
+test('estoque: PR ligado ocupa; pedido de quem é de dentro não ocupa; campos nulos são livres', () => {
+  const dentro = new Set(['mantenedora']);
+  const e = estoque(
+    [
+      { number: 1, assignees: null, comments: null, closedByPullRequestsReferences: null },
+      { number: 2, assignees: [], comments: [], closedByPullRequestsReferences: [{ number: 40 }] },
+      { number: 3, assignees: [], comments: [{ author: { login: 'Mantenedora' }, body: 'vou fazer o merge' }] },
+      { number: 4, assignees: [], comments: [{ author: { login: 'visitante' }, body: 'Quero fazer!' }] },
+    ],
+    dentro,
+  );
+  assert.equal(e.livres, 2);
+  assert.deepEqual(e.ocupadas.map((i) => [i.number, i.motivo]), [[2, 'PR ligado'], [4, 'pediu para fazer']]);
+});
+
+test('relatório: a borda da meta (9 pede reposição, 10 não) e o aviso de limite', () => {
+  const base = { hoje: '2026-11-24', hora: '08:00:00', fora: [], dependabot: [], excecoes: [], dependeDoResponsavel: [], agora };
+  assert.match(relatorio({ ...base, entrada: { total: 12, livres: 9, ocupadas: [] } }), /\| 9 de 12 🟠 repor \|/);
+  const dez = relatorio({ ...base, entrada: { total: 12, livres: 10, ocupadas: [] } });
+  assert.match(dez, /\| 10 de 12 \|/);
+  assert.doesNotMatch(dez, /repor|Atenção: foram lidas/);
+  const muitas = Array.from({ length: ESTOQUE_LIMITE }, (_, n) => ({ number: n }));
+  assert.match(relatorio({ ...base, entrada: estoque(muitas) }), new RegExp(`Atenção: foram lidas só ${ESTOQUE_LIMITE} issues de entrada`));
+  assert.match(relatorio({ ...base, entrada: { total: 1, livres: 0, ocupadas: [{ number: 5, title: 'T', url: 'u', motivo: 'PR ligado' }] } }), /- \[#5\]\(u\) T \(PR ligado\)/);
 });

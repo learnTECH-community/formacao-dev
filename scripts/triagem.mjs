@@ -58,14 +58,35 @@ export function excecoesDoTrivy(texto, agora = new Date()) {
   }));
 }
 
+export const ESTOQUE_LIMITE = 200;
+
+// "vou fazer", "vou pegar", "quero fazer", "posso fazer?", "irei fazer", "eu faço", "deixa comigo",
+// com qualquer espaço ou quebra de linha entre as palavras (R19 do #338, achado 1).
+const PEDIDO = /(^|[^\p{L}])(?:(?:vou|quero|posso|irei)\s+(?:fazer|pegar)|eu\s+fa[cç]o|deixa\s+comigo)(?![\p{L}])/iu;
+// "não vou fazer", "nao quero pegar" (achado 2).
+const NEGADO = /(^|[^\p{L}])n[aã]o\s+(?:vou|quero|posso|irei)\s+(?:fazer|pegar)(?![\p{L}])/iu;
+// "vou fazer uma pergunta" (achado 2).
+const PERGUNTA = /(?:fazer|pegar)\s+(?:uma\s+)?(?:pergunta|d[uú]vida)/iu;
+
+/** O comentário pede a issue? Recusa o "não" antes do verbo e o "vou fazer uma pergunta". */
+export function pedeAIssue(texto = '') {
+  return PEDIDO.test(texto) && !NEGADO.test(texto) && !PERGUNTA.test(texto);
+}
+
 /**
- * Estoque de issues de entrada (`good first issue`). Livre é a que não tem ninguém atribuído nem um
- * comentário "vou fazer". A meta é ter ESTOQUE_MIN ou mais livres (CONTRIBUTING, "Issues de entrada").
+ * Estoque de issues de entrada (`good first issue`). Ocupada é a que tem alguém atribuído, um PR
+ * ligado (achado 3) ou um comentário de quem é de fora pedindo a issue (achados 1 e 2; o "vou fazer
+ * o merge" de quem mantém não conta). A meta é ter ESTOQUE_MIN ou mais livres.
  */
-export function estoque(issues = []) {
-  const ocupada = (i) => (i.assignees ?? []).length > 0 || (i.comments ?? []).some((c) => /vou fazer/i.test(c.body ?? ''));
-  const ocupadas = issues.filter(ocupada);
-  return { total: issues.length, livres: issues.length - ocupadas.length, ocupadas };
+export function estoque(issues = [], dentro = new Set()) {
+  const motivo = (i) => {
+    if ((i.assignees ?? []).length > 0) return 'atribuída';
+    if ((i.closedByPullRequestsReferences ?? []).length > 0) return 'PR ligado';
+    const pedido = (i.comments ?? []).some((c) => !dentro.has((c.author?.login ?? '').toLowerCase()) && pedeAIssue(c.body ?? ''));
+    return pedido ? 'pediu para fazer' : null;
+  };
+  const ocupadas = issues.map((i) => ({ ...i, motivo: motivo(i) })).filter((i) => i.motivo);
+  return { total: issues.length, livres: issues.length - ocupadas.length, ocupadas, noLimite: issues.length >= ESTOQUE_LIMITE };
 }
 
 /** Monta o relatório em Markdown. Função pura: recebe os dados já lidos. */
@@ -84,6 +105,7 @@ export function relatorio({ hoje, hora, fora, dependabot, excecoes, dependeDoRes
     L.push(`| Issues de entrada livres (meta: ${ESTOQUE_MIN} ou mais) | ${entrada.livres} de ${entrada.total}${repor} |`);
   }
   L.push('');
+  if (entrada?.noLimite) L.push(`Atenção: foram lidas só ${ESTOQUE_LIMITE} issues de entrada. A contagem pode estar incompleta.`, '');
 
   L.push('## a) Contribuições de fora', '');
   if (!fora.length) L.push('Nenhuma aberta.', '');
@@ -115,7 +137,7 @@ export function relatorio({ hoje, hora, fora, dependabot, excecoes, dependeDoRes
   } else L.push('Nenhuma exceção no `.trivyignore`.', '');
   if (entrada?.ocupadas.length) {
     L.push('Issues de entrada com alguém trabalhando:', '');
-    for (const i of entrada.ocupadas) L.push(`- [#${i.number}](${i.url}) ${i.title}`);
+    for (const i of entrada.ocupadas) L.push(`- [#${i.number}](${i.url}) ${i.title}${i.motivo ? ` (${i.motivo})` : ''}`);
     L.push('');
   }
   L.push(`Issues \`depende-do-responsavel\` abertas: ${dependeDoResponsavel.length}`, '');
@@ -170,7 +192,10 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     fora,
     dependabot: prs.filter((p) => ehBot(p.author?.login)),
     excecoes,
-    entrada: estoque(json(['issue', 'list', '-R', REPO, '--state', 'open', '--label', 'good first issue', '--limit', '200', '--json', 'number,title,url,assignees,comments'])),
+    entrada: estoque(
+      json(['issue', 'list', '-R', REPO, '--state', 'open', '--label', 'good first issue', '--limit', String(ESTOQUE_LIMITE), '--json', 'number,title,url,assignees,comments,closedByPullRequestsReferences']),
+      dentro,
+    ),
     dependeDoResponsavel: json(['issue', 'list', '-R', REPO, '--state', 'open', '--label', 'depende-do-responsavel', '--limit', '100', '--json', 'number,title,createdAt,url']),
     agora,
   });
