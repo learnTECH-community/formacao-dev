@@ -1,7 +1,7 @@
 // Página inicial: trilhas com o progresso, itens com filtro e como participar.
 // T4.2: o filtro vive no endereço (?trilha=T2&situacao=feitos).
-import { useCallback, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useLocation, useNavigate, useSearchParams } from 'react-router';
 import { CartaoTrilha } from '../componentes/CartaoTrilha';
 import { Fixados } from '../componentes/Fixados';
 import { Filtros } from '../componentes/Filtros';
@@ -10,7 +10,13 @@ import { ComoParticipar } from '../componentes/Moldura';
 import { Ranking } from '../componentes/Ranking';
 import { useAcoesDePreferencias, useFixados } from '../estado/usePreferencias';
 import { filtrarItens, textoDaContagem } from '../filtro';
-import { escreverFiltro, lerFiltro, type FiltroEscolhido } from '../filtroNoEndereco';
+import {
+  escreverFiltro,
+  lerFiltro,
+  textoDaTrilhaInexistente,
+  trilhaInexistente,
+  type FiltroEscolhido,
+} from '../filtroNoEndereco';
 import type { PropsDePagina } from '../rotas';
 import type { Trilha } from '../tipos';
 import { useFocoNoTitulo, useTituloDaAba } from '../useFocoNoTitulo';
@@ -47,8 +53,25 @@ export function Inicio({ catalogo, pedidoDeFoco }: PropsDePagina) {
     setFiltro(lido());
   }
 
+  // #348: trilha pedida que não existe (?trilha=T99). O filtro já caiu em "todas" no lerFiltro;
+  // aqui a página avisa e limpa o endereço, para o link copiado não levar o erro adiante.
+  // O aviso fica guardado até a pessoa mexer no filtro, porque o endereço limpo não tem mais o código.
+  const inexistente = pronto ? trilhaInexistente(parametros, codigos.split(' ')) : null;
+  const [avisoDeTrilha, setAvisoDeTrilha] = useState<string | null>(null);
+  if (inexistente && avisoDeTrilha !== inexistente) setAvisoDeTrilha(inexistente);
+  const { pathname, hash } = useLocation();
+  const navegar = useNavigate();
+  useEffect(() => {
+    if (!inexistente) return;
+    // replace: corrigir o endereço não cria uma entrada nova no histórico. O setSearchParams
+    // descartaria a âncora (#itens), então o endereço é montado aqui com ela (R19 UX/UI do #349).
+    const busca = escreverFiltro(lerFiltro(parametros, codigos.split(' '))).toString();
+    navegar({ pathname, search: busca ? `?${busca}` : '', hash }, { replace: true });
+  }, [inexistente, parametros, codigos, pathname, hash, navegar]);
+
   // Cada mudança vira uma entrada no histórico, para Voltar e Avançar restaurarem o filtro.
   const aoMudar = (novo: FiltroEscolhido) => {
+    setAvisoDeTrilha(null);
     setFiltro(novo);
     setParametros(escreverFiltro(novo));
   };
@@ -81,6 +104,7 @@ export function Inicio({ catalogo, pedidoDeFoco }: PropsDePagina) {
         <h2 id="titulo-itens">Itens</h2>
         <Filtros trilhas={trilhas} filtro={filtro} ligado={pronto} aoMudar={aoMudar} />
         <p className="contagem" id="contagem" aria-live="polite">
+          {pronto && avisoDeTrilha ? `${textoDaTrilhaInexistente(avisoDeTrilha)} ` : ''}
           {pronto ? textoDaContagem(mostrados, total) : ''}
         </p>
         <div id="lista-itens">
