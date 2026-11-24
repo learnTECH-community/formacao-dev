@@ -75,8 +75,10 @@ jobs:
   publicar:
     needs: build
     runs-on: ubuntu-latest
-    # #343: publicar: ainda não rodou; o deploy do Pages costuma levar 1 a 2 min. Um travamento cai aqui, e não nas 6 h padrão.
-    timeout-minutes: 10
+    # #343: publicar: ainda não rodou; o deploy do Pages costuma levar 1 a 2 min. O
+    # actions/deploy-pages já corta sozinho em 10 min (entrada timeout), com a mensagem de erro
+    # dele; o job fica em 15 para essa mensagem aparecer, e não um corte seco (R19 DevOps do #356).
+    timeout-minutes: 15
     permissions:
       pages: write
       id-token: write
