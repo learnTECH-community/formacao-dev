@@ -1,7 +1,8 @@
 // T9.8: a checagem de disponibilidade, com um fetch simulado (nenhum endereço real).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
+import { createServer } from 'node:http';
 import { fileURLToPath } from 'node:url';
 import { conferir, enderecosValidos, separarEnderecos, tabela } from './disponibilidade.mjs';
 
@@ -46,7 +47,7 @@ test('a tabela mostra só situação, endereço, status e tempo', () => {
     ],
     new Date('2026-11-10T12:00:00Z'),
   );
-  assert.match(texto, /^### Disponibilidade em 10\/11\/2026,? 09:00:00 \(Brasília\)/);
+  assert.match(texto, /^### Disponibilidade em 10\/11\/2026,? 09:00:00 GMT-3 \(Brasília\)/);
   assert.match(texto, /\| ok \| https:\/\/painel\.exemplo\/ \| 200 \| 120 ms \|/);
   assert.match(texto, /\| FALHA \| https:\/\/api\.exemplo\/v1\/health \| 503 \| 80 ms \|/);
 });
@@ -73,4 +74,23 @@ test('script: sem endereço sai com 0; só endereço inválido sai com 1 e não 
   assert.equal(errado.status, 1);
   assert.match(errado.stderr, /2 endereço\(s\) descartado\(s\): não é http\(s\)/);
   assert.doesNotMatch(errado.stderr + errado.stdout, /painel\.exemplo|ftp:/, 'o texto descartado não vai para o log');
+});
+
+test('script: um endereço no ar e um descartado saem com 1, e a tabela ainda mostra o que está no ar (R19 QA do #365)', async () => {
+  const servidor = createServer((_, res) => res.end('ok')).listen(0, '127.0.0.1');
+  await new Promise((r) => servidor.once('listening', r));
+  const url = `http://127.0.0.1:${servidor.address().port}/`;
+  try {
+    const filho = spawn(process.execPath, [SCRIPT, url, 'sem http'], { stdio: ['ignore', 'pipe', 'pipe'] });
+    let saida = '';
+    let erro = '';
+    filho.stdout.on('data', (d) => (saida += d));
+    filho.stderr.on('data', (d) => (erro += d));
+    const status = await new Promise((r) => filho.on('close', r));
+    assert.equal(status, 1);
+    assert.match(saida, /\| ok \| http:\/\/127\.0\.0\.1:\d+\/ \| 200 \|/);
+    assert.match(erro, /1 endereço\(s\) descartado\(s\)/);
+  } finally {
+    servidor.close();
+  }
 });
