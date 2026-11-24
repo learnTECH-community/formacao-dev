@@ -51,18 +51,32 @@ export function conferirGitignore(texto) {
   return texto.split(/\r?\n/).some((l) => /^\/?\.env(\*|\.\*)?$/.test(l.trim())) ? [] : ['.gitignore: falta ignorar o .env'];
 }
 
+/**
+ * Lê um arquivo versionado para a varredura. Só o arquivo apagado na cópia de trabalho (ENOENT) é
+ * pulado; qualquer outro erro de leitura vira achado, para a varredura falhar fechada e não passar
+ * calada por um arquivo que ela não leu (checklist de autorrevisão, item 4).
+ */
+export function lerParaConferir(caminho, ler) {
+  try {
+    return { texto: ler(caminho) };
+  } catch (erro) {
+    if (erro?.code === 'ENOENT') return { pular: true };
+    return { achado: `${caminho}: não deu para ler (${erro?.code ?? erro?.message ?? 'erro'}); confira à mão` };
+  }
+}
+
 export function conferirRepositorio(raiz = process.cwd()) {
   const arquivos = execFileSync('git', ['ls-files', '-z'], { cwd: raiz, encoding: 'utf8' }).split('\0').filter(Boolean);
   const achados = conferirGitignore(readFileSync(`${raiz}/.gitignore`, 'utf8'));
   for (const caminho of arquivos) {
     if (IGNORAR.test(caminho)) continue;
-    let texto;
-    try {
-      texto = readFileSync(`${raiz}/${caminho}`, 'utf8');
-    } catch {
-      continue; // apagado na cópia de trabalho
+    const lido = lerParaConferir(caminho, (c) => readFileSync(`${raiz}/${c}`, 'utf8'));
+    if (lido.pular) continue; // apagado na cópia de trabalho
+    if (lido.achado) {
+      achados.push(lido.achado);
+      continue;
     }
-    achados.push(...conferirArquivo(caminho, texto));
+    achados.push(...conferirArquivo(caminho, lido.texto));
   }
   return { arquivos: arquivos.length, achados };
 }

@@ -2,7 +2,7 @@
 // Os exemplos são montados por partes, para este arquivo não parecer um segredo.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { conferirArquivo, conferirGitignore, conferirRepositorio } from './segredos.mjs';
+import { conferirArquivo, conferirGitignore, conferirRepositorio, lerParaConferir } from './segredos.mjs';
 
 const FALSOS = {
   'token do GitHub': 'const t = "' + 'ghp' + '_' + 'a'.repeat(36) + '";',
@@ -48,4 +48,14 @@ test('o repositório não tem segredo versionado', () => {
   const { arquivos, achados } = conferirRepositorio();
   assert.ok(arquivos > 100);
   assert.deepEqual(achados, []);
+});
+
+test('a varredura falha fechada: só o arquivo apagado é pulado; outro erro de leitura vira achado', () => {
+  const erro = (code) => () => {
+    throw Object.assign(new Error(code), { code });
+  };
+  assert.deepEqual(lerParaConferir('a.txt', () => 'conteúdo'), { texto: 'conteúdo' });
+  assert.deepEqual(lerParaConferir('apagado.txt', erro('ENOENT')), { pular: true });
+  assert.deepEqual(lerParaConferir('travado.txt', erro('EACCES')), { achado: 'travado.txt: não deu para ler (EACCES); confira à mão' });
+  assert.match(lerParaConferir('x', () => { throw new Error('sem código'); }).achado, /x: não deu para ler \(sem código\)/);
 });
