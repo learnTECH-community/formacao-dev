@@ -64,14 +64,15 @@ export const ESTOQUE_LIMITE = 200;
 // "eu faço", "deixa comigo" e "deixar comigo", com qualquer espaço ou quebra de linha entre as
 // palavras (R19 do #338, achado 1; R19 do #340, item 4).
 const PEDIDO = /(^|[^\p{L}])((?:vou|quero|posso|irei)\s+(?:fazer|pegar|faz[eê]-la|peg[aá]-la)|eu\s+fa[cç]o|deixar?\s+comigo)(?![\p{L}])/giu;
-// Logo antes do pedido: "não", "nao," (R19 do #340, item 1: o veto vale para aquela ocorrência).
-const NEGADO_ANTES = /n[aã]o[\s,]*$/iu;
-// Logo depois do pedido: "uma pergunta", "uma dúvida", "uma sugestão", "um comentário", "o curso",
-// "outra coisa" e "parte" (como em "eu faço parte").
-const VETO_DEPOIS = /^\s+(?:(?:uma?|o|a)\s+)?(?:pergunta|d[uú]vida|sugest[aã]o|coment[aá]rio|curso|outra\s+coisa|parte)(?![\p{L}])/iu;
-// "eu faço" só pede a issue no fim da frase, sozinho ou com "essa", "esta", "isso" ou "ela"
-// (e "essa issue", "esta tarefa"). "Eu faço isso no trabalho" não pede (item 3).
-const EU_FACO_OK = /^\s*(?:(?:essa|esta|isso|ela)(?:\s+(?:issue|tarefa))?\s*)?(?:$|[.!?,;)])/iu;
+// Logo antes do pedido: "não" negando o verbo (R19 do #340, item 1: o veto vale para aquela
+// ocorrência). Sem vírgula: "Não, vou fazer sim!" é resposta, e pede a issue (reconferência, item 2).
+const NEGADO_ANTES = /n[aã]o\s+$/iu;
+// Logo depois do pedido: "uma pergunta", "uma dúvida", "uma sugestão", "um comentário", "o curso"
+// e "outra coisa". O "parte" fica só no ramo do "eu faço" (reconferência, item 3).
+const VETO_DEPOIS = /^\s+(?:(?:uma?|o|a)\s+)?(?:pergunta|d[uú]vida|sugest[aã]o|coment[aá]rio|curso|outra\s+coisa)(?![\p{L}])/iu;
+// "eu faço" pede a issue no fim da frase, com "sim", com "essa"/"esta" (e o que vier depois, como
+// "essa amanhã") ou com "isso"/"ela" no fim. "Eu faço parte" e "eu faço isso no trabalho" não pedem.
+const EU_FACO_OK = /^\s*(?:$|[.!?,;)]|sim(?![\p{L}])|(?:essa|esta)(?![\p{L}])|(?:isso|ela)\s*(?:$|[.!?,;)]))/iu;
 
 /**
  * O comentário pede a issue? Procura cada pedido e descarta só aquele que tem "não" logo antes ou

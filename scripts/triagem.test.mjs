@@ -150,3 +150,12 @@ test('pedido da issue: citações, "eu faço" solto e as formas novas (itens 2 a
     assert.equal(pedeAIssue(texto), true, texto);
   }
 });
+
+test('pedido da issue: reconferência do #340 (vírgula do "Não," e "parte" só no "eu faço")', () => {
+  for (const texto of ['Não, vou fazer sim!', 'Vou pegar a parte do backend', 'Vou fazer a parte 1 desta issue', 'eu faço sim', 'Eu faço essa amanhã']) {
+    assert.equal(pedeAIssue(texto), true, texto);
+  }
+  for (const texto of ['nao, vou fazer outra coisa', 'nao, vou fazer a pergunta', 'Eu faço parte do grupo', 'eu faço isso no trabalho', 'não vou fazer agora']) {
+    assert.equal(pedeAIssue(texto), false, texto);
+  }
+});
