@@ -43,6 +43,17 @@ Ao estudar um tópico da trilha no roadmap.sh, na ordem do site, proponha um ite
 - Descrição: o que mudou, como testar, a evidência (saída do teste, print) e `Closes #N`.
 - O item marcado com `[x]` no `CATALOGO.md` e a linha "Progresso" atualizada (`node scripts/catalogo.mjs --atualizar`).
 - CI verde antes de pedir revisão.
+- A seção "Pronto com UX, UI e QA" do modelo de PR preenchida (veja abaixo).
+
+### Pronto com UX, UI e QA
+
+O modelo de PR traz um checklist em 3 grupos. Ele não repete o que o CI já confere sozinho: pede o que só quem fez a mudança sabe.
+
+- **UX:** quem usa consegue fazer a tarefa em até 3 passos, entende o texto na primeira leitura e não fica sem saída num erro ou numa lista vazia. São as heurísticas de Nielsen de visibilidade do estado do sistema e de prevenção e recuperação de erros.
+- **UI:** o painel tem tokens e dois temas. Os prints em 360, 768 e 1440 px mostram que nada quebra no celular nem no monitor grande. Contraste AA, foco visível e alvos de 44 px ou mais deixam o painel usável com o teclado e com o dedo.
+- **QA:** os testes e o axe (que roda dentro do `npm run test:e2e`) pegam o que quebrou. O `npm run lcp` e o `npm run orcamento` pegam o que ficou lento ou pesado.
+
+Num PR sem tela (só script ou documento), os itens de UI ficam como "não se aplica".
 
 ## O que o CI confere
 
