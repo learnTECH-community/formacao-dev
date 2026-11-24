@@ -183,3 +183,50 @@ test('#364: no script de verdade, cada segredo falso sai com 1 e o log mostra s�
     assert.ok(!r.stderr.includes(valor), `o valor ${valor.slice(0, 4)}… não aparece no log`);
   }
 });
+
+// R19 QA do #366, item 1 (severidade 3): os limites de tamanho, com o exato e ±1.
+test('#366: limites de tamanho dos padrões, no exato e em ±1', () => {
+  const acha = (linha) => conferirArquivo('a.txt', linha).length > 0;
+  const casos = [
+    ['AI' + 'za' + 'x'.repeat(34), false], ['AI' + 'za' + 'x'.repeat(35), true], ['AI' + 'za' + 'x'.repeat(36), false],
+    ['npm' + '_' + 'y'.repeat(35), false], ['npm' + '_' + 'y'.repeat(36), true], ['npm' + '_' + 'y'.repeat(37), false],
+    ['sk' + '-' + 'z'.repeat(31), false], ['sk' + '-' + 'z'.repeat(32), true],
+    ['AKIA' + 'A'.repeat(15), false], ['AKIA' + 'A'.repeat(16), true], ['AKIA' + 'A'.repeat(17), false],
+  ];
+  for (const [linha, esperado] of casos) assert.equal(acha(linha), esperado, `${linha.slice(0, 5)}… com ${linha.length} caracteres`);
+  // Item 6: "key_AIza..." também conta, porque o _ antes do AIza não impede.
+  assert.equal(acha('key_' + 'AI' + 'za' + 'x'.repeat(35)), true);
+});
+
+// Itens 2, 3 e 5 do QA e critérios 2 e 3 da #364 (SecOps).
+test('#366: chaves públicas e placeholders passam; rediss, amqp e os Discord alternativos são achados', () => {
+  const negativos = [
+    '-----BEGIN ' + 'PUBLIC KEY-----',
+    '-----BEGIN ' + 'PGP PUBLIC KEY BLOCK-----',
+    'https://' + 'hooks.slack.com/services/' + 'XXX/YYY/ZZZ',
+    'https://' + 'discord.com/api/webhooks/' + '123/abc',
+  ];
+  assert.deepEqual(conferirArquivo('docs/exemplo.md', negativos.join('\n')), []);
+  for (const [linha, tipo] of [
+    ['REDIS_URL=rediss://' + 'usuario:senha-ficticia' + '@cache.exemplo:6380', 'URL de banco com senha'],
+    ['amqps://' + 'usuario:senha-ficticia' + '@fila.exemplo/vhost', 'URL de banco com senha'],
+    ['https://' + 'discordapp.com/api/webhooks/' + '123456789/' + 'k'.repeat(30), 'webhook do Discord'],
+    ['https://' + 'canary.discord.com/api/webhooks/' + '123456789/' + 'k'.repeat(30), 'webhook do Discord'],
+  ]) {
+    assert.deepEqual(conferirArquivo('a.txt', linha), [`a.txt:1: parece ${tipo}`], linha.slice(0, 20));
+  }
+});
+
+test('#366: arquivos de chave versionados são achados pelo nome; .pub e outros passam', () => {
+  for (const caminho of ['deploy/servidor.pem', 'certs/site.key', 'home/.ssh/id_rsa', 'id_ed25519', '.npmrc', 'cert.P12']) {
+    assert.match(conferirArquivo(caminho, '').join(), /arquivo de chave ou credencial versionado/, caminho);
+  }
+  for (const caminho of ['id_rsa.pub', 'docs/keyboard.md', 'chaves.md', 'monkey.txt']) {
+    assert.deepEqual(conferirArquivo(caminho, ''), [], caminho);
+  }
+});
+
+test('#366: formatos zip do Office e do Java também são "confira à mão"', () => {
+  const raiz = repositorio({ 'docs/plano.DOCX': 'PK falso', 'lib/app.jar': 'PK falso' });
+  assert.equal(conferirRepositorio(raiz).ilegiveis.length, 2);
+});

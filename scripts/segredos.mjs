@@ -18,14 +18,18 @@ export const PADROES = [
   { nome: 'chave de acesso da AWS', re: /\b(?:AKIA|ASIA)[0-9A-Z]{16}\b/ },
   // Inclui a encriptada (PKCS#8) e a PGP (#364).
   { nome: 'chave privada', re: /-----BEGIN (?:RSA |EC |OPENSSH |DSA |ENCRYPTED |PGP )?PRIVATE KEY(?: BLOCK)?-----/ },
-  { nome: 'chave do Google', re: /\bAIza[0-9A-Za-z_-]{35}(?![0-9A-Za-z_-])/ },
+  // Sem \b no início: "key_AIza..." também conta (R19 QA do #366, item 6).
+  { nome: 'chave do Google', re: /(?<![0-9A-Za-z-])AIza[0-9A-Za-z_-]{35}(?![0-9A-Za-z_-])/ },
   { nome: 'token do npm', re: /\bnpm_[A-Za-z0-9]{36}\b/ },
   // Chaves de LLM (Anthropic, OpenAI): com tamanho mínimo, para "sk-" curto em texto não contar.
   { nome: 'chave de LLM', re: /\bsk-(?:ant-|proj-)?[A-Za-z0-9_-]{32,}/ },
-  { nome: 'webhook do Discord', re: /https:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com\/api\/webhooks\/\d+\/[A-Za-z0-9_-]+/ },
-  { nome: 'webhook do Slack', re: /https:\/\/hooks\.slack\.com\/services\/[A-Za-z0-9/]+/ },
+  // Webhooks no formato real, com tamanho mínimo no token: um exemplo de documentação com
+  // placeholder (XXX/YYY/ZZZ) não conta (R19 QA do #366, item 3). Sem o esquema no início, para a
+  // regex ser de detecção em texto, e não de validação de URL (alerta do CodeQL, R19 SecOps do #366).
+  { nome: 'webhook do Discord', re: /\b(?:ptb\.|canary\.)?discord(?:app)?\.com\/api\/webhooks\/\d{5,}\/[A-Za-z0-9_-]{20,}/ },
+  { nome: 'webhook do Slack', re: /\bhooks\.slack\.com\/services\/T[A-Z0-9]+\/B[A-Z0-9]+\/[A-Za-z0-9]{20,}/ },
   // Usuário e senha de exemplo entre <> (como <usuario>:<senha>) não contam: são só o formato.
-  { nome: 'URL de banco com senha', re: /\b(?:mongodb(?:\+srv)?|postgres(?:ql)?|mysql|redis):\/\/[^\s:/@'"<>]+:[^\s@'"<>]+@/ },
+  { nome: 'URL de banco com senha', re: /\b(?:mongodb(?:\+srv)?|postgres(?:ql)?|mysql|rediss?|amqps?):\/\/[^\s:/@'"<>]+:[^\s@'"<>]+@/ },
   { nome: 'chave de API live', re: /\b(?:sk|rk)_live_[A-Za-z0-9]{16,}\b/ },
   { nome: 'token do Slack', re: /\bxox[abposr]-[A-Za-z0-9-]{10,}\b/ },
 ];
@@ -34,15 +38,23 @@ export const PADROES = [
 const NOME_DE_SEGREDO = /(SECRET|SEGREDO|TOKEN|SENHA|PASSWORD|CHAVE|KEY|MONGO_URL)/i;
 
 /** Arquivos que não se leem: imagens, fontes e o lock (só hashes de pacotes). */
-const IGNORAR = /\.(png|jpe?g|gif|webp|ico|woff2?)$|(^|\/)package-lock\.json$/;
+const IGNORAR = /\.(png|jpe?g|gif|webp|ico|woff2?)$|(^|\/)package-lock\.json$/i;
 
-/** Arquivos que podem levar um segredo dentro e que a varredura não abre: viram achado (#364). */
-const FECHADOS = /\.(zip|pdf|7z|rar|tar|tgz|gz)$/i;
+/**
+ * Arquivos que podem levar um segredo dentro e que a varredura não abre: viram achado (#364).
+ * Inclui os formatos zip do Office e do Java (R19 QA e SecOps do #366).
+ */
+const FECHADOS = /\.(zip|pdf|7z|rar|tar|tgz|gz|docx|xlsx|pptx|odt|jar|war)$/i;
 
-/** Confere só o nome do arquivo versionado: nenhum .env, fora o .env.example. */
+/** Nomes de arquivo de chave ou credencial que não entram no Git (critério 3 da #364). */
+const NOME_DE_CHAVE = /^(?:id_rsa|id_dsa|id_ecdsa|id_ed25519|\.npmrc|\.pypirc|.+\.pem|.+\.key|.+\.p12|.+\.pfx)$/i;
+
+/** Confere só o nome do arquivo versionado: nenhum .env (fora o .env.example) e nenhum arquivo de chave. */
 export function conferirNome(caminho) {
   const nome = caminho.split('/').at(-1);
-  return /^\.env(\..+)?$/.test(nome) && nome !== '.env.example' ? [`${caminho}: arquivo .env versionado; só o .env.example entra no Git`] : [];
+  if (/^\.env(\..+)?$/.test(nome) && nome !== '.env.example') return [`${caminho}: arquivo .env versionado; só o .env.example entra no Git`];
+  if (NOME_DE_CHAVE.test(nome)) return [`${caminho}: arquivo de chave ou credencial versionado (${nome}); tire do Git e revogue se for real`];
+  return [];
 }
 
 /** Confere o conteúdo de um arquivo. Devolve a lista de achados ("arquivo:linha: motivo"). */
