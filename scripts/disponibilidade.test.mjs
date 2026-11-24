@@ -1,7 +1,9 @@
 // T9.8: a checagem de disponibilidade, com um fetch simulado (nenhum endereço real).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { conferir, enderecosValidos, tabela } from './disponibilidade.mjs';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import { conferir, enderecosValidos, separarEnderecos, tabela } from './disponibilidade.mjs';
 
 const relogio = () => {
   let t = 0;
@@ -44,11 +46,31 @@ test('a tabela mostra só situação, endereço, status e tempo', () => {
     ],
     new Date('2026-11-10T12:00:00Z'),
   );
-  assert.match(texto, /^### Disponibilidade em 2026-11-10T12:00:00\.000Z/);
+  assert.match(texto, /^### Disponibilidade em 10\/11\/2026,? 09:00:00 \(Brasília\)/);
   assert.match(texto, /\| ok \| https:\/\/painel\.exemplo\/ \| 200 \| 120 ms \|/);
   assert.match(texto, /\| FALHA \| https:\/\/api\.exemplo\/v1\/health \| 503 \| 80 ms \|/);
 });
 
 test('só endereços http e https entram', () => {
   assert.deepEqual(enderecosValidos(['https://a.exemplo/', '', 'nada', 'ftp://b.exemplo/', 'http://c.exemplo/x']), ['https://a.exemplo/', 'http://c.exemplo/x']);
+});
+
+test('separarEnderecos: conta os descartados e ignora o texto vazio', () => {
+  assert.deepEqual(separarEnderecos(['https://a.exemplo/', '', '  ', 'nada', 'ftp://b.exemplo/']), { validos: ['https://a.exemplo/'], descartados: 2 });
+  assert.deepEqual(separarEnderecos([]), { validos: [], descartados: 0 });
+});
+
+// O script de verdade (checklist de autorrevisão, item 2), sem rede: só os casos sem endereço válido.
+const SCRIPT = fileURLToPath(new URL('./disponibilidade.mjs', import.meta.url));
+const rodar = (...args) => spawnSync(process.execPath, [SCRIPT, ...args], { encoding: 'utf8' });
+
+test('script: sem endereço sai com 0; só endereço inválido sai com 1 e não mostra o texto', () => {
+  const nada = rodar();
+  assert.equal(nada.status, 0);
+  assert.match(nada.stdout, /Nenhum endereço publicado/);
+  assert.equal(rodar('', '').status, 0, 'variáveis vazias: nada publicado ainda');
+  const errado = rodar('painel.exemplo sem http', 'ftp://x.exemplo/');
+  assert.equal(errado.status, 1);
+  assert.match(errado.stderr, /2 endereço\(s\) descartado\(s\): não é http\(s\)/);
+  assert.doesNotMatch(errado.stderr + errado.stdout, /painel\.exemplo|ftp:/, 'o texto descartado não vai para o log');
 });

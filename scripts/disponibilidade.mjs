@@ -2,7 +2,9 @@
 // .github/workflows/disponibilidade.yml. Mostra só o endereço, o status e o tempo:
 // nenhum cabeçalho, corpo ou segredo vai para o log.
 // Uso: node scripts/disponibilidade.mjs <endereço> [<endereço> ...]
-//   sai com 1 se algum endereço não responder 2xx dentro do tempo limite.
+//   sai com 1 se algum endereço não responder 2xx dentro do tempo limite, ou se vierem endereços
+//   e nenhum for http(s) (configuração errada não passa calada; checklist de autorrevisão, item 4).
+//   Sem nenhum endereço, sai com 0: nada publicado ainda.
 import { appendFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
@@ -22,7 +24,14 @@ export async function conferir(url, { buscar = fetch, tempoLimite = 10_000, agor
 /** Tabela em Markdown, para o resumo do run (o histórico fica nas execuções). */
 export function tabela(resultados, hora = new Date()) {
   const linhas = resultados.map((r) => `| ${r.ok ? 'ok' : 'FALHA'} | ${r.url} | ${r.status} | ${r.ms} ms |`);
-  return [`### Disponibilidade em ${hora.toISOString()}`, '', '| Situação | Endereço | Status | Tempo |', '|---|---|---|---|', ...linhas, ''].join('\n');
+  return [`### Disponibilidade em ${hora.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })} (Brasília)`, '', '| Situação | Endereço | Status | Tempo |', '|---|---|---|---|', ...linhas, ''].join('\n');
+}
+
+/** Separa os endereços http(s) dos que não são. Texto vazio não conta como endereço. */
+export function separarEnderecos(lista) {
+  const preenchidos = lista.filter((u) => u.trim() !== '');
+  const validos = enderecosValidos(preenchidos);
+  return { validos, descartados: preenchidos.length - validos.length };
 }
 
 /** Só endereços http(s) de verdade; nada de texto solto no log. */
@@ -37,8 +46,11 @@ export function enderecosValidos(lista) {
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const urls = enderecosValidos(process.argv.slice(2));
+  const { validos: urls, descartados } = separarEnderecos(process.argv.slice(2));
+  // Só a quantidade vai para o log, nunca o texto descartado.
+  if (descartados) console.error(`${descartados} endereço(s) descartado(s): não é http(s). Confira as variáveis URL_DO_PAINEL e URL_DA_API.`);
   if (!urls.length) {
+    if (descartados) process.exit(1);
     console.log('Nenhum endereço publicado para conferir.');
     process.exit(0);
   }
