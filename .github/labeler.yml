@@ -1,0 +1,22 @@
+# Melhoria 2 da semana de abertura (docs/comunidade/semana-de-abertura.md): o rótulo de trilha
+# entra sozinho no PR pelos arquivos que ele muda. Só as pastas que são de uma trilha só.
+# O painel/ mistura T2, T3 e T4, então quem abre o PR escolhe o rótulo dele.
+# Formato da actions/labeler v7: https://github.com/actions/labeler#match-object
+'trilha:T5':
+  - changed-files:
+      - any-glob-to-any-file: ['api/**']
+'trilha:T7':
+  - changed-files:
+      - any-glob-to-any-file: ['e2e/**', 'painel/**/*.test.ts', 'painel/**/*.test.tsx', 'scripts/*.test.mjs', 'playwright.config.mjs']
+'trilha:T9':
+  - changed-files:
+      - any-glob-to-any-file: ['.github/workflows/**', 'compose*.yaml', 'nginx/**', 'prometheus/**', 'render.yaml']
+'trilha:T10':
+  - changed-files:
+      - any-glob-to-any-file: ['SECURITY.md', 'zap/**', '.trivyignore', 'docs/ameacas.md', 'docs/seguranca.md']
+'trilha:T11':
+  - changed-files:
+      - any-glob-to-any-file: ['docs/comunidade/**', 'CODE_OF_CONDUCT.md', 'CONTRIBUTING.md', '.github/DISCUSSION_TEMPLATE/**']
+documentation:
+  - changed-files:
+      - any-glob-to-any-file: ['docs/**', '*.md']

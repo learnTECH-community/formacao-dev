@@ -1,0 +1,23 @@
+# Melhoria 2 da semana de abertura: põe o rótulo de trilha no PR pelos caminhos dos arquivos
+# (.github/labeler.yml). Só acrescenta rótulos; nunca tira um que alguém pôs (sync-labels: false).
+#
+# Segurança: pull_request_target para poder rotular PRs vindos de fork. Por isso NÃO faz checkout
+# nem roda código do PR: a action lê a configuração da branch base. Fixada por SHA (v7.0.0).
+name: Rótulos
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+permissions: {}
+jobs:
+  trilha:
+    # O Dependabot recebe token só de leitura; os PRs dele já vêm com rótulo próprio.
+    if: github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/labeler@bf12e9b00b37c5c0ca2b87b79b2daf7891dbda13 # v7.0.0
+        with:
+          sync-labels: false
