@@ -2,7 +2,12 @@
 // Os exemplos são montados por partes, para este arquivo não parecer um segredo.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { conferirArquivo, conferirGitignore, conferirRepositorio } from './segredos.mjs';
+import { arquivosDoIndice, conferirArquivo, conferirGitignore, conferirRepositorio, lerParaConferir } from './segredos.mjs';
+import { execFileSync, spawnSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const FALSOS = {
   'token do GitHub': 'const t = "' + 'ghp' + '_' + 'a'.repeat(36) + '";',
@@ -48,4 +53,70 @@ test('o repositório não tem segredo versionado', () => {
   const { arquivos, achados } = conferirRepositorio();
   assert.ok(arquivos > 100);
   assert.deepEqual(achados, []);
+});
+
+test('a varredura falha fechada: só o arquivo apagado é pulado; outro erro de leitura vira achado', () => {
+  const erro = (code) => () => {
+    throw Object.assign(new Error(code), { code });
+  };
+  assert.deepEqual(lerParaConferir('a.txt', () => 'conteúdo'), { texto: 'conteúdo' });
+  assert.deepEqual(lerParaConferir('apagado.txt', erro('ENOENT')), { pular: true });
+  assert.deepEqual(lerParaConferir('travado.txt', erro('EACCES')), { achado: 'travado.txt: não deu para ler (EACCES); confira à mão' });
+  assert.match(lerParaConferir('x', () => { throw new Error('sem código'); }).achado, /x: não deu para ler \(sem código\)/);
+});
+
+test('o repositório real também não tem arquivo ilegível', () => {
+  assert.deepEqual(conferirRepositorio().ilegiveis, []);
+});
+
+test('arquivosDoIndice pula os submódulos (gitlinks)', () => {
+  const saida = ['100644 aaa111 0\tREADME.md', '160000 bbb222 0\tvendor/sub', '100755 ccc333 0\tscripts/x.sh', ''].join('\0');
+  assert.deepEqual(arquivosDoIndice(saida), ['README.md', 'scripts/x.sh']);
+});
+
+// R19 QA do #363: o script de verdade, num repositório Git temporário (a lição do #362).
+const SCRIPT = fileURLToPath(new URL('./segredos.mjs', import.meta.url));
+function repositorio(arquivos) {
+  const raiz = mkdtempSync(join(tmpdir(), 'segredos-'));
+  const git = (...args) => execFileSync('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', ...args], { cwd: raiz, stdio: 'pipe' });
+  git('init', '-q');
+  for (const [nome, texto] of Object.entries({ '.gitignore': '.env\n', ...arquivos })) {
+    mkdirSync(join(raiz, nome, '..'), { recursive: true });
+    writeFileSync(join(raiz, nome), texto);
+  }
+  git('add', '-A', '-f');
+  git('commit', '-q', '-m', 'x');
+  return raiz;
+}
+const rodar = (raiz) => spawnSync(process.execPath, [SCRIPT], { cwd: raiz, encoding: 'utf8' });
+
+test('script: limpo e apagado saem com 0; pasta no lugar do arquivo (EISDIR) sai com 1', () => {
+  const limpo = repositorio({ 'a.txt': 'nada aqui' });
+  assert.equal(rodar(limpo).status, 0);
+  rmSync(join(limpo, 'a.txt'));
+  assert.equal(rodar(limpo).status, 0, 'apagado da cópia: pula o conteúdo');
+  const pasta = repositorio({ 'b.txt': 'texto' });
+  rmSync(join(pasta, 'b.txt'));
+  mkdirSync(join(pasta, 'b.txt'));
+  const r = rodar(pasta);
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /Não deu para ler 1 arquivo\(s\); confira à mão:\nb\.txt: não deu para ler \(EISDIR\)/);
+  assert.doesNotMatch(r.stderr, /revogada/, 'a dica de revogar só vale para segredo');
+});
+
+test('script: um .env versionado e apagado da cópia ainda falha, pelo nome', () => {
+  const raiz = repositorio({ 'config/.env': 'X=1' });
+  rmSync(join(raiz, 'config/.env'));
+  const r = rodar(raiz);
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /config\/\.env: arquivo \.env versionado/);
+});
+
+test('script: sem .gitignore, o achado diz que ele não existe', () => {
+  const raiz = repositorio({ 'a.txt': 'nada' });
+  execFileSync('git', ['rm', '-q', '--cached', '.gitignore'], { cwd: raiz });
+  rmSync(join(raiz, '.gitignore'));
+  const r = rodar(raiz);
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /\.gitignore: não existe/);
 });
