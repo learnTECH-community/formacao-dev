@@ -9,8 +9,8 @@ import { Provedores } from './teste/Provedores';
 import { CATALOGO_MD, resposta } from './teste/dados';
 
 function Endereco() {
-  const { search } = useLocation();
-  return <output data-testid="endereco">{search}</output>;
+  const { pathname, search, hash } = useLocation();
+  return <output data-testid="endereco">{`${pathname}${search}${hash}`}</output>;
 }
 
 function abrir(endereco: string) {
@@ -34,7 +34,14 @@ describe('trilha inexistente no endereço (#348)', () => {
     expect(contagem).toHaveAttribute('aria-live', 'polite');
     expect(contagem).toHaveTextContent('Mostrando 1 de 3 itens.');
     expect(screen.getByLabelText('Trilha')).toHaveValue('');
-    await waitFor(() => expect(screen.getByTestId('endereco')).toHaveTextContent(/^\?situacao=feitos$/));
+    await waitFor(() => expect(screen.getByTestId('endereco')).toHaveTextContent(/^\/\?situacao=feitos$/));
+  });
+
+  it('a limpeza guarda a âncora #itens, para o link copiado ainda rolar até a lista (R19 UX/UI do #349)', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => resposta(CATALOGO_MD)));
+    abrir('/?trilha=T99#itens');
+    await screen.findByText(/A trilha T99 não existe/);
+    await waitFor(() => expect(screen.getByTestId('endereco')).toHaveTextContent(/^\/#itens$/));
   });
 
   it('o aviso some quando a pessoa mexe no filtro', async () => {

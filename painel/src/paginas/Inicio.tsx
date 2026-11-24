@@ -1,7 +1,7 @@
 // Página inicial: trilhas com o progresso, itens com filtro e como participar.
 // T4.2: o filtro vive no endereço (?trilha=T2&situacao=feitos).
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router';
+import { useLocation, useNavigate, useSearchParams } from 'react-router';
 import { CartaoTrilha } from '../componentes/CartaoTrilha';
 import { Fixados } from '../componentes/Fixados';
 import { Filtros } from '../componentes/Filtros';
@@ -59,11 +59,15 @@ export function Inicio({ catalogo, pedidoDeFoco }: PropsDePagina) {
   const inexistente = pronto ? trilhaInexistente(parametros, codigos.split(' ')) : null;
   const [avisoDeTrilha, setAvisoDeTrilha] = useState<string | null>(null);
   if (inexistente && avisoDeTrilha !== inexistente) setAvisoDeTrilha(inexistente);
+  const { pathname, hash } = useLocation();
+  const navegar = useNavigate();
   useEffect(() => {
     if (!inexistente) return;
-    // replace: corrigir o endereço não cria uma entrada nova no histórico.
-    setParametros(escreverFiltro(lerFiltro(parametros, codigos.split(' '))), { replace: true });
-  }, [inexistente, parametros, codigos, setParametros]);
+    // replace: corrigir o endereço não cria uma entrada nova no histórico. O setSearchParams
+    // descartaria a âncora (#itens), então o endereço é montado aqui com ela (R19 UX/UI do #349).
+    const busca = escreverFiltro(lerFiltro(parametros, codigos.split(' '))).toString();
+    navegar({ pathname, search: busca ? `?${busca}` : '', hash }, { replace: true });
+  }, [inexistente, parametros, codigos, pathname, hash, navegar]);
 
   // Cada mudança vira uma entrada no histórico, para Voltar e Avançar restaurarem o filtro.
   const aoMudar = (novo: FiltroEscolhido) => {
