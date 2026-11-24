@@ -74,3 +74,31 @@ test('relatório: a leitura, as etapas e a meta', () => {
   assert.match(texto, /\| ana \| T2\.2 \| — \| — \|/);
   assert.match(relatorio({ hoje: 'x', f: { ...f, leitura: 'trilha' }, total: 13 }), /a trilha inteira \(13 itens\)/);
 });
+
+test('R19 QA do #360: lista de dentro vazia, borda de 08/12, vínculo do GitHub, itens diferentes e limite', () => {
+  // Sem a lista de dentro, ninguém "conclui" e o relatório avisa.
+  const prsDoDono = [{ title: 'T2.1: a', author: { login: 'mantenedora' }, mergedAt: '2026-11-20T12:00:00Z' }];
+  const vazio = funil({ issues: [], issuesT2, prs: prsDoDono, dentro: new Set(), itens });
+  assert.equal(vazio.semDentro, true);
+  assert.deepEqual(vazio.concluiu, []);
+  assert.match(motivoProvavel(vazio), /não é confiável/);
+  const textoVazio = relatorio({ hoje: 'x', f: vazio, total: 13 });
+  assert.match(textoVazio, /não deu para ler os membros/);
+  assert.match(textoVazio, /\| 5\. Concluiu \| não calculado \|/);
+  // A borda: 08/12 às 23:59:59 de Brasília conta; 09/12 às 00:00 não.
+  const pr = (mergedAt, login) => ({ title: 'T2.1: a', author: { login }, mergedAt });
+  const borda = funil({ issues: [], issuesT2, prs: [pr('2026-12-08T23:59:59-03:00', 'ana'), pr('2026-12-09T00:00:00-03:00', 'bia')], dentro, itens });
+  assert.deepEqual(borda.concluiu, ['ana']);
+  // O vínculo do GitHub vem antes do corpo; "Closes: #n" também vale no corpo.
+  const mapa = new Map([[26, 'T2.2'], [25, 'T2.1']]);
+  assert.equal(itemDoPr({ title: 'CSS', body: 'nada', closingIssuesReferences: [{ number: 26 }] }, mapa), 'T2.2');
+  assert.equal(itemDoPr({ title: 'CSS', body: 'Closes: #25' }, mapa), 'T2.1');
+  // Quem pede um item e abre PR de outro conta nas duas etapas.
+  const outro = funil({ issues: [], issuesT2, prs: [{ title: 'T2.1: semântica', author: { login: 'ana' }, mergedAt: null }], dentro, itens });
+  const ana = outro.pessoas.find((p) => p.login === 'ana');
+  assert.deepEqual([...ana.pediu], ['T2.2']);
+  assert.deepEqual([...ana.abriu], ['T2.1']);
+  // O limite avisa.
+  assert.match(relatorio({ hoje: 'x', f: outro, total: 13, noLimite: true }), /bateu no limite/);
+  assert.doesNotMatch(relatorio({ hoje: 'x', f: outro, total: 13 }), /bateu no limite/);
+});
