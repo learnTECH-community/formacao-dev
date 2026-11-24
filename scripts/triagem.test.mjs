@@ -1,7 +1,7 @@
 // #324: as regras da triagem diária (36 h de alerta, 48 h de prazo) e o relatório, sem chamar o GitHub.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { deFora, ehVersaoMaior, estadoDoCi, estoque, ESTOQUE_LIMITE, excecoesDoTrivy, horasAtePrimeiraResposta, pedeAIssue, recomendacao, relatorio, resumoDaPrimeiraResposta, situacao } from './triagem.mjs';
+import { comoComentarios, deFora, ehVersaoMaior, estadoDoCi, estoque, ESTOQUE_LIMITE, excecoesDoTrivy, horasAtePrimeiraResposta, pedeAIssue, recomendacao, relatorio, resumoDaPrimeiraResposta, situacao } from './triagem.mjs';
 
 const agora = new Date('2026-11-23T12:00:00-03:00');
 const horasAtras = (h) => new Date(agora - h * 36e5).toISOString();
@@ -179,4 +179,28 @@ test('1ª resposta: mediana e pior caso, e o relatório marca o pior acima de 48
   assert.match(relatorio({ ...base, fora: [] }), /\| 1ª resposta nas abertas já respondidas \| nenhuma respondida ainda \|/);
   assert.match(relatorio({ ...base, fora: [item(3), item(9)] }), /\| mediana 6 h, pior 9 h \(2\) \|/);
   assert.match(relatorio({ ...base, fora: [item(50)] }), /\| mediana 50 h, pior 50 h \(1\) 🔴 \|/);
+});
+
+test('R19 QA do #358: borda das 48 h, bot, autor, fusos e review', () => {
+  const base = { hoje: '2026-11-24', hora: '08:00:00', dependabot: [], excecoes: [], dependeDoResponsavel: [], agora };
+  const item = (h) => ({ tipo: 'issue', number: 1, title: 'x', url: 'u', createdAt: horasAtras(60), author: { login: 'a' }, sit: 'respondido', horasAteResposta: h });
+  // A borda: 48 h já é 🔴, como no situacao(); 47 h não.
+  assert.match(relatorio({ ...base, fora: [item(48)] }), /pior 48 h \(1\) 🔴 \|/);
+  assert.doesNotMatch(relatorio({ ...base, fora: [item(47)] }), /pior 47 h \(1\) 🔴/);
+  // Bot e o próprio autor não contam como resposta (não estão em `dentro`).
+  const criado = horasAtras(30);
+  assert.equal(horasAtePrimeiraResposta(criado, [{ author: { login: 'github-actions[bot]' }, createdAt: horasAtras(29) }], dentro), null);
+  assert.equal(horasAtePrimeiraResposta(criado, [{ author: { login: 'visitante' }, createdAt: horasAtras(29) }], dentro), null);
+  // Fusos diferentes: o mesmo instante em -03:00 e em Z dá a mesma conta.
+  assert.equal(horasAtePrimeiraResposta('2026-11-23T09:00:00-03:00', [{ author: { login: 'mantenedora' }, createdAt: '2026-11-23T15:00:00Z' }], dentro), 3);
+  // Review de alguém de dentro é resposta, com a data do submittedAt.
+  const pr = { comments: [], reviews: [{ author: { login: 'mantenedora' }, submittedAt: horasAtras(28), state: 'COMMENTED' }] };
+  assert.equal(situacao(criado, comoComentarios(pr), dentro, agora), 'respondido');
+  assert.equal(horasAtePrimeiraResposta(criado, comoComentarios(pr), dentro), 2);
+  assert.deepEqual(comoComentarios({}), []);
+  // Comentários nulos não quebram.
+  assert.equal(situacao(horasAtras(10), null, dentro, agora), 'sem resposta há 10 h');
+  // Sem a lista de dentro, o relatório avisa.
+  assert.match(relatorio({ ...base, fora: [], semDentro: true }), /não deu para ler os membros/);
+  assert.doesNotMatch(relatorio({ ...base, fora: [] }), /não deu para ler os membros/);
 });

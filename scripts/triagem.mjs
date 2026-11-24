@@ -19,9 +19,18 @@ export const ehBot = (login = '') => login.endsWith('[bot]') || login.startsWith
 /** De fora: não é bot nem membro ou colaborador (`dentro` em minúsculas). */
 export const deFora = (login, dentro) => Boolean(login) && !ehBot(login) && !dentro.has(login.toLowerCase());
 
+/**
+ * Comentários e reviews de um PR juntos, porque uma review de alguém de dentro também é resposta
+ * (R19 QA do #358, item 2). A data da review é o `submittedAt`.
+ */
+export function comoComentarios(pr) {
+  const reviews = (pr.reviews ?? []).map((r) => ({ author: r.author, createdAt: r.submittedAt }));
+  return [...(pr.comments ?? []), ...reviews];
+}
+
 /** Situação de um item de fora: respondido por alguém de dentro, ou há quantas horas espera. */
 export function situacao(criadoEm, comentarios, dentro, agora = new Date()) {
-  if (comentarios.some((c) => dentro.has((c.author?.login ?? '').toLowerCase()))) return 'respondido';
+  if ((comentarios ?? []).some((c) => dentro.has((c.author?.login ?? '').toLowerCase()))) return 'respondido';
   const h = horasEntre(criadoEm, agora);
   if (h >= PRAZO_H) return `🔴 sem resposta há ${h} h (passou das ${PRAZO_H} h)`;
   if (h >= ALERTA_H) return `🟠 sem resposta há ${h} h`;
@@ -33,8 +42,8 @@ export function situacao(criadoEm, comentarios, dentro, agora = new Date()) {
  * abertura e o primeiro comentário de alguém de dentro. `null` quando ainda não há resposta ou
  * quando o comentário não traz a data.
  */
-export function horasAtePrimeiraResposta(criadoEm, comentarios = [], dentro) {
-  const datas = comentarios
+export function horasAtePrimeiraResposta(criadoEm, comentarios, dentro) {
+  const datas = (comentarios ?? [])
     .filter((c) => dentro.has((c.author?.login ?? '').toLowerCase()) && c.createdAt)
     .map((c) => new Date(c.createdAt).getTime())
     .filter((t) => !Number.isNaN(t));
@@ -137,8 +146,10 @@ export function estoque(issues = [], dentro = new Set()) {
 }
 
 /** Monta o relatório em Markdown. Função pura: recebe os dados já lidos. */
-export function relatorio({ hoje, hora, fora, dependabot, excecoes, dependeDoResponsavel, entrada = null, agora = new Date() }) {
+export function relatorio({ hoje, hora, fora, dependabot, excecoes, dependeDoResponsavel, entrada = null, semDentro = false, agora = new Date() }) {
   const L = [`# Triagem do formacao-dev · ${hoje}`, '', `Gerado às ${hora}, só leitura.`, ''];
+  // R19 QA do #358, item 5: sem a lista de quem é de dentro, ninguém conta como resposta.
+  if (semDentro) L.push('⚠️ Atenção: não deu para ler os membros nem os colaboradores. Todos aparecem como de fora e nenhum comentário conta como resposta. Confira o login do `gh`.', '');
   const vermelhos = fora.filter((x) => x.sit.startsWith('🔴')).length;
   const laranjas = fora.filter((x) => x.sit.startsWith('🟠')).length;
   L.push('## Resumo', '', '| Indicador | Hoje |', '|---|---|');
@@ -146,7 +157,7 @@ export function relatorio({ hoje, hora, fora, dependabot, excecoes, dependeDoRes
   L.push(`| Sem resposta há ${ALERTA_H} h ou mais | ${vermelhos + laranjas} (${vermelhos} passaram das ${PRAZO_H} h) |`);
   const resposta = resumoDaPrimeiraResposta(fora.map((x) => x.horasAteResposta));
   L.push(
-    `| 1ª resposta nas abertas já respondidas | ${resposta ? `mediana ${resposta.mediana} h, pior ${resposta.pior} h (${resposta.respondidos})${resposta.pior > PRAZO_H ? ' 🔴' : ''}` : 'nenhuma respondida ainda'} |`,
+    `| 1ª resposta nas abertas já respondidas | ${resposta ? `mediana ${resposta.mediana} h, pior ${resposta.pior} h (${resposta.respondidos})${resposta.pior >= PRAZO_H ? ' 🔴' : ''}` : 'nenhuma respondida ainda'} |`,
   );
   L.push(`| PRs do Dependabot abertos | ${dependabot.length} |`);
   L.push(`| Dependabot com mais de ${DEPENDABOT_DIAS} dias | ${dependabot.filter((d) => diasEntre(d.createdAt, agora) > DEPENDABOT_DIAS).length} |`);
@@ -214,7 +225,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   }
 
   const issues = json(['issue', 'list', '-R', REPO, '--state', 'open', '--limit', '500', '--json', 'number,title,author,createdAt,comments,url']);
-  const prs = json(['pr', 'list', '-R', REPO, '--state', 'open', '--limit', '200', '--json', 'number,title,author,createdAt,comments,url,statusCheckRollup']);
+  const prs = json(['pr', 'list', '-R', REPO, '--state', 'open', '--limit', '200', '--json', 'number,title,author,createdAt,comments,reviews,url,statusCheckRollup']);
   const [dono, nome] = REPO.split('/');
   const consulta = 'query($dono:String!,$nome:String!){repository(owner:$dono,name:$nome){discussions(first:50,orderBy:{field:CREATED_AT,direction:DESC},states:OPEN){nodes{number title url createdAt author{login} comments(first:20){nodes{author{login} createdAt}}}}}}';
   let discussoes = [];
@@ -226,7 +237,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 
   const fora = [
     ...issues.filter((i) => deFora(i.author?.login, dentro)).map((i) => ({ tipo: 'issue', ...i, comentarios: i.comments })),
-    ...prs.filter((p) => deFora(p.author?.login, dentro)).map((p) => ({ tipo: 'PR', ...p, comentarios: p.comments })),
+    ...prs.filter((p) => deFora(p.author?.login, dentro)).map((p) => ({ tipo: 'PR', ...p, comentarios: comoComentarios(p) })),
     ...discussoes.filter((d) => deFora(d.author?.login, dentro)).map((d) => ({ tipo: 'discussion', ...d, comentarios: d.comments.nodes })),
   ].map((x) => ({
     ...x,
@@ -242,6 +253,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   }
 
   const texto = relatorio({
+    semDentro: dentro.size === 0,
     hoje,
     hora: agora.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
     fora,
