@@ -10,6 +10,10 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+# Uma rodada de cada vez: um disparo manual junto com o agendado não abre 2 issues iguais (R19 DevOps do #367).
+concurrency:
+  group: disponibilidade
+  cancel-in-progress: false
 jobs:
   conferir:
     runs-on: ubuntu-latest
@@ -36,13 +40,17 @@ jobs:
             echo "Sem endereço publicado (URL_DO_PAINEL e URL_DA_API vazias): nada a conferir." | tee -a "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
-          # A causa vai para a saída do passo: "configuracao" quando algum endereço foi descartado
-          # (variável mal preenchida), "queda" no resto (R19 QA do #365, item 3).
+          # A causa vai para a saída do passo. A queda real vence: se algum endereço válido falhou, é
+          # "queda", mesmo com outro descartado; só descartado, sem falha, é "configuracao"
+          # (R19 QA do #365, item 3; R19 DevOps do #367, severidade 2).
           set +e
-          node scripts/disponibilidade.mjs "${alvos[@]}" 2> erro.txt
+          node scripts/disponibilidade.mjs "${alvos[@]}" > saida.txt 2> erro.txt
           codigo=$?
+          cat saida.txt
           cat erro.txt >&2
-          if grep -q "descartado" erro.txt; then causa=configuracao; else causa=queda; fi
+          if grep -q "| FALHA |" saida.txt; then causa=queda
+          elif grep -q "descartado" erro.txt; then causa=configuracao
+          else causa=queda; fi
           echo "causa=$causa" >> "$GITHUB_OUTPUT"
           exit $codigo
       - name: Abrir ou comentar a issue de incidente
@@ -64,7 +72,8 @@ jobs:
           # A hora sai no horário de Brasília (R19 QA do #365, item 4).
           quando=$(TZ=America/Sao_Paulo date '+%d/%m/%Y %H:%M (%Z)')
           corpo="A checagem agendada falhou em $quando. $motivo Detalhes no resumo da execução: $EXECUCAO. Roteiro: docs/incidente.md."
-          aberta=$(gh issue list --label incidente --state open --search "in:title \"$titulo\"" --json number --jq '.[0].number // empty')
+          # Título exato, lido da lista (sem --search, que passa pelo índice de busca, atrasado e aproximado).
+          aberta=$(TITULO="$titulo" gh issue list --label incidente --state open --limit 100 --json number,title --jq '.[] | select(.title == env.TITULO) | .number' | head -n1)
           if [ -z "$aberta" ]; then
             gh issue create --title "$titulo" --label incidente --body "$corpo"
             exit 0
