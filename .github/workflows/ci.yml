@@ -60,8 +60,10 @@ jobs:
           retention-days: 14
   painel:
     runs-on: ubuntu-latest
-    # #343: duração normal 2 a 3 min; 15 dá folga ao playwright install (#343). Um travamento cai aqui, e não nas 6 h padrão.
-    timeout-minutes: 15
+    # #343: duração normal 2 a 3 min, mas o playwright install --with-deps às vezes demora:
+    # 29,2 e 29,7 min em 2 dos 30 últimos runs verdes (R19 DevOps do #350). 35 evita o falso
+    # vermelho; a meta de voltar a 15 está na issue do cache/imagem do Playwright.
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
