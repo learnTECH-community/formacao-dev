@@ -28,6 +28,29 @@ export function situacao(criadoEm, comentarios, dentro, agora = new Date()) {
   return `sem resposta há ${h} h`;
 }
 
+/**
+ * Tempo até a primeira resposta (métrica "Time to First Response" da CHAOSS): horas entre a
+ * abertura e o primeiro comentário de alguém de dentro. `null` quando ainda não há resposta ou
+ * quando o comentário não traz a data.
+ */
+export function horasAtePrimeiraResposta(criadoEm, comentarios = [], dentro) {
+  const datas = comentarios
+    .filter((c) => dentro.has((c.author?.login ?? '').toLowerCase()) && c.createdAt)
+    .map((c) => new Date(c.createdAt).getTime())
+    .filter((t) => !Number.isNaN(t));
+  if (!datas.length) return null;
+  return Math.max(0, Math.floor((Math.min(...datas) - new Date(criadoEm).getTime()) / 36e5));
+}
+
+/** Mediana e pior caso das horas até a 1ª resposta. `null` sem nenhum item respondido. */
+export function resumoDaPrimeiraResposta(horas) {
+  const h = horas.filter((x) => x !== null && x !== undefined).sort((a, b) => a - b);
+  if (!h.length) return null;
+  const meio = Math.floor(h.length / 2);
+  const mediana = h.length % 2 ? h[meio] : Math.round((h[meio - 1] + h[meio]) / 2);
+  return { respondidos: h.length, mediana, pior: h[h.length - 1] };
+}
+
 /** Estado do CI a partir do `statusCheckRollup` do `gh pr list`. */
 export function estadoDoCi(rollup = []) {
   if (!rollup.length) return 'sem checks';
@@ -121,6 +144,10 @@ export function relatorio({ hoje, hora, fora, dependabot, excecoes, dependeDoRes
   L.push('## Resumo', '', '| Indicador | Hoje |', '|---|---|');
   L.push(`| Contribuições de fora abertas | ${fora.length} |`);
   L.push(`| Sem resposta há ${ALERTA_H} h ou mais | ${vermelhos + laranjas} (${vermelhos} passaram das ${PRAZO_H} h) |`);
+  const resposta = resumoDaPrimeiraResposta(fora.map((x) => x.horasAteResposta));
+  L.push(
+    `| 1ª resposta nas abertas já respondidas | ${resposta ? `mediana ${resposta.mediana} h, pior ${resposta.pior} h (${resposta.respondidos})${resposta.pior > PRAZO_H ? ' 🔴' : ''}` : 'nenhuma respondida ainda'} |`,
+  );
   L.push(`| PRs do Dependabot abertos | ${dependabot.length} |`);
   L.push(`| Dependabot com mais de ${DEPENDABOT_DIAS} dias | ${dependabot.filter((d) => diasEntre(d.createdAt, agora) > DEPENDABOT_DIAS).length} |`);
   L.push(`| Exceções do Trivy vencendo em até ${EXCECAO_DIAS} dias | ${excecoes.filter((e) => e.faltam <= EXCECAO_DIAS).length} |`);
@@ -189,7 +216,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const issues = json(['issue', 'list', '-R', REPO, '--state', 'open', '--limit', '500', '--json', 'number,title,author,createdAt,comments,url']);
   const prs = json(['pr', 'list', '-R', REPO, '--state', 'open', '--limit', '200', '--json', 'number,title,author,createdAt,comments,url,statusCheckRollup']);
   const [dono, nome] = REPO.split('/');
-  const consulta = 'query($dono:String!,$nome:String!){repository(owner:$dono,name:$nome){discussions(first:50,orderBy:{field:CREATED_AT,direction:DESC},states:OPEN){nodes{number title url createdAt author{login} comments(first:20){nodes{author{login}}}}}}}';
+  const consulta = 'query($dono:String!,$nome:String!){repository(owner:$dono,name:$nome){discussions(first:50,orderBy:{field:CREATED_AT,direction:DESC},states:OPEN){nodes{number title url createdAt author{login} comments(first:20){nodes{author{login} createdAt}}}}}}';
   let discussoes = [];
   try {
     discussoes = json(['api', 'graphql', '-f', `query=${consulta}`, '-F', `dono=${dono}`, '-F', `nome=${nome}`]).data.repository.discussions.nodes;
@@ -201,7 +228,11 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     ...issues.filter((i) => deFora(i.author?.login, dentro)).map((i) => ({ tipo: 'issue', ...i, comentarios: i.comments })),
     ...prs.filter((p) => deFora(p.author?.login, dentro)).map((p) => ({ tipo: 'PR', ...p, comentarios: p.comments })),
     ...discussoes.filter((d) => deFora(d.author?.login, dentro)).map((d) => ({ tipo: 'discussion', ...d, comentarios: d.comments.nodes })),
-  ].map((x) => ({ ...x, sit: situacao(x.createdAt, x.comentarios, dentro, agora) }));
+  ].map((x) => ({
+    ...x,
+    sit: situacao(x.createdAt, x.comentarios, dentro, agora),
+    horasAteResposta: horasAtePrimeiraResposta(x.createdAt, x.comentarios, dentro),
+  }));
 
   let excecoes = [];
   try {

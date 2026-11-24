@@ -1,7 +1,7 @@
 // #324: as regras da triagem diária (36 h de alerta, 48 h de prazo) e o relatório, sem chamar o GitHub.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { deFora, ehVersaoMaior, estadoDoCi, estoque, ESTOQUE_LIMITE, excecoesDoTrivy, pedeAIssue, recomendacao, relatorio, situacao } from './triagem.mjs';
+import { deFora, ehVersaoMaior, estadoDoCi, estoque, ESTOQUE_LIMITE, excecoesDoTrivy, horasAtePrimeiraResposta, pedeAIssue, recomendacao, relatorio, resumoDaPrimeiraResposta, situacao } from './triagem.mjs';
 
 const agora = new Date('2026-11-23T12:00:00-03:00');
 const horasAtras = (h) => new Date(agora - h * 36e5).toISOString();
@@ -158,4 +158,25 @@ test('pedido da issue: reconferência do #340 (vírgula do "Não," e "parte" só
   for (const texto of ['nao, vou fazer outra coisa', 'nao, vou fazer a pergunta', 'Eu faço parte do grupo', 'eu faço isso no trabalho', 'não vou fazer agora']) {
     assert.equal(pedeAIssue(texto), false, texto);
   }
+});
+
+test('1ª resposta: horas até o primeiro comentário de alguém de dentro (CHAOSS)', () => {
+  const criado = horasAtras(30);
+  const coment = (login, h) => ({ author: { login }, createdAt: horasAtras(h) });
+  assert.equal(horasAtePrimeiraResposta(criado, [coment('visitante', 28), coment('mantenedora', 20), coment('MANTENEDORA', 5)], dentro), 10);
+  assert.equal(horasAtePrimeiraResposta(criado, [coment('visitante', 28)], dentro), null);
+  assert.equal(horasAtePrimeiraResposta(criado, [{ author: { login: 'mantenedora' } }], dentro), null, 'sem data não conta');
+  assert.equal(horasAtePrimeiraResposta(criado, undefined, dentro), null);
+});
+
+test('1ª resposta: mediana e pior caso, e o relatório marca o pior acima de 48 h', () => {
+  assert.equal(resumoDaPrimeiraResposta([null, undefined]), null);
+  assert.deepEqual(resumoDaPrimeiraResposta([5]), { respondidos: 1, mediana: 5, pior: 5 });
+  assert.deepEqual(resumoDaPrimeiraResposta([10, 2, null, 30]), { respondidos: 3, mediana: 10, pior: 30 });
+  assert.deepEqual(resumoDaPrimeiraResposta([4, 10]), { respondidos: 2, mediana: 7, pior: 10 });
+  const base = { hoje: '2026-11-24', hora: '08:00:00', dependabot: [], excecoes: [], dependeDoResponsavel: [], agora };
+  const item = (h) => ({ tipo: 'issue', number: 1, title: 'x', url: 'u', createdAt: horasAtras(60), author: { login: 'a' }, sit: 'respondido', horasAteResposta: h });
+  assert.match(relatorio({ ...base, fora: [] }), /\| 1ª resposta nas abertas já respondidas \| nenhuma respondida ainda \|/);
+  assert.match(relatorio({ ...base, fora: [item(3), item(9)] }), /\| mediana 6 h, pior 9 h \(2\) \|/);
+  assert.match(relatorio({ ...base, fora: [item(50)] }), /\| mediana 50 h, pior 50 h \(1\) 🔴 \|/);
 });
