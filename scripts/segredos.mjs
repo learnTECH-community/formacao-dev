@@ -27,7 +27,10 @@ export const PADROES = [
   // placeholder (XXX/YYY/ZZZ) não conta (R19 QA do #366, item 3). Sem o esquema no início, para a
   // regex ser de detecção em texto, e não de validação de URL (alerta do CodeQL, R19 SecOps do #366).
   { nome: 'webhook do Discord', re: /\b(?:ptb\.|canary\.)?discord(?:app)?\.com\/api\/webhooks\/\d{5,}\/[A-Za-z0-9_-]{20,}/ },
-  { nome: 'webhook do Slack', re: /\bhooks\.slack\.com\/services\/T[A-Z0-9]+\/B[A-Z0-9]+\/[A-Za-z0-9]{20,}/ },
+  // Slack: o segredo é o caminho (/services/T.../B.../token), e não o host. A regex procura só o
+  // caminho; assim ela não tem cara de checagem de host, e o CodeQL não a lê como validação de URL
+  // (alerta 14, js/regex/missing-regexp-anchor). A detecção não muda: sem o token, não há segredo.
+  { nome: 'webhook do Slack', re: /\/services\/T[A-Z0-9]+\/B[A-Z0-9]+\/[A-Za-z0-9]{20,}/ },
   // Usuário e senha de exemplo entre <> (como <usuario>:<senha>) não contam: são só o formato.
   { nome: 'URL de banco com senha', re: /\b(?:mongodb(?:\+srv)?|postgres(?:ql)?|mysql|rediss?|amqps?):\/\/[^\s:/@'"<>]+:[^\s@'"<>]+@/ },
   { nome: 'chave de API live', re: /\b(?:sk|rk)_live_[A-Za-z0-9]{16,}\b/ },
