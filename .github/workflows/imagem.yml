@@ -29,7 +29,7 @@ jobs:
       IMAGEM: ghcr.io/learntech-community/formacao-dev-api
       PUBLICAR: ${{ github.event_name == 'release' }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - id: meta
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
