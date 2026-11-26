@@ -39,7 +39,7 @@ jobs:
     # #343: imagem (Trivy): 37 a 43 s. Um travamento cai aqui, e não nas 6 h padrão.
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Build das imagens da API e do Nginx
         run: |
           docker build -f api/Dockerfile --target final -t formacao-dev-api:ci .
@@ -54,7 +54,7 @@ jobs:
               image --scanners vuln --format json --output "relatorio-trivy/$imagem.json" "formacao-dev-$imagem:ci"
             cat "relatorio-trivy/$imagem.txt"
           done
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: relatorio-trivy
@@ -76,8 +76,8 @@ jobs:
     # #343: zap: 344 a 426 s; o passo do ZAP já tem 30 min, e o job soma a subida do compose. Um travamento cai aqui, e não nas 6 h padrão.
     timeout-minutes: 40
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
       - name: Subir o compose (limite de pedidos alto, para a varredura)
@@ -103,7 +103,7 @@ jobs:
       - name: Nenhum alerta alto (fora das exceções)
         run: node scripts/zap.mjs zap/regras.tsv zap-saida/painel.json zap-saida/api.json | tee -a "$GITHUB_STEP_SUMMARY"
         shell: bash
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: relatorio-zap

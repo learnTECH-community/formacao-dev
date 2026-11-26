@@ -13,8 +13,8 @@ jobs:
     # #343: duração normal cerca de 20 s. Um travamento cai aqui, e não nas 6 h padrão.
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
           cache: npm
@@ -29,8 +29,8 @@ jobs:
     # #343: duração normal cerca de 20 s. Um travamento cai aqui, e não nas 6 h padrão.
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
           cache: npm
@@ -45,14 +45,14 @@ jobs:
     # #343: duração normal cerca de 20 s. Um travamento cai aqui, e não nas 6 h padrão.
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
           cache: npm
       - run: npm ci
       - run: npm run cobertura
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: cobertura
@@ -72,8 +72,8 @@ jobs:
     # #343 e #352: duração normal de 2 a 3 min, agora sem o apt.
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
           cache: npm
@@ -83,13 +83,13 @@ jobs:
         run: |
           node -e "const v=require('@playwright/test/package.json').version; if (v !== process.env.PLAYWRIGHT_DA_IMAGEM) { console.error('O @playwright/test está na ' + v + ', mas a imagem do job painel é a ' + process.env.PLAYWRIGHT_DA_IMAGEM + '. Atualize o container (tag e digest) e PLAYWRIGHT_DA_IMAGEM no ci.yml (#352).'); process.exit(1); }"
       - run: npm run test:e2e
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: playwright-report
           path: playwright-report/
           retention-days: 14
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: failure()
         with:
           name: painel-test-results
@@ -116,8 +116,8 @@ jobs:
       run:
         working-directory: api
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
           cache: npm
@@ -135,7 +135,7 @@ jobs:
       # No 26 roda a bateria inteira menos o teste do CSV de 10 mil linhas, que trava no
       # 26 como travava no 24 (#241, visto no PR #310). Sem ele, nenhum teste pode ficar
       # pulado, e a trava de acesso da T6.11 (Node 24.10 ou mais novo) entra aqui.
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 26
       - name: Testes no Node 26, menos o do CSV (#241)
@@ -150,7 +150,7 @@ jobs:
     # #343: duração normal cerca de 3 min; as esperas do compose somam até 7 min. Um travamento cai aqui, e não nas 6 h padrão.
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Build da imagem em estágios
         run: docker build -f api/Dockerfile --target final -t formacao-dev-api:ci .
       - name: Build de comparação, num estágio só (todas as dependências, imagem cheia)
@@ -266,7 +266,7 @@ jobs:
     env:
       COMPOSE_FILE: compose.yaml:compose.dev.yaml
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Subir o compose de desenvolvimento e medir o tempo
         run: |
           inicio=$(date +%s)
