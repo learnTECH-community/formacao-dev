@@ -10,9 +10,15 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+# Uma rodada de cada vez: um disparo manual junto com o agendado não abre 2 issues iguais (R19 DevOps do #367).
+concurrency:
+  group: disponibilidade
+  cancel-in-progress: false
 jobs:
   conferir:
     runs-on: ubuntu-latest
+    # #343: conferir: 5 a 7 s. Um travamento cai aqui, e não nas 6 h padrão.
+    timeout-minutes: 5
     permissions:
       contents: read
       issues: write
@@ -34,18 +40,49 @@ jobs:
             echo "Sem endereço publicado (URL_DO_PAINEL e URL_DA_API vazias): nada a conferir." | tee -a "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
-          node scripts/disponibilidade.mjs "${alvos[@]}"
+          # A causa vai para a saída do passo. A queda real vence: se algum endereço válido falhou, é
+          # "queda", mesmo com outro descartado; só descartado, sem falha, é "configuracao"
+          # (R19 QA do #365, item 3; R19 DevOps do #367, severidade 2).
+          set +e
+          node scripts/disponibilidade.mjs "${alvos[@]}" > saida.txt 2> erro.txt
+          codigo=$?
+          cat saida.txt
+          cat erro.txt >&2
+          if grep -q "| FALHA |" saida.txt; then causa=queda
+          elif grep -q "descartado" erro.txt; then causa=configuracao
+          else causa=queda; fi
+          echo "causa=$causa" >> "$GITHUB_OUTPUT"
+          exit $codigo
       - name: Abrir ou comentar a issue de incidente
         if: failure() && steps.conferir.outcome == 'failure'
         env:
           GH_TOKEN: ${{ github.token }}
           EXECUCAO: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          CAUSA: ${{ steps.conferir.outputs.causa }}
         run: |
-          titulo="Incidente: painel ou API fora do ar"
-          aberta=$(gh issue list --label incidente --state open --search "in:title \"$titulo\"" --json number --jq '.[0].number // empty')
-          corpo="A checagem agendada falhou em $(date -u +%Y-%m-%dT%H:%MZ). Detalhes no resumo da execução: $EXECUCAO. Roteiro: docs/incidente.md."
-          if [ -n "$aberta" ]; then
-            gh issue comment "$aberta" --body "$corpo"
+          # Uma issue por causa. Na configuração errada, comenta no máximo 1 vez a cada 24 h, para não
+          # encher a issue a cada 6 h; na queda real, comenta a cada rodada, porque mostra que segue fora.
+          if [ "$CAUSA" = "configuracao" ]; then
+            titulo="Disponibilidade: configuração errada"
+            motivo="Algum endereço em URL_DO_PAINEL ou URL_DA_API não é http(s). Confira as variáveis do repositório."
           else
-            gh issue create --title "$titulo" --label incidente --body "$corpo"
+            titulo="Incidente: painel ou API fora do ar"
+            motivo="O painel ou a API não respondeu 2xx dentro do tempo limite."
           fi
+          # A hora sai no horário de Brasília (R19 QA do #365, item 4).
+          quando=$(TZ=America/Sao_Paulo date '+%d/%m/%Y %H:%M (%Z)')
+          corpo="A checagem agendada falhou em $quando. $motivo Detalhes no resumo da execução: $EXECUCAO. Roteiro: docs/incidente.md."
+          # Título exato, lido da lista (sem --search, que passa pelo índice de busca, atrasado e aproximado).
+          aberta=$(TITULO="$titulo" gh issue list --label incidente --state open --limit 100 --json number,title --jq '.[] | select(.title == env.TITULO) | .number' | head -n1)
+          if [ -z "$aberta" ]; then
+            gh issue create --title "$titulo" --label incidente --body "$corpo"
+            exit 0
+          fi
+          if [ "$CAUSA" = "configuracao" ]; then
+            ultimo=$(gh issue view "$aberta" --json comments,createdAt --jq '(.comments[-1].createdAt // .createdAt)')
+            if [ $(( $(date +%s) - $(date -d "$ultimo" +%s) )) -lt 86400 ]; then
+              echo "A issue #$aberta já recebeu aviso nas últimas 24 h: nada a comentar."
+              exit 0
+            fi
+          fi
+          gh issue comment "$aberta" --body "$corpo"

@@ -2,6 +2,16 @@
 
 Português do Brasil, frases curtas e diretas, em código, issues, PRs e revisões.
 
+## Comece em 15 minutos
+
+1. **(2 min)** Leia a issue fixada [Comece aqui](https://github.com/learnTECH-community/formacao-dev/issues/311) e escolha uma issue com o rótulo `good first issue`. Comente "vou fazer" nela: uma pessoa por issue.
+2. **(5 min)** Faça o fork, clone e instale: `git clone`, `npm install`, `npm test`. Precisa do Node 22.22 ou mais novo.
+3. **(1 min)** Traga a sprint da semana do repositório original e crie a sua branch a partir dela: `git remote add upstream https://github.com/learnTECH-community/formacao-dev.git`, `git fetch upstream` e `git switch -c feature/AAAA-MM-DD upstream/developer/sprint-<quinta>`.
+4. **(5 min)** Faça a mudança pedida na seção "Onde mexer" da issue e rode `npm test` de novo.
+5. **(2 min)** Abra o PR para a sprint, com o código do item no título e `Closes #N` na descrição.
+
+Travou em algum passo? Pergunte na própria issue ou nas [Discussions](https://github.com/learnTECH-community/formacao-dev/discussions). A primeira resposta chega em até 48 horas. Ao participar, você segue o [código de conduta](CODE_OF_CONDUCT.md).
+
 ## Fluxo
 
 ```
@@ -33,6 +43,17 @@ Ao estudar um tópico da trilha no roadmap.sh, na ordem do site, proponha um ite
 - Descrição: o que mudou, como testar, a evidência (saída do teste, print) e `Closes #N`.
 - O item marcado com `[x]` no `CATALOGO.md` e a linha "Progresso" atualizada (`node scripts/catalogo.mjs --atualizar`).
 - CI verde antes de pedir revisão.
+- A seção "Pronto com UX, UI e QA" do modelo de PR preenchida (veja abaixo).
+
+### Pronto com UX, UI e QA
+
+O modelo de PR traz um checklist em 3 grupos. Ele não repete o que o CI já confere sozinho: pede o que só quem fez a mudança sabe.
+
+- **UX:** quem usa consegue fazer a tarefa em até 3 passos, entende o texto na primeira leitura e não fica sem saída num erro ou numa lista vazia. São as heurísticas de Nielsen de visibilidade do estado do sistema e de prevenção e recuperação de erros.
+- **UI:** o painel tem tokens e dois temas. Os prints em 360, 768 e 1440 px mostram que nada quebra no celular nem no monitor grande. Contraste AA, foco visível e alvos de 44 px ou mais deixam o painel usável com o teclado e com o dedo.
+- **QA:** os testes e o axe (que roda dentro do `npm run test:e2e`) pegam o que quebrou. O `npm run lcp` e o `npm run orcamento` pegam o que ficou lento ou pesado.
+
+Num PR sem tela (só script ou documento), os itens de UI ficam como "não se aplica".
 
 ## O que o CI confere
 
@@ -73,10 +94,42 @@ Uma boa revisão tem três partes:
 
 Revise o código, não a pessoa. Quem abriu o PR responde a cada comentário: com o ajuste ou com o motivo para não ajustar.
 
+## Tempo de resposta
+
+A primeira resposta a issues, PRs e Discussions de quem é de fora chega em até 48 horas. Pode ser só "recebi, vou olhar até tal dia": o importante é que ninguém fique sem retorno.
+
+Quem mantém o projeto confere isso com a triagem diária, que só lê o GitHub:
+
+```bash
+node scripts/triagem.mjs            # grava triagem/AAAA-MM-DD.md
+```
+
+O relatório marca 🟠 o que está sem resposta há 36 horas ou mais (alerta) e 🔴 o que passou das 48 horas (prazo perdido). Ele também lista os PRs do Dependabot, as exceções do Trivy que vão vencer e as issues `depende-do-responsavel`. Conta como resposta qualquer comentário de um membro da organização ou de alguém com acesso ao repositório.
+
+## Issues de entrada (para quem mantém)
+
+Uma issue de entrada leva **sempre os dois rótulos**: `good first issue`, que é o padrão do GitHub e põe a issue na página [contribute](https://github.com/learnTECH-community/formacao-dev/contribute) e na busca de quem quer começar, e `boa-primeira-issue`, que é o nome em português usado nos filtros daqui. A decisão de manter os dois é de 21/11/2026.
+
+Antes de pôr os rótulos, confira se a issue tem:
+
+- **Objetivo** e **Motivo**, em poucas linhas;
+- **Onde mexer**, com o arquivo e, quando der, a função ou a linha;
+- **Critérios de aceite** que outra pessoa consegue conferir com sim ou não;
+- **Tempo estimado** de até 2 horas;
+- **Como começar** e **Pronto com UX, UI e QA**, como nas issues da lista [Comece aqui (#311)](https://github.com/learnTECH-community/formacao-dev/issues/311).
+
+O rótulo é uma promessa: quem rotula acompanha o PR até o merge e responde em até 48 horas. Issue de entrada fica para quem vem de fora; quem mantém o repositório não a resolve. A meta é ter sempre 10 ou mais livres, ou seja, sem ninguém atribuído. Quando uma fecha, acrescente outra na lista do #311.
+
+Depois do 1º PR mesclado, convide a pessoa para o próximo degrau da [mentoria em 3 degraus](docs/comunidade/mentoria.md): uma issue `help wanted` em par e, depois, autonomia.
+
+## Quem contribuiu
+
+Toda contribuição aceita entra em [docs/comunidade/quem-contribuiu.md](docs/comunidade/quem-contribuiu.md): código, documentação, revisão, dúvida respondida, acessibilidade, defeito, ideia e tradução. Ninguém precisa pedir. Quem mantém acrescenta a pessoa no merge do PR ou quando a resposta é aceita, só com o login e o tipo.
+
 ## Contribuição externa
 
 Ao contribuir em outro projeto do GitHub, abra uma issue aqui com o modelo "Contribuição externa". Ela registra o link e o item do catálogo que você praticou. Siga sempre o `CONTRIBUTING.md` do outro projeto.
 
 ## Conduta
 
-Respeito, paciência com quem está começando e nenhum dado pessoal de outras pessoas em issues ou PRs.
+Respeito, paciência com quem está começando e nenhum dado pessoal de outras pessoas em issues ou PRs. As regras completas, como denunciar e os passos de moderação estão no [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).

@@ -8,3 +8,5 @@ api/dados/
 .env
 .env.*
 !.env.example
+# #324: relatórios locais da triagem diária (node scripts/triagem.mjs).
+triagem/
