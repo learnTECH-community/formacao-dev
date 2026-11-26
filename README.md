@@ -42,6 +42,8 @@ Regras para contribuir fora:
 
 Use as [Discussions](https://github.com/learnTECH-community/formacao-dev/discussions). Uma resposta que resolve a dúvida é marcada como aceita por quem perguntou.
 
+Toda contribuição conta, inclusive revisão, resposta e teste de acessibilidade: veja [quem contribuiu](docs/comunidade/quem-contribuiu.md).
+
 ## Rodar o catálogo
 
 Requisito: Node 22.22 ou mais novo.
