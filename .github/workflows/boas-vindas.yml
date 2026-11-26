@@ -1,0 +1,71 @@
+# Melhoria 3 da semana de abertura (docs/comunidade/semana-de-abertura.md): uma mensagem de
+# boas-vindas na primeira issue e no primeiro PR de cada pessoa. Ela não substitui a resposta
+# de uma pessoa, que continua chegando em até 48 h (CONTRIBUTING, "Tempo de resposta").
+#
+# Segurança: usa pull_request_target para poder comentar em PRs vindos de fork, e por isso
+# NÃO faz checkout nem roda código do PR. Só a action oficial, fixada por SHA (v3.1.0).
+# Um job por evento, cada um só com a escrita de que precisa (R19 SecOps do #339).
+#
+# A action exige as duas mensagens em todo job (issue_message e pr_message com required: true)
+# e lê a lista de issues e a de PRs antes de comentar. Por isso os dois jobs recebem as duas
+# mensagens (do env abaixo, texto fixo) e a leitura das duas listas (2ª R19 SecOps do #339).
+name: Boas-vindas
+on:
+  issues:
+    types: [opened]
+  pull_request_target:
+    types: [opened]
+permissions: {}
+env:
+  MENSAGEM_ISSUE: |
+    Oi! Obrigado pela sua primeira issue na formacao-dev. 👋
+
+    Esta é uma mensagem automática. Uma pessoa da manutenção responde aqui em até 48 horas, mesmo que seja só para dizer quando vai olhar com calma.
+
+    Enquanto isso:
+    - Se você quer contribuir, a lista [Comece aqui](https://github.com/learnTECH-community/formacao-dev/issues/311) traz issues pequenas, com o lugar exato onde mexer.
+    - Se a sua dúvida é sobre uma tarefa, as [Discussions](https://github.com/learnTECH-community/formacao-dev/discussions), em Dúvidas, também servem.
+    - Ao participar, você segue o [código de conduta](https://github.com/learnTECH-community/formacao-dev/blob/main/CODE_OF_CONDUCT.md).
+  MENSAGEM_PR: |
+    Oi! Obrigado pelo seu primeiro PR na formacao-dev. 🎉
+
+    Esta é uma mensagem automática. Uma pessoa da manutenção revisa em até 48 horas.
+
+    Para a revisão andar rápido, confira:
+    - a descrição tem `Closes #N`, com a issue que o PR resolve;
+    - o checklist "Pronto com UX, UI e QA" do modelo está marcado (o que não se aplica fica como "não se aplica");
+    - o CI está verde. Se ficar vermelho e você não souber por quê, pergunte aqui mesmo.
+
+    O passo a passo está no [Comece em 15 minutos](https://github.com/learnTECH-community/formacao-dev/blob/main/CONTRIBUTING.md#comece-em-15-minutos).
+jobs:
+  primeira-issue:
+    if: github.event_name == 'issues'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+      pull-requests: read
+    steps:
+      - uses: actions/first-interaction@1c4688942c71f71d4f5502a26ea67c331730fa4d # v3.1.0
+        with:
+          issue_message: ${{ env.MENSAGEM_ISSUE }}
+          pr_message: ${{ env.MENSAGEM_PR }}
+
+  primeiro-pr:
+    # Só a primeira contribuição, pelo próprio evento, sem API: a action sozinha saudaria em
+    # todo PR de quem nunca abriu issue (B4 da 2ª R19 SecOps). O Dependabot não é uma pessoa
+    # chegando, e o token dele é só de leitura.
+    if: >-
+      github.event_name == 'pull_request_target' &&
+      github.actor != 'dependabot[bot]' &&
+      contains(fromJSON('["FIRST_TIME_CONTRIBUTOR", "FIRST_TIMER"]'), github.event.pull_request.author_association)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: write
+      issues: read
+    steps:
+      - uses: actions/first-interaction@1c4688942c71f71d4f5502a26ea67c331730fa4d # v3.1.0
+        with:
+          issue_message: ${{ env.MENSAGEM_ISSUE }}
+          pr_message: ${{ env.MENSAGEM_PR }}
