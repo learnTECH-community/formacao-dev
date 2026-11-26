@@ -120,6 +120,8 @@ Antes de pôr os rótulos, confira se a issue tem:
 
 O rótulo é uma promessa: quem rotula acompanha o PR até o merge e responde em até 48 horas. Issue de entrada fica para quem vem de fora; quem mantém o repositório não a resolve. A meta é ter sempre 10 ou mais livres, ou seja, sem ninguém atribuído. Quando uma fecha, acrescente outra na lista do #311.
 
+Depois do 1º PR mesclado, convide a pessoa para o próximo degrau da [mentoria em 3 degraus](docs/comunidade/mentoria.md): uma issue `help wanted` em par e, depois, autonomia.
+
 ## Quem contribuiu
 
 Toda contribuição aceita entra em [docs/comunidade/quem-contribuiu.md](docs/comunidade/quem-contribuiu.md): código, documentação, revisão, dúvida respondida, acessibilidade, defeito, ideia e tradução. Ninguém precisa pedir. Quem mantém acrescenta a pessoa no merge do PR ou quando a resposta é aceita, só com o login e o tipo.
