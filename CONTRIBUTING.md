@@ -122,6 +122,17 @@ O rótulo é uma promessa: quem rotula acompanha o PR até o merge e responde em
 
 Depois do 1º PR mesclado, convide a pessoa para o próximo degrau da [mentoria em 3 degraus](docs/comunidade/mentoria.md): uma issue `help wanted` em par e, depois, autonomia.
 
+### Prazo de quem pediu a issue
+
+Quem comenta "vou fazer" tem **7 dias** para abrir o PR, que pode ser um rascunho (*draft*). Assim, uma issue não fica presa por alguém que precisou parar.
+
+- **No 5º dia sem PR**, quem mantém pergunta na issue se a pessoa precisa de ajuda: "Oi! Como está indo? Se travou em algum passo, me conta aqui."
+- **No 8º dia sem PR**, a issue volta a ficar livre, com um comentário gentil: "Liberamos esta issue para outra pessoa. Se quiser retomar, é só comentar de novo. Obrigado por ter começado!"
+- Um PR ligado à issue, mesmo em rascunho, suspende o prazo.
+- Se a pessoa avisar que precisa de mais tempo, o prazo é renovado por mais 7 dias.
+
+O prazo existe para que mais gente consiga começar, e não para cobrar quem já está trabalhando.
+
 ## Quem contribuiu
 
 Toda contribuição aceita entra em [docs/comunidade/quem-contribuiu.md](docs/comunidade/quem-contribuiu.md): código, documentação, revisão, dúvida respondida, acessibilidade, defeito, ideia e tradução. Ninguém precisa pedir. Quem mantém acrescenta a pessoa no merge do PR ou quando a resposta é aceita, só com o login e o tipo.
