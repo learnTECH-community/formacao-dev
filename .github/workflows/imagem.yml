@@ -19,6 +19,8 @@ permissions:
 jobs:
   imagem:
     runs-on: ubuntu-latest
+    # #343: imagem: 24 a 36 s no PR; na release também publica no GHCR. Um travamento cai aqui, e não nas 6 h padrão.
+    timeout-minutes: 20
     # O token do Actions só lê o código e escreve pacotes; nada mais.
     permissions:
       contents: read

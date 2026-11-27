@@ -10,6 +10,16 @@ export const PRAZO_H = 48;
 export const DEPENDABOT_DIAS = 2;
 export const EXCECAO_DIAS = 7;
 export const ESTOQUE_MIN = 10;
+export const FECHADOS_DIAS = 7;
+export const FECHADOS_LIMITE = 200;
+// Os limites das leituras dos abertos (checklist de autorrevisão, item 17: nada corta calado).
+export const LIMITES_ABERTOS = { issues: 500, prs: 200, dependeDoResponsavel: 100 };
+const NOMES_DAS_LEITURAS = { issues: 'issues abertas', prs: 'PRs abertos', dependeDoResponsavel: 'depende-do-responsavel' };
+
+/** Os nomes das leituras que bateram no limite: o relatório avisa que a conta pode estar incompleta. */
+export function leiturasNoLimite(lidos, limites = LIMITES_ABERTOS) {
+  return Object.keys(limites).filter((k) => (lidos[k] ?? 0) >= limites[k]);
+}
 
 const horasEntre = (desde, agora) => Math.floor((agora - new Date(desde)) / 36e5);
 const diasEntre = (desde, agora) => Math.floor((agora - new Date(desde)) / 864e5);
@@ -19,13 +29,47 @@ export const ehBot = (login = '') => login.endsWith('[bot]') || login.startsWith
 /** De fora: não é bot nem membro ou colaborador (`dentro` em minúsculas). */
 export const deFora = (login, dentro) => Boolean(login) && !ehBot(login) && !dentro.has(login.toLowerCase());
 
+/**
+ * Comentários e reviews de um PR juntos, porque uma review de alguém de dentro também é resposta
+ * (R19 QA do #358, item 2). A data da review é o `submittedAt`.
+ */
+export function comoComentarios(pr) {
+  const reviews = (pr.reviews ?? []).map((r) => ({ author: r.author, createdAt: r.submittedAt }));
+  // Decisão do Líder (R19 QA do #359): o merge por alguém de dentro também é resposta, na hora do merge.
+  const merge = pr.mergedAt && pr.mergedBy ? [{ author: pr.mergedBy, createdAt: pr.mergedAt }] : [];
+  return [...(pr.comments ?? []), ...reviews, ...merge];
+}
+
 /** Situação de um item de fora: respondido por alguém de dentro, ou há quantas horas espera. */
 export function situacao(criadoEm, comentarios, dentro, agora = new Date()) {
-  if (comentarios.some((c) => dentro.has((c.author?.login ?? '').toLowerCase()))) return 'respondido';
+  if ((comentarios ?? []).some((c) => dentro.has((c.author?.login ?? '').toLowerCase()))) return 'respondido';
   const h = horasEntre(criadoEm, agora);
   if (h >= PRAZO_H) return `🔴 sem resposta há ${h} h (passou das ${PRAZO_H} h)`;
   if (h >= ALERTA_H) return `🟠 sem resposta há ${h} h`;
   return `sem resposta há ${h} h`;
+}
+
+/**
+ * Tempo até a primeira resposta (métrica "Time to First Response" da CHAOSS): horas entre a
+ * abertura e o primeiro comentário de alguém de dentro. `null` quando ainda não há resposta ou
+ * quando o comentário não traz a data.
+ */
+export function horasAtePrimeiraResposta(criadoEm, comentarios, dentro) {
+  const datas = (comentarios ?? [])
+    .filter((c) => dentro.has((c.author?.login ?? '').toLowerCase()) && c.createdAt)
+    .map((c) => new Date(c.createdAt).getTime())
+    .filter((t) => !Number.isNaN(t));
+  if (!datas.length) return null;
+  return Math.max(0, Math.floor((Math.min(...datas) - new Date(criadoEm).getTime()) / 36e5));
+}
+
+/** Mediana e pior caso das horas até a 1ª resposta. `null` sem nenhum item respondido. */
+export function resumoDaPrimeiraResposta(horas) {
+  const h = horas.filter((x) => x !== null && x !== undefined).sort((a, b) => a - b);
+  if (!h.length) return null;
+  const meio = Math.floor(h.length / 2);
+  const mediana = h.length % 2 ? h[meio] : Math.round((h[meio - 1] + h[meio]) / 2);
+  return { respondidos: h.length, mediana, pior: h[h.length - 1] };
 }
 
 /** Estado do CI a partir do `statusCheckRollup` do `gh pr list`. */
@@ -113,14 +157,41 @@ export function estoque(issues = [], dentro = new Set()) {
   return { total: issues.length, livres: issues.length - ocupadas.length, ocupadas, noLimite: issues.length >= ESTOQUE_LIMITE };
 }
 
+/**
+ * Início da janela dos fechados: exatamente FECHADOS_DIAS antes de `agora`, com hora, em UTC
+ * (a data sem hora virava 00:00 UTC e a janela chegava a 8 dias; R19 QA do #359).
+ */
+export function desdeDosFechados(agora = new Date()) {
+  return new Date(agora.getTime() - FECHADOS_DIAS * 864e5).toISOString().replace(/\.\d{3}Z$/, 'Z');
+}
+
 /** Monta o relatório em Markdown. Função pura: recebe os dados já lidos. */
-export function relatorio({ hoje, hora, fora, dependabot, excecoes, dependeDoResponsavel, entrada = null, agora = new Date() }) {
+export function relatorio({ hoje, hora, fora, dependabot, excecoes, dependeDoResponsavel, entrada = null, semDentro = false, fechadosDaSemana = null, fechadosDesde = null, fechadosNoLimite = false, abertosNoLimite = [], agora = new Date() }) {
   const L = [`# Triagem do formacao-dev · ${hoje}`, '', `Gerado às ${hora}, só leitura.`, ''];
+  // R19 QA do #358, item 5: sem a lista de quem é de dentro, ninguém conta como resposta.
+  if (abertosNoLimite.length) {
+    const quais = abertosNoLimite.map((k) => `${NOMES_DAS_LEITURAS[k] ?? k} (${LIMITES_ABERTOS[k]})`).join(', ');
+    L.push(`⚠️ Atenção: a leitura de ${quais} bateu no limite. A contagem pode estar incompleta.`, '');
+  }
+  if (semDentro) L.push('⚠️ Atenção: não deu para ler os membros nem os colaboradores. Todos aparecem como de fora e nenhum comentário conta como resposta. Confira o login do `gh`.', '');
   const vermelhos = fora.filter((x) => x.sit.startsWith('🔴')).length;
   const laranjas = fora.filter((x) => x.sit.startsWith('🟠')).length;
   L.push('## Resumo', '', '| Indicador | Hoje |', '|---|---|');
   L.push(`| Contribuições de fora abertas | ${fora.length} |`);
   L.push(`| Sem resposta há ${ALERTA_H} h ou mais | ${vermelhos + laranjas} (${vermelhos} passaram das ${PRAZO_H} h) |`);
+  const textoDaResposta = (r, vazio) =>
+    r ? `mediana ${r.mediana} h, pior ${r.pior} h (${r.respondidos})${r.pior >= PRAZO_H ? ' 🔴' : ''}` : vazio;
+  const resposta = resumoDaPrimeiraResposta(fora.map((x) => x.horasAteResposta));
+  L.push(`| 1ª resposta nas abertas já respondidas | ${textoDaResposta(resposta, 'nenhuma respondida ainda')} |`);
+  // #358, limite declarado: os itens de fora fechados nos últimos 7 dias também entram na métrica.
+  if (fechadosDaSemana) {
+    const daSemana = resumoDaPrimeiraResposta(fechadosDaSemana.map((x) => x.horasAteResposta));
+    const semResposta = fechadosDaSemana.filter((x) => x.horasAteResposta === null).length;
+    L.push(
+      `| 1ª resposta nos fechados dos últimos ${FECHADOS_DIAS} dias${fechadosDesde ? ` (desde ${new Date(fechadosDesde).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })})` : ''} | ${textoDaResposta(daSemana, 'nenhum respondido')}${semResposta ? `; ${semResposta} fechado(s) sem resposta` : ''} |`,
+    );
+    if (fechadosNoLimite) L.push(`| ⚠️ Fechados no limite | a leitura bateu em ${FECHADOS_LIMITE} issues ou PRs; a conta pode estar incompleta |`);
+  }
   L.push(`| PRs do Dependabot abertos | ${dependabot.length} |`);
   L.push(`| Dependabot com mais de ${DEPENDABOT_DIAS} dias | ${dependabot.filter((d) => diasEntre(d.createdAt, agora) > DEPENDABOT_DIAS).length} |`);
   L.push(`| Exceções do Trivy vencendo em até ${EXCECAO_DIAS} dias | ${excecoes.filter((e) => e.faltam <= EXCECAO_DIAS).length} |`);
@@ -132,6 +203,8 @@ export function relatorio({ hoje, hora, fora, dependabot, excecoes, dependeDoRes
   if (entrada?.noLimite) L.push(`Atenção: foram lidas só ${ESTOQUE_LIMITE} issues de entrada. A contagem pode estar incompleta.`, '');
 
   L.push('## a) Contribuições de fora', '');
+  // A exceção que ainda não avisa fica escrita (R19 QA do #361; a correção é a good first issue #333).
+  L.push('Discussions: leitura limitada a 50 tópicos e 20 comentários por tópico, sem aviso ainda (#333).', '');
   if (!fora.length) L.push('Nenhuma aberta.', '');
   else {
     L.push('| Tipo | # | Título | Autor | Situação |', '|---|---|---|---|---|');
@@ -186,10 +259,14 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     }
   }
 
-  const issues = json(['issue', 'list', '-R', REPO, '--state', 'open', '--limit', '500', '--json', 'number,title,author,createdAt,comments,url']);
-  const prs = json(['pr', 'list', '-R', REPO, '--state', 'open', '--limit', '200', '--json', 'number,title,author,createdAt,comments,url,statusCheckRollup']);
+  const issues = json(['issue', 'list', '-R', REPO, '--state', 'open', '--limit', String(LIMITES_ABERTOS.issues), '--json', 'number,title,author,createdAt,comments,url']);
+  const prs = json(['pr', 'list', '-R', REPO, '--state', 'open', '--limit', String(LIMITES_ABERTOS.prs), '--json', 'number,title,author,createdAt,comments,reviews,url,statusCheckRollup']);
+  // Os fechados nos últimos FECHADOS_DIAS dias (issues e PRs), para a 1ª resposta não perder quem já foi atendido.
+  const desde = desdeDosFechados(agora);
+  const issuesFechadas = json(['issue', 'list', '-R', REPO, '--state', 'closed', '--search', `closed:>=${desde}`, '--limit', String(FECHADOS_LIMITE), '--json', 'number,author,createdAt,comments']);
+  const prsFechados = json(['pr', 'list', '-R', REPO, '--state', 'closed', '--search', `closed:>=${desde}`, '--limit', String(FECHADOS_LIMITE), '--json', 'number,author,createdAt,comments,reviews,mergedAt,mergedBy']);
   const [dono, nome] = REPO.split('/');
-  const consulta = 'query($dono:String!,$nome:String!){repository(owner:$dono,name:$nome){discussions(first:50,orderBy:{field:CREATED_AT,direction:DESC},states:OPEN){nodes{number title url createdAt author{login} comments(first:20){nodes{author{login}}}}}}}';
+  const consulta = 'query($dono:String!,$nome:String!){repository(owner:$dono,name:$nome){discussions(first:50,orderBy:{field:CREATED_AT,direction:DESC},states:OPEN){nodes{number title url createdAt author{login} comments(first:20){nodes{author{login} createdAt}}}}}}';
   let discussoes = [];
   try {
     discussoes = json(['api', 'graphql', '-f', `query=${consulta}`, '-F', `dono=${dono}`, '-F', `nome=${nome}`]).data.repository.discussions.nodes;
@@ -199,9 +276,13 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 
   const fora = [
     ...issues.filter((i) => deFora(i.author?.login, dentro)).map((i) => ({ tipo: 'issue', ...i, comentarios: i.comments })),
-    ...prs.filter((p) => deFora(p.author?.login, dentro)).map((p) => ({ tipo: 'PR', ...p, comentarios: p.comments })),
+    ...prs.filter((p) => deFora(p.author?.login, dentro)).map((p) => ({ tipo: 'PR', ...p, comentarios: comoComentarios(p) })),
     ...discussoes.filter((d) => deFora(d.author?.login, dentro)).map((d) => ({ tipo: 'discussion', ...d, comentarios: d.comments.nodes })),
-  ].map((x) => ({ ...x, sit: situacao(x.createdAt, x.comentarios, dentro, agora) }));
+  ].map((x) => ({
+    ...x,
+    sit: situacao(x.createdAt, x.comentarios, dentro, agora),
+    horasAteResposta: horasAtePrimeiraResposta(x.createdAt, x.comentarios, dentro),
+  }));
 
   let excecoes = [];
   try {
@@ -210,7 +291,15 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     excecoes = [];
   }
 
+  const dependeDoResponsavel = json(['issue', 'list', '-R', REPO, '--state', 'open', '--label', 'depende-do-responsavel', '--limit', String(LIMITES_ABERTOS.dependeDoResponsavel), '--json', 'number,title,createdAt,url']);
   const texto = relatorio({
+    semDentro: dentro.size === 0,
+    fechadosDesde: desde,
+    fechadosNoLimite: issuesFechadas.length >= FECHADOS_LIMITE || prsFechados.length >= FECHADOS_LIMITE,
+    fechadosDaSemana: [
+      ...issuesFechadas.filter((i) => deFora(i.author?.login, dentro)).map((i) => ({ horasAteResposta: horasAtePrimeiraResposta(i.createdAt, i.comments, dentro) })),
+      ...prsFechados.filter((p) => deFora(p.author?.login, dentro)).map((p) => ({ horasAteResposta: horasAtePrimeiraResposta(p.createdAt, comoComentarios(p), dentro) })),
+    ],
     hoje,
     hora: agora.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
     fora,
@@ -220,7 +309,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       json(['issue', 'list', '-R', REPO, '--state', 'open', '--label', 'good first issue', '--limit', String(ESTOQUE_LIMITE), '--json', 'number,title,url,assignees,comments,closedByPullRequestsReferences']),
       dentro,
     ),
-    dependeDoResponsavel: json(['issue', 'list', '-R', REPO, '--state', 'open', '--label', 'depende-do-responsavel', '--limit', '100', '--json', 'number,title,createdAt,url']),
+    dependeDoResponsavel,
+    abertosNoLimite: leiturasNoLimite({ issues: issues.length, prs: prs.length, dependeDoResponsavel: dependeDoResponsavel.length }),
     agora,
   });
   const pasta = new URL('../triagem/', import.meta.url);

@@ -8,7 +8,7 @@
 
 ## O que falta e de quem
 
-Atualizado em 19/11/2026. Cada linha diz o que deixa o MVP pronto e quem destrava.
+Atualizado em 24/11/2026. Cada linha diz o que deixa o MVP pronto e quem destrava.
 
 | O que falta | Critério | De quem | Pronto quando | Issue |
 |---|---|---|---|---|
@@ -17,6 +17,9 @@ Atualizado em 19/11/2026. Cada linha diz o que deixa o MVP pronto e quem destrav
 | Ligar o aviso privado de falhas e a varredura de segredos do GitHub | 9 | Responsável | Settings → Security mostra os dois ligados | #246 |
 | Conferir a decisão de dados pessoais aprovada em 11/11 | 9 | Responsável | A issue fecha com o ok | #271 |
 | Testar a barra de progresso com um leitor de tela real | 8 | Comunidade (`boa-primeira-issue`) | O PR traz o resultado no NVDA, VoiceOver ou no leitor do navegador | #27 |
+| Trocar as exceções do Trivy (CVEs do nginx 1.30.6, vencem em 03/12) pela imagem 1.31 | 9 | Responsável (merge do Dependabot #314) e depois a Engenharia (tirar o `.trivyignore`) | O Trivy passa sem as 6 exceções | #312 |
+| Fixar por SHA as actions dos workflows antigos | 9 | Engenharia | Nenhum `uses:` por tag no `codeql.yml` e nos outros | #341 |
+| Tirar o `apt` lento do job `painel` e voltar o timeout a 15 min | 10 | Engenharia | Feito no #353 (imagem oficial do Playwright); falta registrar 10 runs abaixo de 5 min | #352 |
 | Rodar a API inteira no Node 24 e no 26, ou registrar a causa da trava | 11 | Engenharia | O motivo fica escrito na issue; hoje o CI testa no 22 e no 26, e no 26 o teste do CSV fica de fora porque também trava (PR #310). A imagem roda o 26: a rota `/v1/progresso.csv` com muitas linhas precisa ser checada nela | #241 |
 | Medir a hipótese: 3 pessoas concluírem a T2 até 08/12/2026 | 2 | Responsável e comunidade | A contagem de pessoas com PR de T2 mesclado fica registrada aqui | — |
 
@@ -53,6 +56,15 @@ Acreditamos que itens pequenos e práticos, num projeto comum e com o progresso 
 - Medição de uso: o projeto é N1.
 
 ## Histórico
+
+### Ciclo de 23 e 24/11/2026 (comunidade, processo e CI)
+
+**Resumo:** 8 de 10 aplicáveis atendidos, sem mudar a conta. Os PRs #326 a #353 entraram na sprint `developer/sprint-2026-11-26` e chegam à `main` pelo #318.
+- **Critérios 1 e 2 (hipótese):** regra de primeira resposta em até 48 h, com a triagem diária `scripts/triagem.mjs` e o estoque de issues de entrada (#326, #338, #340); abertura das Discussions documentada em `docs/comunidade/` (#327, #328); benchmark e plano da semana de abertura (#335); 23 `good first issue` abertas.
+- **Critério 8:** aviso acessível quando a trilha do endereço não existe, na região `aria-live` da contagem, com o endereço limpo e a âncora guardada (#349, revisão do Esp UX/UI). Estudo de Nielsen em 360 e 1440 px: contraste de 5,93:1 ou mais no tema claro e 7,63:1 ou mais no escuro, sem rolagem horizontal; os achados viraram #346 e #347.
+- **Critério 10:** `timeout-minutes` em todos os jobs do `ci.yml` (#350); o job `painel` roda na imagem oficial do Playwright, fixada por digest, e saiu de 26 a 31,5 min nos runs lentos para 2,0 a 2,6 min (#353); rótulo de trilha automático nos PRs (#342).
+- **Critério 11:** Vitest com 167 testes; `scripts/triagem.test.mjs` com 17.
+- **Critério 12:** checklist "Pronto com UX, UI e QA" no modelo de PR e no CONTRIBUTING (#336); regra das issues de entrada (#337).
 
 ### Ciclo de 18 e 19/11/2026 (versões maiores das dependências)
 
